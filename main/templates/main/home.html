@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}LastBite — Selamatkan Makanan, Hemat Pengeluaran{% endblock %}
+
+{% block content %}
+
+<!-- ========== HERO SECTION ========== -->
+<section class="hero">
+  <div class="hero__container">
+    <div class="hero__content">
+      <span class="hero__badge">🌱 Kurangi Food Waste Mulai Hari Ini</span>
+      <h1 class="hero__title">
+        Makanan Lezat,<br>
+        Harga <span class="hero__title-accent">Diskon 30–50%</span>
+      </h1>
+      <p class="hero__subtitle">
+        LastBite menghubungkan kamu dengan merchant di sekitar kampus yang punya stok makanan sisa menjelang tutup toko.
+        Dapatkan <strong>Surprise Bag</strong> dengan harga hemat, selamatkan makanan dari pembuangan.
+      </p>
+      <div class="hero__cta">
+        <a href="#" class="btn btn--primary btn--lg">Temukan Surprise Bag 🍱</a>
+        <a href="#" class="btn btn--ghost btn--lg">Daftar sebagai Merchant</a>
+      </div>
+      <div class="hero__stats">
+        <div class="hero__stat">
+          <span class="hero__stat-value">500+</span>
+          <span class="hero__stat-label">Surprise Bag tersedia</span>
+        </div>
+        <div class="hero__stat-divider"></div>
+        <div class="hero__stat">
+          <span class="hero__stat-value">120+</span>
+          <span class="hero__stat-label">Merchant bergabung</span>
+        </div>
+        <div class="hero__stat-divider"></div>
+        <div class="hero__stat">
+          <span class="hero__stat-value">2.4 ton</span>
+          <span class="hero__stat-label">Makanan terselamatkan</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero__visual">
+      <div class="hero__card-stack">
+        <div class="hero__bag-card hero__bag-card--1">
+          <div class="hero__bag-emoji">🥐</div>
+          <div class="hero__bag-info">
+            <p class="hero__bag-name">Bakers Corner</p>
+            <p class="hero__bag-type">Pastry Surprise Bag</p>
+            <div class="hero__bag-price">
+              <span class="hero__bag-price-orig">Rp 85.000</span>
+              <span class="hero__bag-price-disc">Rp 39.000</span>
+            </div>
+            <span class="hero__bag-badge">3 tersisa</span>
+          </div>
+        </div>
+        <div class="hero__bag-card hero__bag-card--2">
+          <div class="hero__bag-emoji">🍱</div>
+          <div class="hero__bag-info">
+            <p class="hero__bag-name">Kafe Hijau</p>
+            <p class="hero__bag-type">Lunch Box Surprise</p>
+            <div class="hero__bag-price">
+              <span class="hero__bag-price-orig">Rp 55.000</span>
+              <span class="hero__bag-price-disc">Rp 27.000</span>
+            </div>
+            <span class="hero__bag-badge">5 tersisa</span>
+          </div>
+        </div>
+        <div class="hero__eco-badge">
+          <span>🌍</span>
+          <span>-1.2 kg CO₂ terhindar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== HOW IT WORKS ========== -->
+<section class="how-it-works">
+  <div class="section-container">
+    <div class="section-header">
+      <h2 class="section-title">Cara Kerja LastBite</h2>
+      <p class="section-subtitle">Tiga langkah mudah untuk menyelamatkan makanan dan menghemat pengeluaranmu</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step__icon-wrap">
+          <span class="step__icon">🔍</span>
+          <span class="step__number">1</span>
+        </div>
+        <h3 class="step__title">Temukan Surprise Bag</h3>
+        <p class="step__desc">Jelajahi Surprise Bag dari merchant di sekitarmu. Filter berdasarkan kategori, harga, atau lokasi.</p>
+      </div>
+      <div class="step__connector"></div>
+      <div class="step">
+        <div class="step__icon-wrap">
+          <span class="step__icon">🛒</span>
+          <span class="step__number">2</span>
+        </div>
+        <h3 class="step__title">Pesan & Bayar</h3>
+        <p class="step__desc">Pesan langsung lewat aplikasi dengan harga diskon 30–50%. Kamu dapat kode QR untuk pengambilan.</p>
+      </div>
+      <div class="step__connector"></div>
+      <div class="step">
+        <div class="step__icon-wrap">
+          <span class="step__icon">🏪</span>
+          <span class="step__number">3</span>
+        </div>
+        <h3 class="step__title">Ambil ke Toko</h3>
+        <p class="step__desc">Datang ke toko sebelum jam tutup, tunjukkan kode QR, dan nikmati makananmu. Mudah dan cepat!</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FEATURED BAGS ========== -->
+<section class="featured-bags">
+  <div class="section-container">
+    <div class="section-header">
+      <h2 class="section-title">Surprise Bag Populer</h2>
+      <p class="section-subtitle">Jangan sampai kehabisan — stok terbatas tiap harinya!</p>
+    </div>
+    <div class="bags-grid">
+      {% for bag in featured_bags %}
+        <div class="bag-card">
+          <div class="bag-card__emoji">{{ bag.emoji }}</div>
+          <div class="bag-card__body">
+            <p class="bag-card__merchant">{{ bag.merchant }}</p>
+            <h3 class="bag-card__name">{{ bag.name }}</h3>
+            <div class="bag-card__prices">
+              <span class="bag-card__price-orig">Rp {{ bag.original_price }}</span>
+              <span class="bag-card__price-disc">Rp {{ bag.discount_price }}</span>
+              <span class="bag-card__discount-badge">-{{ bag.discount_percent }}%</span>
+            </div>
+            <div class="bag-card__footer">
+              <span class="bag-card__stock">🕐 Pickup: {{ bag.pickup_time }}</span>
+              <span class="bag-card__remaining">{{ bag.stock }} tersisa</span>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <!-- Placeholder cards if no data yet -->
+        <div class="bag-card">
+          <div class="bag-card__emoji">🥖</div>
+          <div class="bag-card__body">
+            <p class="bag-card__merchant">Bakers Corner UI</p>
+            <h3 class="bag-card__name">Pastry Morning Bag</h3>
+            <div class="bag-card__prices">
+              <span class="bag-card__price-orig">Rp 85.000</span>
+              <span class="bag-card__price-disc">Rp 39.000</span>
+              <span class="bag-card__discount-badge">-54%</span>
+            </div>
+            <div class="bag-card__footer">
+              <span class="bag-card__stock">🕐 Pickup: 17:00–18:00</span>
+              <span class="bag-card__remaining">3 tersisa</span>
+            </div>
+          </div>
+        </div>
+        <div class="bag-card">
+          <div class="bag-card__emoji">🍱</div>
+          <div class="bag-card__body">
+            <p class="bag-card__merchant">Kafe Hijau Depok</p>
+            <h3 class="bag-card__name">Lunch Box Surprise</h3>
+            <div class="bag-card__prices">
+              <span class="bag-card__price-orig">Rp 55.000</span>
+              <span class="bag-card__price-disc">Rp 27.000</span>
+              <span class="bag-card__discount-badge">-51%</span>
+            </div>
+            <div class="bag-card__footer">
+              <span class="bag-card__stock">🕐 Pickup: 20:00–21:00</span>
+              <span class="bag-card__remaining">5 tersisa</span>
+            </div>
+          </div>
+        </div>
+        <div class="bag-card">
+          <div class="bag-card__emoji">☕</div>
+          <div class="bag-card__body">
+            <p class="bag-card__merchant">Kopiku Margonda</p>
+            <h3 class="bag-card__name">Coffee & Snack Bundle</h3>
+            <div class="bag-card__prices">
+              <span class="bag-card__price-orig">Rp 45.000</span>
+              <span class="bag-card__price-disc">Rp 22.000</span>
+              <span class="bag-card__discount-badge">-51%</span>
+            </div>
+            <div class="bag-card__footer">
+              <span class="bag-card__stock">🕐 Pickup: 19:00–20:00</span>
+              <span class="bag-card__remaining">8 tersisa</span>
+            </div>
+          </div>
+        </div>
+        <div class="bag-card">
+          <div class="bag-card__emoji">🍰</div>
+          <div class="bag-card__body">
+            <p class="bag-card__merchant">Sweet Studio</p>
+            <h3 class="bag-card__name">Dessert Surprise Bag</h3>
+            <div class="bag-card__prices">
+              <span class="bag-card__price-orig">Rp 70.000</span>
+              <span class="bag-card__price-disc">Rp 35.000</span>
+              <span class="bag-card__discount-badge">-50%</span>
+            </div>
+            <div class="bag-card__footer">
+              <span class="bag-card__stock">🕐 Pickup: 18:00–19:00</span>
+              <span class="bag-card__remaining">2 tersisa</span>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="section-cta">
+      <a href="#" class="btn btn--primary btn--lg">Lihat Semua Surprise Bag →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ========== ECO IMPACT SECTION ========== -->
+<section class="eco-impact">
+  <div class="section-container">
+    <div class="eco-impact__content">
+      <div class="eco-impact__text">
+        <span class="eco-impact__badge">🌍 Dampak Nyata</span>
+        <h2 class="section-title">Setiap Pembelian,<br>Dampak yang Terasa</h2>
+        <p class="section-subtitle">
+          Pantau jejak dampak lingkungan dan penghematan finansialmu langsung di LastBite.
+          Setiap transaksi tercatat dan dihitung emisi karbon yang berhasil dicegah.
+        </p>
+        <a href="#" class="btn btn--primary">Lihat Eco Impact Journal</a>
+      </div>
+      <div class="eco-impact__stats">
+        <div class="eco-stat">
+          <span class="eco-stat__icon">🥗</span>
+          <span class="eco-stat__value">2.4 ton</span>
+          <span class="eco-stat__label">Makanan terselamatkan</span>
+        </div>
+        <div class="eco-stat">
+          <span class="eco-stat__icon">💨</span>
+          <span class="eco-stat__value">4.8 ton</span>
+          <span class="eco-stat__label">CO₂ yang dicegah</span>
+        </div>
+        <div class="eco-stat">
+          <span class="eco-stat__icon">💰</span>
+          <span class="eco-stat__value">Rp 180 jt</span>
+          <span class="eco-stat__label">Total penghematan user</span>
+        </div>
+        <div class="eco-stat">
+          <span class="eco-stat__icon">🏪</span>
+          <span class="eco-stat__value">120+</span>
+          <span class="eco-stat__label">Merchant terdaftar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CTA SECTION ========== -->
+<section class="cta-section">
+  <div class="section-container">
+    <div class="cta-section__inner">
+      <h2 class="cta-section__title">Mulai Selamatkan Makanan Hari Ini</h2>
+      <p class="cta-section__subtitle">
+        Bergabung dengan ribuan mahasiswa dan pekerja muda yang sudah hemat sambil berkontribusi mengurangi food waste.
+      </p>
+      <div class="cta-section__buttons">
+        <a href="#" class="btn btn--white btn--lg">Daftar Sekarang — Gratis!</a>
+        <a href="#" class="btn btn--ghost-white btn--lg">Pelajari Lebih Lanjut</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

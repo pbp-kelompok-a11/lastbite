@@ -1,22 +1,15 @@
 """
 URL configuration for lastbite project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('main.urls')),              # Landing page
+    path('bags/', include('surprise_bag.urls')),  # Surprise Bag module
+    path('orders/', include('order.urls')),       # Order module
+    # path('stores/', include('merchant_store.urls')),  # TODO: uncomment setelah branch merchant_store di-merge
+    path('community/', include('community.urls')),    # Community module
+    path('eco/', include('eco_impact.urls')),         # Eco Impact module
 ]
