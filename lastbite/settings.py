@@ -83,8 +83,15 @@ WSGI_APPLICATION = 'lastbite.wsgi.application'
 # ===========================================================
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'fathir.atha',
+        'USER': 'fathir.atha',
+        'PASSWORD': 'KYXM_Qe1h_PZNE1s-TFE9PDIPNHNWSYQ',
+        'HOST': 'pws.cs.ui.ac.id',
+        'PORT': '5432',
+        'OPTIONS': {
+            'options': '-c search_path=lastbite,public'
+        },
     }
 }
 
