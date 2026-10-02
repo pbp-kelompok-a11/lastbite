@@ -20,7 +20,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-f4b0()y0xii)mw_3f-!i0
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost 127.0.0.1').split()
+ALLOWED_HOSTS = [
+    'fathir-atha-lastbite-pbp-kelompok-a11.pws.cs.ui.ac.id',
+    'localhost',
+    '127.0.0.1',
+]
 
 # ===========================================================
 # APPLICATIONS
