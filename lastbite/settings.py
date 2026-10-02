@@ -86,7 +86,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'fathir.atha',
         'USER': 'fathir.atha',
-        'PASSWORD': 'KYXM_Qe1h_PZNE1s-TFE9PDIPNHNWSYQ',
+        'PASSWORD': 'Q00U2X1ruoFjnw4Nz7C6lxRuRuOvocRY',
         'HOST': 'pws.cs.ui.ac.id',
         'PORT': '5432',
         'OPTIONS': {
