@@ -91,7 +91,7 @@ DATABASES = {
         'NAME': 'fathir.atha',
         'USER': 'fathir.atha',
         'PASSWORD': 'Q00U2X1ruoFjnw4Nz7C6lxRuRuOvocRY',
-        'HOST': 'pws.cs.ui.ac.id',
+        'HOST': '10.119.106.139',
         'PORT': '5432',
         'OPTIONS': {
             'options': '-c search_path=lastbite,public'
