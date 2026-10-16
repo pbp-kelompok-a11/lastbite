@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Community — LastBite{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'community/css/community.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="community section-container">
+  <header class="community-hero">
+    <p class="community-eyebrow">LASTBITE COMMUNITY</p>
+    <h1>Ide kecil untuk<br>kesempatan kedua.</h1>
+    <p>Temukan cara menyimpan, mengolah, dan menikmati makanan surplus. Belajar bersama dari tips komunitas LastBite.</p>
+  </header>
+
+  <section aria-labelledby="food-hacks-title">
+    <div class="community-heading">
+      <div>
+        <p class="community-eyebrow">DARI KOMUNITAS, UNTUK KOMUNITAS</p>
+        <h2 id="food-hacks-title">Food Hacks terbaru</h2>
+      </div>
+      <p class="community-muted">Berbagi cara, mengurangi sisa.</p>
+    </div>
+    <div class="community-feed">
+      {% for post in posts %}
+        {% include 'community/components/food_hack_card.html' %}
+      {% empty %}
+        <div class="community-empty">
+          <span aria-hidden="true">&#10047;</span>
+          <h3>Belum ada Food Hack</h3>
+          <p>Tips dari komunitas akan tampil di sini. Setiap ide kecil bisa membantu makanan dinikmati lebih lama.</p>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

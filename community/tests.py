@@ -1,9 +1,72 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from .models import CommunityPost
+
+
+class CommunityFeedTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.author = get_user_model().objects.create_user(username='food_hack_writer')
+
+    def create_post(self, **changes):
+        fields = {
+            'author': self.author, 'title': 'Tips menyimpan roti',
+            'content': 'Bekukan roti dalam wadah tertutup.',
+            'post_type': CommunityPost.PostType.FOOD_HACK,
+        }
+        fields.update(changes)
+        post = CommunityPost(**fields)
+        post.full_clean()
+        post.save()
+        return post
+
+    def test_guest_sees_food_hacks_newest_first_and_not_reviews(self):
+        older = self.create_post(title='Tips roti lama')
+        CommunityPost.objects.filter(pk=older.pk).update(created_at=timezone.now() - timedelta(days=1))
+        newer = self.create_post(title='Tips sayur baru')
+        self.create_post(title='Review tidak masuk feed ini', post_type='review', rating=5)
+        response = self.client.get(reverse('community:home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'community/home.html')
+        self.assertTemplateUsed(response, 'base.html')
+        self.assertEqual(list(response.context['posts']), [newer, older])
+        self.assertContains(response, 'food_hack_writer')
+        self.assertContains(response, 'Bekukan roti dalam wadah tertutup.')
+        self.assertNotContains(response, 'Review tidak masuk feed ini')
+
+    def test_empty_feed(self):
+        response = self.client.get(reverse('community:home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Belum ada Food Hack')
+        self.assertQuerySetEqual(response.context['posts'], [])
+
+    def test_database_title_update_appears_on_refresh(self):
+        post = self.create_post(title='Judul sebelum edit')
+        self.assertContains(self.client.get(reverse('community:home')), 'Judul sebelum edit')
+        post.title = 'Judul setelah edit'
+        post.full_clean()
+        post.save()
+        response = self.client.get(reverse('community:home'))
+        self.assertContains(response, 'Judul setelah edit')
+        self.assertNotContains(response, 'Judul sebelum edit')
+
+    def test_user_content_is_escaped(self):
+        self.create_post(title='<script>alert(1)</script>', content='<b>Konten pengguna</b>')
+        response = self.client.get(reverse('community:home'))
+        self.assertContains(response, '&lt;script&gt;alert(1)&lt;/script&gt;')
+        self.assertNotContains(response, '<script>alert(1)</script>')
+        self.assertContains(response, '&lt;b&gt;Konten pengguna&lt;/b&gt;')
+
+    def test_feed_only_accepts_read_requests(self):
+        self.assertEqual(self.client.head(reverse('community:home')).status_code, 200)
+        self.assertEqual(self.client.post(reverse('community:home')).status_code, 405)
+        self.assertFalse(CommunityPost.objects.exists())
 
 
 class CommunityPostTests(TestCase):

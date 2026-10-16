@@ -1,0 +1,11 @@
+<article class="food-hack-card">
+  <header>
+    <span class="food-hack-card__badge">{{ post.get_post_type_display }}</span>
+    <h3>{{ post.title }}</h3>
+  </header>
+  <p class="food-hack-card__excerpt">{{ post.content|truncatewords:45 }}</p>
+  <footer class="food-hack-card__meta">
+    <span>{{ post.author.get_username }}</span>
+    <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:'j M Y' }}</time>
+  </footer>
+</article>
