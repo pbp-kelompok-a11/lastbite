@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ post.title }} — LastBite Community{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'community/css/community.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="community section-container">
+  <a class="community-back" href="{% url 'community:home' %}">
+    <svg class="community-back__icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m12 19-7-7 7-7M5 12h14" />
+    </svg>
+    <span>Kembali ke Community</span>
+  </a>
+  <article class="community-detail">
+    <header>
+      <span class="food-hack-card__badge">{{ post.get_post_type_display }}</span>
+      <h1>{{ post.title }}</h1>
+      <div class="community-detail__meta">
+        <span>Oleh {{ post.author.get_username }}</span>
+        <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:'j M Y' }}</time>
+      </div>
+    </header>
+    <div class="community-detail__content">{{ post.content|linebreaks }}</div>
+  </article>
+</div>
+{% endblock %}

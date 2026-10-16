@@ -69,6 +69,66 @@ class CommunityFeedTests(TestCase):
         self.assertFalse(CommunityPost.objects.exists())
 
 
+class CommunityDetailTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        author = get_user_model().objects.create_user(username='detail_writer')
+        cls.first = CommunityPost.objects.create(
+            author=author, title='Tips roti', content='Paragraf pertama.\n\nParagraf kedua.',
+        )
+        cls.second = CommunityPost.objects.create(
+            author=author, title='Tips sayur', content='Konten sayur yang berbeda.',
+        )
+        cls.review = CommunityPost.objects.create(
+            author=author, post_type='review', rating=5, title='Review', content='Ulasan.',
+        )
+
+    def test_cards_link_to_their_own_details(self):
+        response = self.client.get(reverse('community:home'))
+        for post in (self.first, self.second):
+            self.assertContains(response, 'href="{}"'.format(
+                reverse('community:post_detail', args=[post.pk])
+            ))
+
+    def test_guest_sees_the_requested_post_and_full_content(self):
+        for post, other in ((self.first, self.second), (self.second, self.first)):
+            with self.subTest(post=post.pk):
+                response = self.client.get(reverse('community:post_detail', args=[post.pk]))
+                self.assertEqual(response.status_code, 200)
+                self.assertTemplateUsed(response, 'community/post_detail.html')
+                self.assertTemplateUsed(response, 'base.html')
+                self.assertEqual(response.context['post'], post)
+                self.assertContains(response, post.title)
+                self.assertNotContains(response, other.title)
+                self.assertContains(response, 'detail_writer')
+                self.assertContains(response, '<time datetime=')
+                self.assertContains(response, reverse('community:home'))
+        response = self.client.get(reverse('community:post_detail', args=[self.first.pk]))
+        self.assertContains(response, '<p>Paragraf pertama.</p>')
+        self.assertContains(response, '<p>Paragraf kedua.</p>')
+
+    def test_missing_post_and_review_return_404(self):
+        for pk in (999999, self.review.pk):
+            with self.subTest(pk=pk):
+                self.assertEqual(self.client.get(reverse('community:post_detail', args=[pk])).status_code, 404)
+
+    def test_detail_escapes_user_content(self):
+        self.first.title = '<script>alert(1)</script>'
+        self.first.content = '<img src=x onerror=alert(1)>'
+        self.first.save()
+        response = self.client.get(reverse('community:post_detail', args=[self.first.pk]))
+        self.assertContains(response, '&lt;script&gt;alert(1)&lt;/script&gt;')
+        self.assertContains(response, '&lt;img src=x onerror=alert(1)&gt;')
+        self.assertNotContains(response, '<img src=x onerror=alert(1)>')
+
+    def test_detail_is_read_only(self):
+        url = reverse('community:post_detail', args=[self.first.pk])
+        self.assertEqual(self.client.head(url).status_code, 200)
+        self.assertEqual(self.client.post(url, {'title': 'Diubah'}).status_code, 405)
+        self.first.refresh_from_db()
+        self.assertEqual(self.first.title, 'Tips roti')
+
+
 class CommunityPostTests(TestCase):
     @classmethod
     def setUpTestData(cls):

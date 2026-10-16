@@ -1,7 +1,7 @@
 <article class="food-hack-card">
   <header>
     <span class="food-hack-card__badge">{{ post.get_post_type_display }}</span>
-    <h3>{{ post.title }}</h3>
+    <h3><a class="food-hack-card__link" href="{% url 'community:post_detail' post.pk %}">{{ post.title }}</a></h3>
   </header>
   <p class="food-hack-card__excerpt">{{ post.content|truncatewords:45 }}</p>
   <footer class="food-hack-card__meta">
