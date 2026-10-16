@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hapus Food Hack — LastBite{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'community/css/community.css' %}">
+{% endblock %}
+{% block content %}
+<div class="community section-container">
+  <section class="community-editor" aria-labelledby="delete-title">
+    <p class="community-eyebrow">KELOLA FOOD HACK</p>
+    <h1 id="delete-title">Hapus Food Hack ini?</h1>
+    <p class="community-muted">Postingan yang dihapus tidak dapat dikembalikan. Kamu bisa membatalkan untuk tetap menyimpannya.</p>
+    <article class="community-delete-summary">
+      <h2>{{ post.title }}</h2>
+      <p>{{ post.content|truncatewords:45 }}</p>
+    </article>
+    <form method="post" class="community-form">
+      {% csrf_token %}
+      <div class="community-form__actions">
+        <button class="btn btn--danger btn--md" type="submit">Ya, hapus Food Hack</button>
+        <a class="btn btn--outline btn--md" href="{% url 'community:post_detail' post.pk %}">Batal</a>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

@@ -104,3 +104,11 @@
 .community-form [aria-invalid="true"] { border-color: #a12b22; }
 .community-form__actions { display: flex; flex-wrap: wrap; gap: var(--space-md); }
 .community-form > button { justify-self: start; }
+.community-post-actions { display: flex; flex-wrap: wrap; gap: var(--space-md); margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 1px solid var(--color-border); }
+.community-post-actions a:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 4px; }
+.community .btn--danger { background: #a12b22; color: white; border: 2px solid #a12b22; }
+.community .btn--danger:hover { background: #7e211a; border-color: #7e211a; }
+.community .btn--danger-outline { color: #a12b22; border: 2px solid #a12b22; }
+.community .btn--danger-outline:hover { background: #fcece9; }
+.community-delete-summary { margin-top: var(--space-xl); padding: var(--space-lg); background: var(--color-surface); border-radius: var(--radius-md); overflow-wrap: anywhere; }
+.community-delete-summary p { margin-top: var(--space-sm); color: var(--color-text-muted); }

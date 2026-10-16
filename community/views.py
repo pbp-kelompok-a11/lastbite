@@ -34,3 +34,32 @@ def create_food_hack(request):
         post = form.save()
         return redirect('community:post_detail', pk=post.pk)
     return render(request, 'community/food_hack_form.html', {'form': form})
+
+
+@login_required(login_url='community:login')
+@require_http_methods(['GET', 'POST'])
+def edit_food_hack(request, pk):
+    post = get_object_or_404(
+        CommunityPost, pk=pk, author=request.user,
+        post_type=CommunityPost.PostType.FOOD_HACK,
+    )
+    form = FoodHackForm(request.POST if request.method == 'POST' else None, instance=post)
+    if request.method == 'POST' and form.is_valid():
+        post = form.save()
+        return redirect('community:post_detail', pk=post.pk)
+    return render(request, 'community/food_hack_form.html', {
+        'form': form, 'post': post, 'is_edit': True,
+    })
+
+
+@login_required(login_url='community:login')
+@require_http_methods(['GET', 'POST'])
+def delete_food_hack(request, pk):
+    post = get_object_or_404(
+        CommunityPost, pk=pk, author=request.user,
+        post_type=CommunityPost.PostType.FOOD_HACK,
+    )
+    if request.method == 'POST':
+        post.delete()
+        return redirect('community:home')
+    return render(request, 'community/food_hack_confirm_delete.html', {'post': post})
