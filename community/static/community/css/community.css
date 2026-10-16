@@ -82,3 +82,25 @@
   .community-hero { padding: var(--space-xl) var(--space-lg); }
   .food-hack-card { padding: var(--space-lg); }
 }
+.community-editor { max-width: 720px; margin: 0 auto; }
+.community-editor--login { max-width: 480px; }
+.community-form { display: grid; gap: var(--space-lg); margin-top: var(--space-xl); }
+.community-form__field label { display: block; font-weight: 600; margin-bottom: var(--space-sm); }
+.community-form input:not([type="hidden"]), .community-form textarea {
+  width: 100%;
+  padding: .85rem 1rem;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.community-form textarea { resize: vertical; min-height: 200px; }
+.community-form input:focus-visible, .community-form textarea:focus-visible,
+.community-form button:focus-visible, .community-form a:focus-visible {
+  outline: 3px solid var(--color-primary); outline-offset: 3px;
+}
+.community-form .errorlist { color: #a12b22; font-size: .875rem; margin-top: var(--space-sm); }
+.community-form [aria-invalid="true"] { border-color: #a12b22; }
+.community-form__actions { display: flex; flex-wrap: wrap; gap: var(--space-md); }
+.community-form > button { justify-self: start; }

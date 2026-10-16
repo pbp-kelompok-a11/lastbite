@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
@@ -127,6 +127,82 @@ class CommunityDetailTests(TestCase):
         self.assertEqual(self.client.post(url, {'title': 'Diubah'}).status_code, 405)
         self.first.refresh_from_db()
         self.assertEqual(self.first.title, 'Tips roti')
+
+
+class FoodHackCreateTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.author = get_user_model().objects.create_user(username='customer', password='test-password-123')
+        cls.other = get_user_model().objects.create_user(username='other')
+
+    def test_guest_redirects_to_working_login_and_cannot_post(self):
+        url = reverse('community:food_hack_create')
+        for method in (self.client.get, self.client.post):
+            response = method(url)
+            self.assertRedirects(response, reverse('community:login') + '?next=' + url)
+        self.assertFalse(CommunityPost.objects.exists())
+
+    def test_login_returns_user_to_create_form(self):
+        url = reverse('community:food_hack_create')
+        response = self.client.post(reverse('community:login') + '?next=' + url, {
+            'username': 'customer', 'password': 'test-password-123', 'next': url,
+        })
+        self.assertRedirects(response, url)
+
+    def test_authenticated_get_displays_form_without_saving(self):
+        self.client.force_login(self.author)
+        response = self.client.get(reverse('community:food_hack_create'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'community/food_hack_form.html')
+        self.assertEqual(list(response.context['form'].fields), ['title', 'content'])
+        self.assertContains(response, 'name="csrfmiddlewaretoken"')
+        self.assertFalse(CommunityPost.objects.exists())
+
+    def test_valid_post_sets_protected_fields_and_appears_in_detail_and_feed(self):
+        self.client.force_login(self.author)
+        response = self.client.post(reverse('community:food_hack_create'), {
+            'title': 'Tips freezer', 'content': 'Simpan dalam porsi kecil.',
+            'author': self.other.pk, 'post_type': 'review', 'rating': 5,
+        })
+        post = CommunityPost.objects.get()
+        self.assertEqual(post.author, self.author)
+        self.assertEqual(post.post_type, 'food_hack')
+        self.assertIsNone(post.rating)
+        self.assertRedirects(response, reverse('community:post_detail', args=[post.pk]))
+        self.assertContains(self.client.get(reverse('community:home')), 'Tips freezer')
+        self.assertContains(self.client.get(response.url), 'Simpan dalam porsi kecil.')
+
+    def test_invalid_post_shows_errors_and_keeps_input(self):
+        self.client.force_login(self.author)
+        for data, field in (({'title': '   ', 'content': 'Konten tetap'}, 'title'),
+                            ({'title': 'Judul tetap', 'content': '   '}, 'content'),
+                            ({'title': 'a' * 256, 'content': 'Konten tetap'}, 'title')):
+            with self.subTest(field=field, data=data):
+                response = self.client.post(reverse('community:food_hack_create'), data)
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(field, response.context['form'].errors)
+                self.assertEqual(response.context['form'].data['title'], data['title'])
+                self.assertFalse(CommunityPost.objects.exists())
+
+    def test_create_requires_csrf_and_rejects_other_methods(self):
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.author)
+        url = reverse('community:food_hack_create')
+        self.assertEqual(client.post(url, {'title': 'Tips', 'content': 'Konten'}).status_code, 403)
+        self.client.force_login(self.author)
+        self.assertEqual(self.client.put(url).status_code, 405)
+        self.assertFalse(CommunityPost.objects.exists())
+
+    def test_bad_login_and_external_next_are_not_accepted(self):
+        url = reverse('community:login')
+        response = self.client.post(url, {'username': 'customer', 'password': 'wrong'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['form'].errors)
+        response = self.client.post(url, {
+            'username': 'customer', 'password': 'test-password-123',
+            'next': 'https://example.org/',
+        })
+        self.assertRedirects(response, reverse('community:home'))
 
 
 class CommunityPostTests(TestCase):

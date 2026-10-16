@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bagikan Food Hack — LastBite{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'community/css/community.css' %}">
+{% endblock %}
+{% block content %}
+<div class="community section-container">
+  <section class="community-editor" aria-labelledby="form-title">
+    <a class="community-back" href="{% url 'community:home' %}">Kembali ke Community</a>
+    <p class="community-eyebrow">DARI DAPURMU, UNTUK KOMUNITAS</p>
+    <h1 id="form-title">Bagikan Food Hack</h1>
+    <p class="community-muted">Satu tips sederhana bisa membantu makanan dinikmati lebih lama.</p>
+    <form method="post" class="community-form">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+      <div class="community-form__field">
+        {{ field.label_tag }}
+        {{ field }}
+        {{ field.errors }}
+      </div>
+      {% endfor %}
+      <div class="community-form__actions">
+        <button class="btn btn--primary btn--md" type="submit">Publikasikan Food Hack</button>
+        <a class="btn btn--outline btn--md" href="{% url 'community:home' %}">Batal</a>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

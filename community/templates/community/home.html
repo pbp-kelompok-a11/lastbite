@@ -20,7 +20,7 @@
         <p class="community-eyebrow">DARI KOMUNITAS, UNTUK KOMUNITAS</p>
         <h2 id="food-hacks-title">Food Hacks terbaru</h2>
       </div>
-      <p class="community-muted">Berbagi cara, mengurangi sisa.</p>
+      <a class="btn btn--primary btn--md" href="{% url 'community:food_hack_create' %}">{% if user.is_authenticated %}Bagikan Food Hack{% else %}Login untuk berbagi{% endif %}</a>
     </div>
     <div class="community-feed">
       {% for post in posts %}
