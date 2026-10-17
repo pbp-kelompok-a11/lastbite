@@ -1,0 +1,12 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Register — LastBite{% endblock %}
+{% block accounts_content %}
+<h1 id="accounts-title">Mulai langkah baikmu</h1>
+<p>Bergabung untuk menyelamatkan makanan sebagai Customer atau Merchant.</p>
+<form method="post" class="accounts-form">
+  {% csrf_token %}
+  {% include 'accounts/components/form_fields.html' %}
+  <button class="btn btn--primary btn--md" type="submit">Buat akun</button>
+</form>
+<p class="accounts-switch">Sudah punya akun? <a href="{% url 'accounts:login' %}">Login</a></p>
+{% endblock %}
