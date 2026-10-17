@@ -6,7 +6,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import CommunityPost
+from .models import CommunityComment, CommunityPost
 from accounts.models import UserProfile
 
 
@@ -792,6 +792,295 @@ class CommunityUpvoteTests(TestCase):
         response = self.client.post(self.url)
         self.assertRedirects(response, reverse('community:post_detail', args=[self.post.pk]))
         self.assertEqual(self.post.upvotes.count(), 1)
+
+
+class CommunityCommentTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.customer = get_user_model().objects.create_user(username='comment_customer')
+        UserProfile.objects.create(user=cls.customer, role='customer')
+        cls.merchant = get_user_model().objects.create_user(username='comment_merchant')
+        UserProfile.objects.create(user=cls.merchant, role='merchant')
+        cls.other = get_user_model().objects.create_user(username='comment_other')
+        UserProfile.objects.create(user=cls.other, role='customer')
+        cls.post = CommunityPost.objects.create(author=cls.customer, title='Tips komentar', content='Konten.')
+        cls.other_post = CommunityPost.objects.create(author=cls.other, title='Post lain', content='Konten.')
+        cls.review = CommunityPost.objects.create(author=cls.customer, title='Review', content='Enak.', post_type='review', rating=5)
+
+    def url(self, action='create', comment=None, post=None):
+        args = [post.pk if post is not None else self.post.pk]
+        if comment is not None:
+            args.append(comment.pk)
+        return reverse('community:comment_' + action, args=args)
+
+    def test_customer_and_merchant_can_comment_with_server_assigned_parent_and_author(self):
+        for user in (self.customer, self.merchant):
+            with self.subTest(user=user.username):
+                self.client.force_login(user)
+                response = self.client.post(self.url(), {
+                    'comment-content': '  Pengalaman memasak saya.  ',
+                    'author': self.other.pk, 'post': self.review.pk,
+                })
+                self.assertEqual(response.status_code, 302)
+                comment = CommunityComment.objects.latest('pk')
+                self.assertEqual(comment.author, user)
+                self.assertEqual(comment.post, self.post)
+                self.assertEqual(comment.content, 'Pengalaman memasak saya.')
+                detail = self.client.get(response.url)
+                self.assertContains(detail, 'Pengalaman memasak saya.')
+
+    def test_ajax_create_returns_saved_comment_fragment(self):
+        self.client.force_login(self.customer)
+        response = self.client.post(self.url(), {'comment-content': 'Ide yang menarik!'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ide yang menarik!')
+        self.assertContains(response, 'id="comments"')
+        self.assertNotContains(response, '<html')
+        self.assertEqual(CommunityComment.objects.count(), 1)
+
+    def test_guest_can_read_comments_but_cannot_create_edit_or_delete(self):
+        comment = CommunityComment.objects.create(post=self.post, author=self.customer, content='Komentar publik.')
+        detail = self.client.get(reverse('community:post_detail', args=[self.post.pk]))
+        self.assertContains(detail, 'Komentar publik.')
+        self.assertContains(detail, 'untuk ikut berkomentar.')
+        self.assertNotContains(detail, 'data-comment-form=')
+        for action in ('create', 'edit', 'delete'):
+            url = self.url(action, comment if action != 'create' else None)
+            self.assertEqual(self.client.post(url).status_code, 302)
+            ajax = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+            self.assertEqual(ajax.status_code, 401)
+            self.assertIn('login_url', ajax.json())
+        self.assertEqual(CommunityComment.objects.count(), 1)
+
+    def test_blank_and_overlong_comments_are_rejected_without_saving(self):
+        self.client.force_login(self.customer)
+        for content in ('', '   ', 'x' * 2001):
+            with self.subTest(length=len(content)):
+                response = self.client.post(self.url(), {'comment-content': content}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+                self.assertEqual(response.status_code, 400)
+                self.assertContains(response, 'errorlist', status_code=400)
+                self.assertFalse(CommunityComment.objects.exists())
+        response = self.client.post(self.url(), {'comment-content': 'x' * 2000}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)
+
+    def test_comment_author_can_edit_and_delete(self):
+        for user in (self.customer, self.merchant):
+            with self.subTest(user=user.username):
+                comment = CommunityComment.objects.create(post=self.post, author=user, content='Sebelum edit.')
+                self.client.force_login(user)
+                response = self.client.post(self.url('edit', comment), {f'edit-{comment.pk}-content': 'Setelah edit.'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+                self.assertEqual(response.status_code, 200)
+                comment.refresh_from_db()
+                self.assertEqual(comment.content, 'Setelah edit.')
+                response = self.client.post(self.url('delete', comment), HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+                self.assertEqual(response.status_code, 200)
+                self.assertFalse(CommunityComment.objects.filter(pk=comment.pk).exists())
+
+    def test_invalid_edit_keeps_database_content_and_opens_form_with_error(self):
+        comment = CommunityComment.objects.create(post=self.post, author=self.customer, content='Tetap tersimpan.')
+        self.client.force_login(self.customer)
+        response = self.client.post(self.url('edit', comment), {f'edit-{comment.pk}-content': ' '}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, f'id="edit-comment-{comment.pk}"', status_code=400)
+        self.assertContains(response, 'data-open-on-load="true"', status_code=400)
+        self.assertContains(response, 'aria-invalid="true"', status_code=400)
+        comment.refresh_from_db()
+        self.assertEqual(comment.content, 'Tetap tersimpan.')
+
+    def test_other_users_including_post_owner_cannot_manage_someone_elses_comment(self):
+        comment = CommunityComment.objects.create(post=self.post, author=self.other, content='Milik orang lain.')
+        for user in (self.customer, self.merchant):
+            self.client.force_login(user)
+            for action in ('edit', 'delete'):
+                response = self.client.post(self.url(action, comment), {f'edit-{comment.pk}-content': 'Diubah.'})
+                self.assertEqual(response.status_code, 404)
+            detail = self.client.get(reverse('community:post_detail', args=[self.post.pk]))
+            self.assertNotContains(detail, f'data-comment-dialog-open="edit-comment-{comment.pk}"')
+            self.assertNotContains(detail, f'data-comment-dialog-open="delete-comment-{comment.pk}"')
+        comment.refresh_from_db()
+        self.assertEqual(comment.content, 'Milik orang lain.')
+
+    def test_no_profile_account_is_rejected(self):
+        user = get_user_model().objects.create_user(username='comment_no_profile')
+        self.client.force_login(user)
+        self.assertEqual(self.client.post(self.url(), {'comment-content': 'Tidak boleh.'}).status_code, 403)
+        self.assertFalse(CommunityComment.objects.exists())
+
+    def test_reviews_missing_posts_and_wrong_parent_are_rejected(self):
+        self.client.force_login(self.customer)
+        comment = CommunityComment.objects.create(post=self.post, author=self.customer, content='Tetap utuh.')
+        self.assertEqual(self.client.post(self.url(post=self.review), {'comment-content': 'Review.'}).status_code, 404)
+        self.assertEqual(self.client.post(reverse('community:comment_create', args=[999999])).status_code, 404)
+        for action in ('edit', 'delete'):
+            self.assertEqual(self.client.post(self.url(action, comment, self.other_post)).status_code, 404)
+        comment.refresh_from_db()
+        self.assertEqual(comment.content, 'Tetap utuh.')
+        with self.assertRaises(ValidationError):
+            CommunityComment(post=self.review, author=self.customer, content='Tidak valid.').full_clean()
+
+    def test_comment_mutations_require_post_and_csrf(self):
+        comment = CommunityComment.objects.create(post=self.post, author=self.customer, content='Aman.')
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.customer)
+        for action in ('create', 'edit', 'delete'):
+            url = self.url(action, comment if action != 'create' else None)
+            self.assertEqual(client.get(url).status_code, 405)
+            self.assertEqual(client.post(url).status_code, 403)
+        client.get(reverse('community:post_detail', args=[self.post.pk]))
+        response = client.post(self.url(), {'comment-content': 'Dengan CSRF.'}, HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(CommunityComment.objects.count(), 2)
+
+    def test_guest_sees_escaped_comments_in_order_and_merchant_badge(self):
+        first = CommunityComment.objects.create(post=self.post, author=self.merchant, content='<script>alert(1)</script>\nBaris berikutnya.')
+        second = CommunityComment.objects.create(post=self.post, author=self.customer, content='Komentar kedua.')
+        response = self.client.get(reverse('community:post_detail', args=[self.post.pk]))
+        self.assertEqual(response.context['comments'], [first, second])
+        self.assertContains(response, '&lt;script&gt;alert(1)&lt;/script&gt;')
+        self.assertNotContains(response, '<script>alert(1)</script>')
+        self.assertContains(response, 'food-hack-card__badge--merchant')
+        self.assertContains(response, 'Penulis post')
+
+    def test_non_ajax_redirect_preserves_feed_page(self):
+        self.client.force_login(self.customer)
+        feed = 'post_type=food_hack&sort=oldest&page=20'
+        response = self.client.post(self.url(), {'comment-content': 'Halaman tetap.', 'feed': feed})
+        self.assertEqual(response.status_code, 302)
+        detail = self.client.get(response.url)
+        self.assertEqual(detail.context['back_url'], reverse('community:home') + '?' + feed)
+
+    def test_post_deletion_cascades_to_comments(self):
+        CommunityComment.objects.create(post=self.post, author=self.merchant, content='Komentar.')
+        self.post.delete()
+        self.assertFalse(CommunityComment.objects.exists())
+
+    def test_replies_and_nested_replies_stay_under_original_post(self):
+        root = CommunityComment.objects.create(post=self.post, author=self.customer, content='Komentar induk.')
+        self.client.force_login(self.merchant)
+        reply_url = reverse('community:comment_reply', args=[self.post.pk, root.pk])
+        response = self.client.post(reply_url, {f'reply-{root.pk}-content': 'Balasan merchant.'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)
+        reply = CommunityComment.objects.get(parent=root)
+        self.assertEqual(reply.author, self.merchant)
+        self.client.force_login(self.other)
+        response = self.client.post(reverse('community:comment_reply', args=[self.post.pk, reply.pk]),
+                                    {f'reply-{reply.pk}-content': 'Balasan lanjutan.'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Membalas @comment_merchant')
+        self.assertContains(response, 'community-comment__replies')
+        self.assertEqual(response.context['root_comments'], [root])
+        self.assertEqual(len(response.context['comments']), 3)
+        self.assertEqual(CommunityPost.objects.count(), 3)
+        feed = self.client.get(reverse('community:home'))
+        self.assertNotContains(feed, 'Balasan merchant.')
+        self.assertNotContains(feed, 'Balasan lanjutan.')
+
+    def test_reply_cannot_target_comment_in_another_post(self):
+        root = CommunityComment.objects.create(post=self.other_post, author=self.other, content='Di post lain.')
+        self.client.force_login(self.customer)
+        response = self.client.post(reverse('community:comment_reply', args=[self.post.pk, root.pk]), {f'reply-{root.pk}-content': 'Salah post.'})
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(CommunityComment.objects.count(), 1)
+        with self.assertRaises(ValidationError):
+            CommunityComment(post=self.post, author=self.customer, parent=root, content='Salah post.').full_clean()
+
+    def test_blank_reply_keeps_reply_form_open_with_error(self):
+        root = CommunityComment.objects.create(post=self.post, author=self.customer, content='Induk.')
+        self.client.force_login(self.merchant)
+        response = self.client.post(reverse('community:comment_reply', args=[self.post.pk, root.pk]),
+                                    {f'reply-{root.pk}-content': ' '}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, f'id="reply-comment-{root.pk}"', status_code=400)
+        self.assertContains(response, 'data-open-on-load="true"', status_code=400)
+        self.assertContains(response, 'aria-invalid="true"', status_code=400)
+        self.assertEqual(CommunityComment.objects.count(), 1)
+
+    def test_comment_likes_toggle_independently_for_customer_and_merchant(self):
+        root = CommunityComment.objects.create(post=self.post, author=self.customer, content='Induk.')
+        reply = CommunityComment.objects.create(post=self.post, author=self.merchant, parent=root, content='Balasan.')
+        for comment in (root, reply):
+            url = reverse('community:comment_like', args=[self.post.pk, comment.pk])
+            self.client.force_login(self.customer)
+            self.assertEqual(self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest').status_code, 200)
+            self.assertEqual(comment.likes.count(), 1)
+            self.client.force_login(self.merchant)
+            response = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+            self.assertEqual(response.status_code, 200)
+            rendered = next(item for item in response.context['comments'] if item.pk == comment.pk)
+            self.assertEqual(rendered.like_count, 2)
+            self.assertTrue(rendered.has_liked)
+            self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+            self.assertEqual(comment.likes.count(), 1)
+            self.assertTrue(comment.likes.filter(pk=self.customer.pk).exists())
+
+    def test_comment_like_uniqueness_and_persistence_after_refresh(self):
+        comment = CommunityComment.objects.create(post=self.post, author=self.customer, content='Disukai.')
+        comment.likes.add(self.merchant, self.merchant)
+        self.assertEqual(comment.likes.count(), 1)
+        self.client.force_login(self.merchant)
+        response = self.client.get(reverse('community:post_detail', args=[self.post.pk]))
+        self.assertContains(response, 'community-comment-like--active')
+        self.assertEqual(response.context['comments'][0].like_count, 1)
+
+    def test_reply_and_like_require_login_post_csrf_and_valid_role(self):
+        root = CommunityComment.objects.create(post=self.post, author=self.customer, content='Induk.')
+        urls = [reverse('community:comment_reply', args=[self.post.pk, root.pk]),
+                reverse('community:comment_like', args=[self.post.pk, root.pk])]
+        for url in urls:
+            self.assertEqual(self.client.get(url).status_code, 405)
+            self.assertEqual(self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest').status_code, 401)
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.customer)
+        for url in urls:
+            self.assertEqual(client.post(url).status_code, 403)
+        user = get_user_model().objects.create_user(username='no_comment_role')
+        self.client.force_login(user)
+        for url in urls:
+            self.assertEqual(self.client.post(url).status_code, 403)
+        self.assertEqual(CommunityComment.objects.count(), 1)
+        self.assertFalse(root.likes.exists())
+
+    def test_comment_like_rejects_wrong_post_and_reviews(self):
+        root = CommunityComment.objects.create(post=self.post, author=self.customer, content='Induk.')
+        self.client.force_login(self.merchant)
+        for post in (self.other_post, self.review):
+            response = self.client.post(reverse('community:comment_like', args=[post.pk, root.pk]))
+            self.assertEqual(response.status_code, 404)
+        self.assertFalse(root.likes.exists())
+
+    def test_deleting_parent_preserves_replies_by_other_users(self):
+        root = CommunityComment.objects.create(post=self.post, author=self.customer, content='Induk.')
+        reply = CommunityComment.objects.create(post=self.post, author=self.merchant, parent=root, content='Tetap ada.')
+        reply.likes.add(self.other)
+        self.client.force_login(self.customer)
+        self.client.post(self.url('delete', root), HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        reply.refresh_from_db()
+        self.assertIsNone(reply.parent_id)
+        self.assertEqual(reply.post, self.post)
+        self.assertEqual(reply.likes.count(), 1)
+
+    def test_feed_shows_comment_count_without_multiplying_post_likes(self):
+        root = CommunityComment.objects.create(post=self.post, author=self.customer, content='Induk.')
+        CommunityComment.objects.create(post=self.post, author=self.merchant, parent=root, content='Balasan.')
+        self.post.upvotes.add(self.customer, self.merchant)
+        self.client.force_login(self.customer)
+        for headers in ({}, {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}):
+            response = self.client.get(reverse('community:home'), {'page': 1}, **headers)
+            post = next(post for post in response.context['posts'] if post.pk == self.post.pk)
+            self.assertEqual(post.comment_count, 2)
+            self.assertEqual(post.upvote_count, 2)
+            self.assertContains(response, f'<span data-post-comment-count="{self.post.pk}">2</span>', html=True)
+            self.assertContains(response, '#comment-form')
+            self.assertNotContains(response, 'Balasan.</p>')
+
+    def test_comment_count_updates_after_delete_and_new_reply(self):
+        root = CommunityComment.objects.create(post=self.post, author=self.customer, content='Induk.')
+        self.client.force_login(self.customer)
+        response = self.client.post(reverse('community:comment_reply', args=[self.post.pk, root.pk]),
+                                    {f'reply-{root.pk}-content': 'Balasan.'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertContains(response, 'data-comment-count="2"')
+        response = self.client.post(self.url('delete', root), HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertContains(response, 'data-comment-count="1"')
 
 
 class CommunityPostTests(TestCase):

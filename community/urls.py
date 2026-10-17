@@ -10,4 +10,9 @@ urlpatterns = [
     path('posts/<int:pk>/upvote/', views.toggle_upvote, name='post_upvote'),
     path('posts/<int:pk>/edit/', views.edit_food_hack, name='post_edit'),
     path('posts/<int:pk>/delete/', views.delete_food_hack, name='post_delete'),
+    path('posts/<int:pk>/comments/', views.create_comment, name='comment_create'),
+    path('posts/<int:pk>/comments/<int:parent_pk>/reply/', views.create_comment, name='comment_reply'),
+    path('posts/<int:pk>/comments/<int:comment_pk>/like/', views.toggle_comment_like, name='comment_like'),
+    path('posts/<int:pk>/comments/<int:comment_pk>/edit/', views.edit_comment, name='comment_edit'),
+    path('posts/<int:pk>/comments/<int:comment_pk>/delete/', views.delete_comment, name='comment_delete'),
 ]
