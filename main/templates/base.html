@@ -13,6 +13,7 @@
   <!-- Base CSS -->
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'accounts/css/auth_ui.css' %}">
 
   {% block extra_css %}{% endblock %}
 </head>
@@ -39,10 +40,11 @@
       <div class="navbar__auth">
         {% if user.is_authenticated %}
           <span class="navbar__user">Hi, {{ user.username }}!</span>
-          <a href="#" class="btn btn--outline btn--sm">Logout</a>
+          {% if user.profile %}<span class="navbar__user">{{ user.profile.get_role_display }}</span>{% endif %}
+          <button type="button" class="btn btn--outline btn--sm" id="logout-open" aria-haspopup="dialog" aria-controls="logout-dialog">Logout</button>
         {% else %}
-          <a href="#" class="btn btn--outline btn--sm">Login</a>
-          <a href="#" class="btn btn--primary btn--sm">Register</a>
+          <a href="{% url 'accounts:login' %}" class="btn btn--outline btn--sm">Login</a>
+          <a href="{% url 'accounts:register' %}" class="btn btn--primary btn--sm">Register</a>
         {% endif %}
       </div>
 
@@ -54,6 +56,32 @@
       </button>
     </div>
   </nav>
+
+  {% if messages %}
+  <div class="notifications" aria-label="Notifikasi">
+    {% for message in messages %}
+    <div class="notification notification--{{ message.level_tag }}" role="status">
+      <p>{{ message }}</p>
+      <button type="button" class="notification__close" aria-label="Tutup notifikasi">&times;</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if user.is_authenticated %}
+  <dialog id="logout-dialog" class="logout-dialog" aria-labelledby="logout-title" aria-describedby="logout-description">
+    <h2 id="logout-title">Anda yakin ingin logout?</h2>
+    <p id="logout-description">Kamu sedang masuk sebagai <strong>{{ user.username }}</strong>. Kamu bisa login kembali kapan saja.</p>
+    <form method="post" action="{% url 'accounts:logout' %}" id="logout-form" data-success-url="{% url 'main:home' %}">
+      {% csrf_token %}
+      <p class="logout-dialog__error" id="logout-error" role="alert" hidden></p>
+      <div class="logout-dialog__actions">
+        <button type="submit" class="btn btn--primary btn--md" id="logout-submit">Ya, logout</button>
+        <button type="button" class="btn btn--outline btn--md" id="logout-cancel" autofocus>Batal</button>
+      </div>
+    </form>
+  </dialog>
+  {% endif %}
 
   <!-- ========== MAIN CONTENT ========== -->
   <main>
@@ -89,8 +117,8 @@
         <div class="footer__links-group">
           <h4 class="footer__heading">Bergabung</h4>
           <ul class="footer__links">
-            <li><a href="#" class="footer__link">Daftar sebagai Pembeli</a></li>
-            <li><a href="#" class="footer__link">Daftar sebagai Merchant</a></li>
+            <li><a href="{% url 'accounts:register' %}?role=customer" class="footer__link">Daftar sebagai Pembeli</a></li>
+            <li><a href="{% url 'accounts:register' %}?role=merchant" class="footer__link">Daftar sebagai Merchant</a></li>
           </ul>
         </div>
 
@@ -113,6 +141,8 @@
 
   <!-- Base JS -->
   <script src="{% static 'js/base.js' %}"></script>
+  <script src="{% static 'accounts/js/notifications.js' %}"></script>
+  <script src="{% static 'accounts/js/logout.js' %}"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

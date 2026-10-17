@@ -20,7 +20,7 @@
       </p>
       <div class="hero__cta">
         <a href="#" class="btn btn--primary btn--lg">Temukan Surprise Bag 🍱</a>
-        <a href="#" class="btn btn--ghost btn--lg">Daftar sebagai Merchant</a>
+        <a href="{% url 'accounts:register' %}?role=merchant" class="btn btn--ghost btn--lg">Daftar sebagai Merchant</a>
       </div>
       <div class="hero__stats">
         <div class="hero__stat">
@@ -259,7 +259,7 @@
         Bergabung dengan ribuan mahasiswa dan pekerja muda yang sudah hemat sambil berkontribusi mengurangi food waste.
       </p>
       <div class="cta-section__buttons">
-        <a href="#" class="btn btn--white btn--lg">Daftar Sekarang — Gratis!</a>
+        <a href="{% url 'accounts:register' %}" class="btn btn--white btn--lg">Daftar Sekarang — Gratis!</a>
         <a href="#" class="btn btn--ghost-white btn--lg">Pelajari Lebih Lanjut</a>
       </div>
     </div>
