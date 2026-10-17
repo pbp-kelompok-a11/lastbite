@@ -18,23 +18,38 @@
     <div class="community-heading">
       <div>
         <p class="community-eyebrow">DARI KOMUNITAS, UNTUK KOMUNITAS</p>
-        <h2 id="food-hacks-title">{% if query %}Hasil pencarian{% elif selected_post_type == 'food_hack' %}Food Hacks terbaru{% else %}Postingan terbaru{% endif %}</h2>
+        <h2 id="food-hacks-title">{{ feed_heading }}</h2>
       </div>
       {% if can_create_food_hack %}
       <a class="btn btn--primary btn--md" href="{% url 'community:food_hack_create' %}">Bagikan Food Hack</a>
       {% elif not user.is_authenticated %}
       <a class="btn btn--primary btn--md" href="{% url 'community:food_hack_create' %}">Login untuk berbagi</a>
       {% else %}
-      <p class="community-muted">Food Hack dapat dibagikan oleh akun Customer.</p>
+      <p class="community-muted">Food Hack dapat dibagikan oleh akun Customer dan Merchant.</p>
       {% endif %}
     </div>
     <div class="community-toolbar">
-      <nav class="community-tabs" aria-label="Kategori postingan">
-        <a class="community-tab{% if selected_post_type == 'all' %} community-tab--active{% endif %}" href="{% url 'community:home' %}?post_type=all{% if query %}&amp;q={{ query|urlencode }}{% endif %}"{% if selected_post_type == 'all' %} aria-current="page"{% endif %}>All Posts</a>
-        <a class="community-tab{% if selected_post_type == 'food_hack' %} community-tab--active{% endif %}" href="{% url 'community:home' %}?post_type=food_hack{% if query %}&amp;q={{ query|urlencode }}{% endif %}"{% if selected_post_type == 'food_hack' %} aria-current="page"{% endif %}>Food Hacks</a>
-      </nav>
-      <form method="get" action="{% url 'community:home' %}" class="community-search" role="search">
+      <div class="community-feed-controls">
+        <nav class="community-tabs" aria-label="Kategori postingan">
+          <a class="community-tab{% if selected_post_type == 'all' %} community-tab--active{% endif %}" href="{% url 'community:home' %}?{{ all_posts_query }}"{% if selected_post_type == 'all' %} aria-current="page"{% endif %}>All Posts</a>
+          <a class="community-tab{% if selected_post_type == 'food_hack' %} community-tab--active{% endif %}" href="{% url 'community:home' %}?{{ food_hacks_query }}"{% if selected_post_type == 'food_hack' %} aria-current="page"{% endif %}>Food Hacks</a>
+        </nav>
+        <div class="community-sort">
+          <label class="community-visually-hidden" for="community-sort">Urutkan postingan</label>
+          <select id="community-sort" name="sort" form="community-search-form">
+            <option value="newest"{% if selected_sort == 'newest' %} selected{% endif %}>Terbaru</option>
+            <option value="oldest"{% if selected_sort == 'oldest' %} selected{% endif %}>Terlama</option>
+            <option value="likes"{% if selected_sort == 'likes' %} selected{% endif %}>Like terbanyak</option>
+          </select>
+        </div>
+        <a class="community-liked-filter{% if liked_only %} community-liked-filter--active{% endif %}" href="{{ liked_url }}"{% if user.is_authenticated %} data-liked-filter{% endif %} aria-label="{% if liked_only %}Tampilkan semua postingan{% elif user.is_authenticated %}Tampilkan postingan yang disukai{% else %}Login untuk melihat postingan yang disukai{% endif %}" title="Postingan yang disukai">
+          {% include 'community/components/like_icon.html' %}
+          <span class="community-visually-hidden">{% if liked_only %}Tampilkan semua postingan{% else %}Postingan yang disukai{% endif %}</span>
+        </a>
+      </div>
+      <form id="community-search-form" method="get" action="{% url 'community:home' %}" class="community-search" role="search">
         <input type="hidden" name="post_type" value="{{ selected_post_type }}">
+        <input type="hidden" name="liked" value="{{ liked_only|yesno:'1,0' }}">
         <label for="community-query">Cari judul atau isi postingan</label>
         <div class="community-search__controls">
           <input type="search" id="community-query" name="q" value="{{ query }}" placeholder="Contoh: roti atau sayuran">
@@ -50,4 +65,5 @@
 
 {% block extra_js %}
 <script src="{% static 'community/js/search.js' %}"></script>
+<script src="{% static 'community/js/upvote.js' %}"></script>
 {% endblock %}

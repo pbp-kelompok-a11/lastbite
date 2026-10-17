@@ -1,6 +1,6 @@
-<div id="community-results" data-page="{{ page_obj.number }}">
+<div id="community-results" data-page="{{ page_obj.number }}" data-sort="{{ selected_sort }}" data-liked="{{ liked_only|yesno:'1,0' }}" data-heading="{{ feed_heading }}">
   {% if query %}
-  <p class="community-search-summary">Pencarian: <strong>{{ query }}</strong>. <a data-clear-search href="{% url 'community:home' %}?post_type={{ selected_post_type }}">Hapus pencarian</a></p>
+  <p class="community-search-summary">Pencarian: <strong>{{ query }}</strong>. <a data-clear-search href="{% url 'community:home' %}?{{ clear_query }}">Hapus pencarian</a></p>
   {% endif %}
   <div class="community-feed">
     {% for post in posts %}
@@ -11,6 +11,9 @@
         {% if query %}
         <h3>Tidak ada hasil yang cocok</h3>
         <p>Coba kata kunci lain atau hapus pencarian untuk melihat postingan yang tersedia.</p>
+        {% elif liked_only %}
+        <h3>Belum ada postingan yang disukai</h3>
+        <p>Tekan hati pada postingan yang kamu suka, lalu temukan kembali di sini.</p>
         {% else %}
         <h3>Belum ada Food Hack</h3>
         <p>Tips dari komunitas akan tampil di sini. Setiap ide kecil bisa membantu makanan dinikmati lebih lama.</p>

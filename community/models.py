@@ -19,6 +19,9 @@ class CommunityPost(models.Model):
     )
     title = models.CharField(max_length=255)
     content = models.TextField()
+    upvotes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True, related_name='upvoted_community_posts',
+    )
     rating = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
@@ -26,10 +29,6 @@ class CommunityPost(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    # Integration contract: related_order will reference order.Order, be required
-    # for reviews, and verify a completed order owned by the author. Add the FK
-    # and its migration once the Order model and its field names are available.
 
     class Meta:
         ordering = ['-created_at', '-pk']

@@ -8,7 +8,7 @@
 
 {% block content %}
 <div class="community section-container">
-  <a class="community-back" href="{% url 'community:home' %}">
+  <a class="community-back" href="{{ back_url }}">
     <svg class="community-back__icon" viewBox="0 0 24 24" aria-hidden="true">
       <path d="m12 19-7-7 7-7M5 12h14" />
     </svg>
@@ -17,6 +17,9 @@
   <article class="community-detail">
     <header>
       <span class="food-hack-card__badge">{{ post.get_post_type_display }}</span>
+      {% if post.author.profile.role == 'merchant' %}
+      <span class="food-hack-card__badge food-hack-card__badge--merchant">Merchant</span>
+      {% endif %}
       <h1>{{ post.title }}</h1>
       <div class="community-detail__meta">
         <span>Oleh {{ post.author.get_username }}</span>
@@ -24,6 +27,7 @@
       </div>
     </header>
     <div class="community-detail__content">{{ post.content|linebreaks }}</div>
+    {% include 'community/components/upvote.html' %}
     {% if can_manage_post %}
     <nav class="community-post-actions" aria-label="Kelola Food Hack">
       <a class="btn btn--outline btn--md" href="{% url 'community:post_edit' post.pk %}">Edit Food Hack</a>
@@ -32,4 +36,8 @@
     {% endif %}
   </article>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'community/js/upvote.js' %}"></script>
 {% endblock %}

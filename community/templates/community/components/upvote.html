@@ -1,0 +1,24 @@
+<div class="community-upvote" data-upvote-post="{{ post.pk }}">
+  {% if can_upvote %}
+  <form method="post" action="{% url 'community:post_upvote' post.pk %}" data-upvote-form>
+    {% csrf_token %}
+    <button type="submit" class="community-upvote__button{% if post.has_upvoted %} community-upvote__button--active{% endif %}" aria-pressed="{{ post.has_upvoted|yesno:'true,false' }}" aria-label="Like: {{ post.title }}">
+      {% include 'community/components/like_icon.html' %}
+      <span data-like-label>{% if post.has_upvoted %}Liked{% else %}Like{% endif %}</span>
+      <span data-upvote-count>{{ post.upvote_count }}</span>
+    </button>
+  </form>
+  {% elif not user.is_authenticated %}
+  <a class="community-upvote__button" href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Login untuk like: {{ post.title }}">
+    {% include 'community/components/like_icon.html' %}
+    <span>Like</span>
+    <span data-upvote-count>{{ post.upvote_count }}</span>
+  </a>
+  {% else %}
+  <span class="community-upvote__total" title="Hanya Customer dan Merchant yang dapat memberi like.">
+    {% include 'community/components/like_icon.html' %}
+    {{ post.upvote_count }} like
+  </span>
+  {% endif %}
+  <p class="community-upvote__error" data-upvote-error role="alert" hidden></p>
+</div>

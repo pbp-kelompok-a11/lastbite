@@ -13,6 +13,5 @@ class CommunityPostAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        # Reviews become available after completed-order validation is integrated.
         form.base_fields['post_type'].choices = [CommunityPost.PostType.choices[0]]
         return form
