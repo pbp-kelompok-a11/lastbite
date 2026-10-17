@@ -24,7 +24,7 @@
       </div>
     </header>
     <div class="community-detail__content">{{ post.content|linebreaks }}</div>
-    {% if user.is_authenticated and user == post.author %}
+    {% if can_manage_post %}
     <nav class="community-post-actions" aria-label="Kelola Food Hack">
       <a class="btn btn--outline btn--md" href="{% url 'community:post_edit' post.pk %}">Edit Food Hack</a>
       <a class="btn btn--danger-outline btn--md" href="{% url 'community:post_delete' post.pk %}">Hapus Food Hack</a>

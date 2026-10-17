@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import CommunityPost
+from accounts.models import UserProfile
 
 
 class CommunityFeedTests(TestCase):
@@ -67,6 +68,76 @@ class CommunityFeedTests(TestCase):
         self.assertEqual(self.client.head(reverse('community:home')).status_code, 200)
         self.assertEqual(self.client.post(reverse('community:home')).status_code, 405)
         self.assertFalse(CommunityPost.objects.exists())
+
+
+class CommunityFilterTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        author = get_user_model().objects.create_user(username='filter_writer')
+        cls.bread = CommunityPost.objects.create(author=author, title='Tips ROTI', content='Bekukan dalam wadah.')
+        cls.vegetable = CommunityPost.objects.create(author=author, title='Tips sayur', content='Olah sisa brokoli.')
+        cls.review = CommunityPost.objects.create(author=author, title='Review roti', content='Enak.', post_type='review', rating=5)
+
+    def test_search_matches_title_or_content_ignoring_case(self):
+        for query, expected in (('roti', self.bread), ('BROKOLI', self.vegetable), ('  wadah  ', self.bread)):
+            with self.subTest(query=query):
+                response = self.client.get(reverse('community:home'), {'q': query})
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(list(response.context['posts']), [expected])
+                self.assertEqual(response.context['query'], query.strip())
+
+    def test_ajax_returns_filtered_fragment_without_page_layout(self):
+        response = self.client.get(reverse('community:home'), {'q': 'roti'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'community/components/feed_results.html')
+        self.assertContains(response, 'id="community-results"')
+        self.assertContains(response, self.bread.title)
+        self.assertNotContains(response, self.vegetable.title)
+        self.assertNotContains(response, '<html')
+        self.assertNotContains(response, '<script')
+        self.assertIn('X-Requested-With', response.headers['Vary'])
+
+    def test_ajax_handles_empty_results_and_escapes_input(self):
+        response = self.client.get(reverse('community:home'), {'q': '<script>alert(1)</script>'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertContains(response, 'Tidak ada hasil yang cocok')
+        self.assertContains(response, '&lt;script&gt;alert(1)&lt;/script&gt;')
+        self.assertNotContains(response, '<script>alert(1)</script>')
+
+    def test_supported_tabs_do_not_expose_unverified_reviews(self):
+        for post_type in ('all', 'food_hack'):
+            with self.subTest(post_type=post_type):
+                response = self.client.get(reverse('community:home'), {'post_type': post_type})
+                self.assertEqual(response.context['selected_post_type'], post_type)
+                self.assertEqual(set(response.context['posts']), {self.bread, self.vegetable})
+                self.assertNotContains(response, self.review.title)
+                self.assertContains(response, 'class="community-tab community-tab--active"', count=1)
+                label = 'All Posts' if post_type == 'all' else 'Food Hacks'
+                self.assertContains(response, f'href="{reverse("community:home")}?post_type={post_type}" aria-current="page">{label}</a>')
+
+    def test_search_is_combined_with_category_and_keeps_newest_order(self):
+        response = self.client.get(reverse('community:home'), {'post_type': 'food_hack', 'q': 'Tips'})
+        self.assertEqual(list(response.context['posts']), [self.vegetable, self.bread])
+        self.assertContains(response, 'name="post_type" value="food_hack"')
+        self.assertContains(response, 'name="q" value="Tips"')
+        self.assertContains(response, '?post_type=all&amp;q=Tips')
+
+    def test_no_matches_differs_from_empty_feed(self):
+        response = self.client.get(reverse('community:home'), {'q': 'tidakada123'})
+        self.assertContains(response, 'Tidak ada hasil yang cocok')
+        self.assertNotContains(response, 'Belum ada Food Hack')
+        self.assertQuerySetEqual(response.context['posts'], [])
+
+    def test_invalid_category_and_blank_search_fall_back_safely(self):
+        response = self.client.get(reverse('community:home'), {'post_type': 'invalid', 'q': '   '})
+        self.assertEqual(response.context['selected_post_type'], 'all')
+        self.assertEqual(response.context['query'], '')
+        self.assertEqual(set(response.context['posts']), {self.bread, self.vegetable})
+
+    def test_search_text_is_escaped_and_tab_query_is_url_encoded(self):
+        response = self.client.get(reverse('community:home'), {'q': '<script>& test'})
+        self.assertContains(response, '&lt;script&gt;&amp; test')
+        self.assertNotContains(response, '<script>& test')
+        self.assertContains(response, 'q=%3Cscript%3E%26%20test')
 
 
 class CommunityDetailTests(TestCase):
@@ -133,18 +204,19 @@ class FoodHackCreateTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.author = get_user_model().objects.create_user(username='customer', password='test-password-123')
+        UserProfile.objects.create(user=cls.author, role=UserProfile.Role.CUSTOMER)
         cls.other = get_user_model().objects.create_user(username='other')
 
     def test_guest_redirects_to_working_login_and_cannot_post(self):
         url = reverse('community:food_hack_create')
         for method in (self.client.get, self.client.post):
             response = method(url)
-            self.assertRedirects(response, reverse('community:login') + '?next=' + url)
+            self.assertRedirects(response, reverse('accounts:login') + '?next=' + url)
         self.assertFalse(CommunityPost.objects.exists())
 
     def test_login_returns_user_to_create_form(self):
         url = reverse('community:food_hack_create')
-        response = self.client.post(reverse('community:login') + '?next=' + url, {
+        response = self.client.post(reverse('accounts:login') + '?next=' + url, {
             'username': 'customer', 'password': 'test-password-123', 'next': url,
         })
         self.assertRedirects(response, url)
@@ -194,7 +266,7 @@ class FoodHackCreateTests(TestCase):
         self.assertFalse(CommunityPost.objects.exists())
 
     def test_bad_login_and_external_next_are_not_accepted(self):
-        url = reverse('community:login')
+        url = reverse('accounts:login')
         response = self.client.post(url, {'username': 'customer', 'password': 'wrong'})
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['form'].errors)
@@ -202,7 +274,7 @@ class FoodHackCreateTests(TestCase):
             'username': 'customer', 'password': 'test-password-123',
             'next': 'https://example.org/',
         })
-        self.assertRedirects(response, reverse('community:home'))
+        self.assertRedirects(response, reverse('main:home'))
 
 
 class FoodHackOwnershipTests(TestCase):
@@ -210,6 +282,8 @@ class FoodHackOwnershipTests(TestCase):
     def setUpTestData(cls):
         cls.owner = get_user_model().objects.create_user(username='post_owner')
         cls.other = get_user_model().objects.create_user(username='not_owner')
+        UserProfile.objects.create(user=cls.owner, role=UserProfile.Role.CUSTOMER)
+        UserProfile.objects.create(user=cls.other, role=UserProfile.Role.CUSTOMER)
         cls.post = CommunityPost.objects.create(author=cls.owner, title='Judul awal', content='Konten awal')
         cls.review = CommunityPost.objects.create(
             author=cls.owner, title='Review', content='Ulasan', post_type='review', rating=5,
@@ -224,7 +298,7 @@ class FoodHackOwnershipTests(TestCase):
                 with self.subTest(action=action, method=method.__name__):
                     response = method(self.url(action))
                     self.assertEqual(response.status_code, 302)
-                    self.assertTrue(response.url.startswith(reverse('community:login') + '?next='))
+                    self.assertTrue(response.url.startswith(reverse('accounts:login') + '?next='))
         self.assertTrue(CommunityPost.objects.filter(pk=self.post.pk).exists())
 
     def test_other_user_cannot_read_or_mutate_owner_post(self):
@@ -303,6 +377,141 @@ class FoodHackOwnershipTests(TestCase):
         response = self.client.get(url)
         self.assertContains(response, self.url('edit'))
         self.assertContains(response, self.url('delete'))
+
+
+class CommunityAccountsIntegrationTests(TestCase):
+    def test_registration_login_next_and_food_hack_crud(self):
+        create_url = reverse('community:food_hack_create')
+        response = self.client.get(create_url)
+        self.assertRedirects(response, reverse('accounts:login') + '?next=' + create_url)
+        self.client.post(reverse('accounts:register'), {
+            'username': 'integrated_customer', 'role': 'customer',
+            'password1': 'LastBite-Test-937!', 'password2': 'LastBite-Test-937!',
+        })
+        response = self.client.post(reverse('accounts:login'), {
+            'username': 'integrated_customer', 'password': 'LastBite-Test-937!', 'next': create_url,
+        })
+        self.assertRedirects(response, create_url)
+        response = self.client.post(create_url, {'title': 'Tips integrasi', 'content': 'Konten integrasi.'})
+        post = CommunityPost.objects.get()
+        self.assertRedirects(response, reverse('community:post_detail', args=[post.pk]))
+        self.assertContains(self.client.get(reverse('community:home')), 'Tips integrasi')
+        response = self.client.post(reverse('community:post_edit', args=[post.pk]), {
+            'title': 'Tips sudah diedit', 'content': 'Konten baru.',
+        })
+        self.assertRedirects(response, reverse('community:post_detail', args=[post.pk]))
+        self.assertRedirects(self.client.post(reverse('community:post_delete', args=[post.pk])), reverse('community:home'))
+        self.assertFalse(CommunityPost.objects.exists())
+
+    def test_merchant_and_account_without_profile_cannot_write(self):
+        for role in ('merchant', None):
+            with self.subTest(role=role):
+                user = get_user_model().objects.create_user(username='user_' + str(role))
+                if role:
+                    UserProfile.objects.create(user=user, role=role)
+                post = CommunityPost.objects.create(author=user, title='Tetap utuh', content='Konten.')
+                self.client.force_login(user)
+                urls = [reverse('community:food_hack_create'),
+                        reverse('community:post_edit', args=[post.pk]),
+                        reverse('community:post_delete', args=[post.pk])]
+                for url in urls:
+                    for method in (self.client.get, self.client.post):
+                        self.assertEqual(method(url, {'title': 'Diubah', 'content': 'Baru'}).status_code, 403)
+                self.assertNotContains(self.client.get(reverse('community:home')), 'Bagikan Food Hack')
+                detail = self.client.get(reverse('community:post_detail', args=[post.pk]))
+                self.assertNotContains(detail, 'Edit Food Hack')
+                self.assertNotContains(detail, 'Hapus Food Hack')
+                post.refresh_from_db()
+                self.assertEqual(post.title, 'Tetap utuh')
+
+    def test_old_community_login_is_removed(self):
+        self.assertEqual(self.client.get('/community/login/').status_code, 404)
+
+
+class CommunityPaginationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.author = get_user_model().objects.create_user(username='pagination_author')
+        CommunityPost.objects.bulk_create([
+            CommunityPost(author=cls.author, title=f'Tips roti {number}', content='Simpan roti.')
+            for number in range(23)
+        ])
+        CommunityPost.objects.create(
+            author=cls.author, title='Review roti', content='Enak.', post_type='review', rating=5,
+        )
+
+    def test_pages_have_ten_posts_and_preserve_newest_order_without_overlap(self):
+        actual = []
+        for page, expected_count in ((1, 10), (2, 10), (3, 3)):
+            response = self.client.get(reverse('community:home'), {'page': page})
+            posts = list(response.context['posts'])
+            self.assertEqual(len(posts), expected_count)
+            self.assertEqual(response.context['page_obj'].paginator.count, 23)
+            actual.extend(post.pk for post in posts)
+        expected = list(CommunityPost.objects.filter(post_type='food_hack').values_list('pk', flat=True))
+        self.assertEqual(actual, expected)
+
+    def test_links_preserve_filter_and_encoded_search(self):
+        response = self.client.get(reverse('community:home'), {
+            'post_type': 'food_hack', 'q': 'Tips roti', 'page': 2,
+        })
+        self.assertContains(response, '?post_type=food_hack&amp;q=Tips+roti&amp;page=3')
+        self.assertContains(response, 'Halaman 2 dari 3')
+        self.assertContains(response, 'aria-label="Halaman sebelumnya"')
+
+    def test_ajax_page_uses_same_pagination(self):
+        response = self.client.get(reverse('community:home'), {'page': 3},
+                                   HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertTemplateUsed(response, 'community/components/feed_results.html')
+        self.assertContains(response, 'data-page="3"')
+        self.assertEqual(len(response.context['posts']), 3)
+        self.assertNotContains(response, 'aria-label="Halaman berikutnya"')
+
+    def test_invalid_page_is_handled(self):
+        for requested, expected in (('oops', 1), ('999', 3), ('0', 3)):
+            with self.subTest(page=requested):
+                response = self.client.get(reverse('community:home'), {'page': requested})
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.context['page_obj'].number, expected)
+
+    def test_single_page_and_empty_search_show_only_page_one(self):
+        for query in ('Tips roti 22', 'no matching post'):
+            with self.subTest(query=query):
+                response = self.client.get(reverse('community:home'), {'q': query})
+                self.assertContains(response, 'aria-label="Halaman postingan"')
+                self.assertContains(response, 'Halaman 1 dari 1')
+                self.assertContains(response, 'aria-label="Halaman 1"')
+                self.assertNotContains(response, 'aria-label="Halaman sebelumnya"')
+                self.assertNotContains(response, 'aria-label="Halaman berikutnya"')
+                self.assertNotContains(response, 'data-page-link=')
+                self.assertEqual(response.context['page_obj'].number, 1)
+
+    def test_navigation_buttons_follow_page_position(self):
+        for page, previous, following in ((1, False, True), (2, True, True), (3, True, False)):
+            with self.subTest(page=page):
+                response = self.client.get(reverse('community:home'), {'page': page})
+                self.assertEqual('aria-label="Halaman sebelumnya"' in response.content.decode(), previous)
+                self.assertEqual('aria-label="Halaman berikutnya"' in response.content.decode(), following)
+
+    def test_hundred_pages_show_compact_numbers_at_start_middle_and_end(self):
+        CommunityPost.objects.bulk_create([
+            CommunityPost(author=self.author, title=f'Extra tips {number}', content='Konten.')
+            for number in range(977)
+        ])
+        for page, visible, hidden, ellipses in (
+            (1, (2, 3, 100), (4, 50, 99), 1),
+            (6, (1, 4, 5, 7, 8, 100), (2, 3, 9, 99), 2),
+            (50, (1, 48, 49, 51, 52, 100), (2, 47, 53, 99), 2),
+            (100, (1, 98, 99), (2, 50, 97), 1),
+        ):
+            with self.subTest(page=page):
+                response = self.client.get(reverse('community:home'), {'page': page})
+                self.assertContains(response, 'Halaman ' + str(page) + ' dari 100')
+                self.assertContains(response, 'community-page--ellipsis', count=ellipses)
+                for number in visible:
+                    self.assertContains(response, f'data-page-link="{number}"')
+                for number in hidden:
+                    self.assertNotContains(response, f'data-page-link="{number}"')
 
 
 class CommunityPostTests(TestCase):
