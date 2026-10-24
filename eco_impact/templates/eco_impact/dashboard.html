@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Eco Impact Dashboard — LastBite{% endblock %}
+
+{% block content %}
+<section style="padding: 2rem 0;">
+  <div class="section-container">
+    <div class="section-header">
+      <h1 class="section-title">🌿 Eco Impact Dashboard</h1>
+      <p class="section-subtitle">Pantau dampak positifmu dalam menyelamatkan makanan</p>
+    </div>
+
+    <!-- Filter Period -->
+    <div style="display:flex; gap:1rem; justify-content:center; margin-bottom:2rem;">
+      <button class="btn btn--outline period-btn" data-period="weekly">Minggu Ini</button>
+      <button class="btn btn--outline period-btn active" data-period="monthly">Bulan Ini</button>
+      <button class="btn btn--outline period-btn" data-period="all">Semua</button>
+    </div>
+
+    <!-- Summary Cards (diisi via AJAX) -->
+    <div id="summary-cards" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1.5rem; margin-bottom:3rem;">
+      <div class="eco-stat">
+        <span style="font-size:2rem;">💰</span>
+        <span style="font-size:1.75rem; font-weight:800; color:var(--color-primary);" id="stat-money">Rp 0</span>
+        <span style="color:var(--color-text-muted);">Total Hemat</span>
+      </div>
+      <div class="eco-stat">
+        <span style="font-size:2rem;">🌱</span>
+        <span style="font-size:1.75rem; font-weight:800; color:var(--color-primary);" id="stat-carbon">0 kg</span>
+        <span style="color:var(--color-text-muted);">CO₂ Dicegah</span>
+      </div>
+      <div class="eco-stat">
+        <span style="font-size:2rem;">📋</span>
+        <span style="font-size:1.75rem; font-weight:800; color:var(--color-primary);" id="stat-count">0</span>
+        <span style="color:var(--color-text-muted);">Penyelamatan</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex; gap:1rem; margin-bottom:2rem;">
+      <a href="{% url 'eco_impact:create_log' %}" class="btn btn--primary">+ Tambah Log Manual</a>
+    </div>
+
+    <!-- Log Table (diisi via AJAX) -->
+    <div id="log-container">
+      <p style="text-align:center; color:var(--color-text-muted);">Memuat data...</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPeriod = 'monthly';
+
+function formatRupiah(num) {
+  return 'Rp ' + num.toLocaleString('id-ID');
+}
+
+function fetchSummary(period) {
+  fetch(`{% url 'eco_impact:summary_api' %}?period=${period}`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('stat-money').textContent = formatRupiah(data.total_money_saved);
+      document.getElementById('stat-carbon').textContent = data.total_carbon_kg + ' kg';
+      document.getElementById('stat-count').textContent = data.total_logs;
+    });
+}
+
+function fetchLogs(period) {
+  fetch(`{% url 'eco_impact:logs_api' %}?period=${period}`)
+    .then(r => r.json())
+    .then(data => {
+      const container = document.getElementById('log-container');
+      if (data.logs.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:var(--color-text-muted);">Belum ada log. Tambahkan log manual pertamamu!</p>';
+        return;
+      }
+      let html = `<table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="background:var(--color-surface);">
+          <th style="padding:.75rem;text-align:left;">Tanggal</th>
+          <th style="padding:.75rem;text-align:left;">Makanan</th>
+          <th style="padding:.75rem;text-align:right;">Hemat</th>
+          <th style="padding:.75rem;text-align:right;">CO₂</th>
+          <th style="padding:.75rem;text-align:center;">Sumber</th>
+          <th style="padding:.75rem;text-align:center;">Aksi</th>
+        </tr></thead><tbody>`;
+      data.logs.forEach(log => {
+        html += `<tr style="border-bottom:1px solid var(--color-border);">
+          <td style="padding:.75rem;">${log.date}</td>
+          <td style="padding:.75rem;">${log.food_name} (x${log.quantity})</td>
+          <td style="padding:.75rem;text-align:right;color:var(--color-primary);font-weight:600;">${formatRupiah(log.money_saved)}</td>
+          <td style="padding:.75rem;text-align:right;">${log.carbon_kg} kg</td>
+          <td style="padding:.75rem;text-align:center;"><span style="padding:.2rem .6rem;border-radius:999px;background:var(--color-surface);font-size:.8rem;">${log.source}</span></td>
+          <td style="padding:.75rem;text-align:center;">
+            ${log.source === 'Manual' ? `<a href="/eco-impact/logs/${log.id}/edit/" style="color:var(--color-primary);margin-right:.5rem;">Edit</a>
+            <a href="/eco-impact/logs/${log.id}/delete/" style="color:red;" onclick="return confirm('Hapus log ini?')">Hapus</a>` : '—'}
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    });
+}
+
+function loadData(period) {
+  currentPeriod = period;
+  fetchSummary(period);
+  fetchLogs(period);
+  document.querySelectorAll('.period-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.period === period);
+  });
+}
+
+document.querySelectorAll('.period-btn').forEach(btn => {
+  btn.addEventListener('click', () => loadData(btn.dataset.period));
+});
+
+// Load awal
+loadData('monthly');
+</script>
+{% endblock %}

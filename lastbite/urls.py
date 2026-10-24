@@ -9,7 +9,7 @@ urlpatterns = [
     path('', include('main.urls')),              # Landing page
     path('bags/', include('surprise_bag.urls')),  # Surprise Bag module
     path('orders/', include('order.urls')),       # Order module
-    # path('stores/', include('merchant_store.urls')),  # TODO: uncomment setelah branch merchant_store di-merge
+    # path('stores/', include('merchant_store.urls')),  # uncomment setelah branch merchant_store di-merge
     path('community/', include('community.urls')),    # Community module
-    path('eco/', include('eco_impact.urls')),         # Eco Impact module
+    path('eco-impact/', include('eco_impact.urls')),         # Eco Impact module
 ]
