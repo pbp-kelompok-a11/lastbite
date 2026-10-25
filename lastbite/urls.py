@@ -10,7 +10,7 @@ urlpatterns = [
     path('', include('main.urls')),              # Landing page
     path('bags/', include('surprise_bag.urls')),  # Surprise Bag module
     path('orders/', include('order.urls')),       # Order module
-        path('stores/', include('merchant_store.urls')),  # Merchant Store module
+    path('stores/', include('merchant_store.urls')),  # Merchant Store module
     path('community/', include('community.urls')),    # Community module
-    path('eco/', include('eco_impact.urls')),         # Eco Impact module
+    path('eco-impact/', include('eco_impact.urls')),  # Eco Impact module
 ]
