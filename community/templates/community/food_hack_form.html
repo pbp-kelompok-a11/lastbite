@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit{% else %}Bagikan{% endif %} Food Hack — LastBite{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'community/css/community.css' %}">
+{% endblock %}
+{% block content %}
+<div class="community section-container">
+  <section class="community-editor" aria-labelledby="form-title">
+    <a class="community-back" href="{% url 'community:home' %}">Kembali ke Community</a>
+    <p class="community-eyebrow">DARI DAPURMU, UNTUK KOMUNITAS</p>
+    <h1 id="form-title">{% if is_edit %}Edit Food Hack{% else %}Bagikan Food Hack{% endif %}</h1>
+    <p class="community-muted">Satu tips sederhana bisa membantu makanan dinikmati lebih lama.</p>
+    <form method="post" class="community-form">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+      <div class="community-form__field">
+        {{ field.label_tag }}
+        {{ field }}
+        {{ field.errors }}
+      </div>
+      {% endfor %}
+      <div class="community-form__actions">
+        <button class="btn btn--primary btn--md" type="submit">{% if is_edit %}Simpan perubahan{% else %}Publikasikan Food Hack{% endif %}</button>
+        <a class="btn btn--outline btn--md" href="{% if is_edit %}{% url 'community:post_detail' post.pk %}{% else %}{% url 'community:home' %}{% endif %}">Batal</a>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

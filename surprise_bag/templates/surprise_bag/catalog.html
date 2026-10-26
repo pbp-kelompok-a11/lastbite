@@ -19,13 +19,13 @@
     </div>
 
     <div class="sb-layout">
-      <!-- Filter (dikirim via AJAX, tanpa reload) -->
-      <form id="filter-form" class="sb-filter" autocomplete="off">
+      <!-- Filter: tanpa JS dikirim sebagai GET biasa, dengan JS diambil via AJAX -->
+      <form id="filter-form" class="sb-filter" action="{% url 'surprise_bag:catalog' %}" method="get" autocomplete="off">
         <h2 class="sb-filter__title">Filter</h2>
 
         <label class="sb-field">
           <span>Cari</span>
-          <input type="search" name="q" placeholder="Nama paket...">
+          <input type="search" name="q" value="{{ filters.q }}" placeholder="Nama paket...">
         </label>
 
         <label class="sb-field">
@@ -33,7 +33,7 @@
           <select name="category">
             <option value="">Semua kategori</option>
             {% for value, label in categories %}
-              <option value="{{ value }}">{{ label }}</option>
+              <option value="{{ value }}"{% if value == filters.category %} selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
         </label>
@@ -41,32 +41,37 @@
         <div class="sb-field">
           <span>Harga diskon (Rp)</span>
           <div class="sb-field__row">
-            <input type="number" name="min_price" min="0" step="1000" placeholder="Min">
-            <input type="number" name="max_price" min="0" step="1000" placeholder="Maks">
+            <input type="number" name="min_price" min="0" step="1000" value="{{ filters.min_price }}" placeholder="Min">
+            <input type="number" name="max_price" min="0" step="1000" value="{{ filters.max_price }}" placeholder="Maks">
           </div>
         </div>
 
         <label class="sb-field">
           <span>Urutkan</span>
           <select name="sort">
-            <option value="newest">Terbaru</option>
-            <option value="price_asc">Harga termurah</option>
-            <option value="price_desc">Harga termahal</option>
-            <option value="discount">Diskon terbesar</option>
+            {% for value, label in sort_options %}
+              <option value="{{ value }}"{% if value == filters.sort %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
           </select>
         </label>
 
-        <label class="sb-check">
-          <input type="checkbox" name="available" value="1" checked>
-          <span>Hanya yang masih ada stok</span>
+        <label class="sb-field">
+          <span>Stok</span>
+          <select name="stock">
+            <option value="available">Masih ada stok</option>
+            <option value="all"{% if filters.stock == 'all' %} selected{% endif %}>Semua (termasuk habis)</option>
+          </select>
         </label>
 
-        <button type="reset" class="btn btn--outline btn--sm">Reset Filter</button>
+        <div class="sb-filter__actions">
+          <button type="submit" class="btn btn--primary btn--sm">Terapkan</button>
+          <a id="reset-filter" href="{% url 'surprise_bag:catalog' %}" class="btn btn--outline btn--sm">Reset Filter</a>
+        </div>
       </form>
 
       <div>
-        <p id="result-count" class="sb-result-count">Memuat...</p>
-        <div id="bag-grid" class="bags-grid"></div>
+        <p id="catalog-status" class="sb-catalog-status" role="status" hidden></p>
+        {% include 'surprise_bag/components/catalog_results.html' %}
       </div>
     </div>
   </div>
@@ -75,88 +80,98 @@
 
 {% block extra_js %}
 <script>
-const API_URL = "{% url 'surprise_bag:catalog_api' %}";
 const form = document.getElementById('filter-form');
-const grid = document.getElementById('bag-grid');
-const countEl = document.getElementById('result-count');
+const statusEl = document.getElementById('catalog-status');
+const FILTER_DEFAULTS = { sort: 'newest', stock: 'available' };
+let results = document.getElementById('catalog-results');
 let debounceTimer;
 let controller;
 
-// cegah XSS — escape juga tanda kutip karena dipakai di atribut src/alt
-function escapeHtml(str) {
-  return String(str ?? '').replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
+// filter yang bernilai default tidak ikut ke URL, sama seperti link halaman dari server
+function makeUrl(page = 1) {
+  const url = new URL(form.action);
+  new FormData(form).forEach((value, key) => {
+    value = value.trim();
+    if (value && value !== FILTER_DEFAULTS[key]) url.searchParams.set(key, value);
+  });
+  if (page > 1) url.searchParams.set('page', page);
+  return url;
 }
 
-function bagVisual(bag) {
-  if (!bag.image_url) return `<div class="bag-card__emoji">${bag.emoji}</div>`;
-  // kalau link gambar rusak, kembali ke emoji kategori
-  return `<div class="bag-card__emoji bag-card__emoji--image">
-    <img src="${escapeHtml(bag.image_url)}" alt="${escapeHtml(bag.name)}" class="bag-card__image" loading="lazy"
-         onerror="this.parentElement.classList.remove('bag-card__emoji--image'); this.replaceWith('${bag.emoji}')">
-  </div>`;
-}
-
-function formatRupiah(num) {
-  return 'Rp ' + Number(num).toLocaleString('id-ID');
-}
-
-function stockLabel(bag) {
-  if (bag.stock === 0) return '<span class="sb-stock sb-stock--empty">Habis</span>';
-  if (bag.stock <= 3) return `<span class="sb-stock sb-stock--low">Sisa ${bag.stock}!</span>`;
-  return `<span class="sb-stock">Stok ${bag.stock}</span>`;
-}
-
-function renderBags(bags) {
-  countEl.textContent = `${bags.length} Surprise Bag ditemukan`;
-  if (bags.length === 0) {
-    grid.innerHTML = '<p class="sb-empty">Tidak ada Surprise Bag yang cocok dengan filter.</p>';
-    return;
-  }
-  grid.innerHTML = bags.map(bag => `
-    <a href="${bag.detail_url}" class="bag-card${bag.stock === 0 ? ' bag-card--soldout' : ''}">
-      ${bagVisual(bag)}
-      <div class="bag-card__body">
-    <span class="bag-card__merchant">${escapeHtml(bag.merchant)}</span>
-        <span class="bag-card__name">${escapeHtml(bag.name)}</span>
-        <span class="sb-category">${escapeHtml(bag.category_label)}</span>
-        <div class="bag-card__prices">
-          <span class="bag-card__price-orig">${formatRupiah(bag.original_price)}</span>
-          <span class="bag-card__price-disc">${formatRupiah(bag.discounted_price)}</span>
-          <span class="bag-card__discount-badge">-${bag.discount_percent}%</span>
-        </div>
-        <div class="bag-card__footer">
-          <span class="bag-card__stock">🕐 ${bag.pickup_start}–${bag.pickup_end}</span>
-          ${stockLabel(bag)}
-        </div>
-      </div>
-    </a>`).join('');
-}
-
-function loadBags() {
-  const params = new URLSearchParams(new FormData(form));
-  // batalkan request lama kalau user masih ngetik
-  if (controller) controller.abort();
+async function loadResults(page = 1, scrollToResults = false) {
+  clearTimeout(debounceTimer);
+  controller?.abort();
   controller = new AbortController();
-  return fetch(`${API_URL}?${params}`, { signal: controller.signal })
-    .then(r => r.json())
-    .then(data => renderBags(data.bags))
-    .catch(err => {
-      if (err.name !== 'AbortError') countEl.textContent = 'Gagal memuat data. Coba lagi.';
+  const { signal } = controller;
+  const url = makeUrl(page);
+  results.setAttribute('aria-busy', 'true');
+  try {
+    const response = await fetch(url, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      signal,
     });
+    if (!response.ok) throw new Error('Gagal memuat katalog');
+    const html = await response.text();
+    const updated = new DOMParser().parseFromString(html, 'text/html').getElementById('catalog-results');
+    if (!updated) throw new Error('Hasil katalog tidak ditemukan');
+    results.replaceWith(updated);
+    results = updated;
+
+    // server bisa mengoreksi nomor halaman (misal kelewatan), jadi URL ikut disesuaikan
+    const actualPage = Number(results.dataset.page);
+    if (actualPage > 1) url.searchParams.set('page', actualPage);
+    else url.searchParams.delete('page');
+    window.history.replaceState(null, '', url);
+    statusEl.hidden = true;
+
+    if (scrollToResults) {
+      results.querySelector('.sb-page-link--current')?.focus({ preventScroll: true });
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      results.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+    statusEl.textContent = 'Gagal memuat katalog. Hasil sebelumnya tetap ditampilkan.';
+    statusEl.hidden = false;
+  } finally {
+    // request yang sudah dibatalkan tidak boleh mematikan status loading request terbaru
+    if (controller.signal === signal) results.removeAttribute('aria-busy');
+  }
 }
 
+function isPlainClick(event) {
+  return event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey;
+}
+
+// filter berubah -> kembali ke halaman 1
 form.addEventListener('input', () => {
   clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(loadBags, 300);
+  debounceTimer = setTimeout(() => loadResults(1), 300);
 });
-form.addEventListener('reset', () => setTimeout(loadBags, 0));
-form.addEventListener('submit', e => { e.preventDefault(); loadBags(); });
+form.addEventListener('submit', event => {
+  event.preventDefault();
+  loadResults(1);
+});
 
-// stok di katalog diperbarui otomatis tiap 30 detik
-setInterval(() => { if (!document.hidden) loadBags(); }, 30000);
+document.getElementById('reset-filter').addEventListener('click', event => {
+  if (!isPlainClick(event)) return;
+  event.preventDefault();
+  form.querySelectorAll('input').forEach(input => { input.value = ''; });
+  form.querySelectorAll('select').forEach(select => { select.selectedIndex = 0; });
+  loadResults(1);
+});
 
-loadBags();
+// #catalog-results diganti tiap AJAX, jadi klik halaman ditangkap lewat parent-nya
+results.parentElement.addEventListener('click', event => {
+  const pageLink = event.target.closest('[data-page-link]');
+  if (!pageLink || !isPlainClick(event)) return;
+  event.preventDefault();
+  loadResults(Number(pageLink.dataset.pageLink), true);
+});
+
+// stok di halaman yang sedang dibuka diperbarui otomatis tiap 30 detik
+setInterval(() => {
+  if (!document.hidden) loadResults(Number(results.dataset.page));
+}, 30000);
 </script>
 {% endblock %}

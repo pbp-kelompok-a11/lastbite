@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError
+from django.db.models import OuterRef, Subquery
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -10,6 +11,7 @@ from django.views.decorators.cache import never_cache
 
 from accounts.permissions import is_customer, is_merchant
 from surprise_bag.models import SurpriseBag
+from community.models import CommunityPost
 
 from .forms import OrderForm, PickupVerificationForm
 from .models import Order
@@ -17,7 +19,10 @@ from .services import reserve_bag, transition_order
 
 
 def _visible_orders(user):
-    orders = Order.objects.select_related('customer', 'surprise_bag__merchant')
+    reviews = CommunityPost.objects.filter(related_order=OuterRef('pk'), post_type='review')
+    orders = Order.objects.select_related('customer', 'surprise_bag__merchant').annotate(
+        review_id=Subquery(reviews.values('pk')[:1]),
+    )
     if is_customer(user):
         return orders.filter(customer=user)
     if is_merchant(user):

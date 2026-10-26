@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hasil Review — LastBite{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'community/css/community.css' %}">
+{% endblock %}
+{% block content %}
+<div class="community section-container">
+  <a class="community-back" href="{{ back_url }}">Kembali ke Community</a>
+  <article class="community-detail">
+    <p class="community-eyebrow">REVIEW KOMUNITAS</p>
+    <h1>{{ post.title }}</h1>
+    <div class="community-detail__meta">
+      <span>Oleh {{ post.author.get_username }}</span>
+      <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:'j M Y, H:i' }}</time>
+    </div>
+    {% include 'community/components/review_rating.html' %}
+    <p class="community-review-notice">{{ post.related_order.food_name }} · {{ post.related_order.surprise_bag.merchant_name }} · Pickup {{ post.related_order.pickup_date|date:'j M Y' }}</p>
+    <div class="community-detail__content">{{ post.content|linebreaks }}</div>
+    {% if reply or can_reply %}
+    <section id="merchant-reply" class="community-review-reply" aria-labelledby="merchant-reply-title">
+      <div class="community-review-reply__heading">
+        <h2 id="merchant-reply-title">Balasan Merchant</h2>
+        {% if can_reply %}
+        <button type="button" class="btn btn--outline btn--sm" id="review-reply-open" aria-haspopup="dialog" aria-controls="review-reply-dialog">{% if reply %}Edit balasan{% else %}Balas Review{% endif %}</button>
+        {% endif %}
+      </div>
+      {% if reply %}
+      <p class="community-review-reply__meta"><strong>{{ reply.merchant.get_username }}</strong> · <time datetime="{{ reply.updated_at|date:'c' }}">{{ reply.updated_at|date:'j M Y, H:i' }}</time></p>
+      <div class="community-detail__content">{{ reply.content|linebreaks }}</div>
+      {% else %}<p class="community-muted">Berikan tanggapan resmi untuk pengalaman Customer.</p>{% endif %}
+    </section>
+    {% endif %}
+    {% if can_reply %}
+    <dialog id="review-reply-dialog" class="community-comment-dialog" aria-labelledby="review-reply-title"{% if reply_dialog_open %} data-open-on-load="true"{% endif %}>
+      <header class="community-comment-dialog__header">
+        <h3 id="review-reply-title">{% if reply %}Edit balasan{% else %}Balas Review{% endif %}</h3>
+        <button type="button" class="community-comment-dialog__close" data-review-reply-close aria-label="Tutup popup balasan">&times;</button>
+      </header>
+      <p class="community-comment-dialog__preview">{{ post.content|truncatechars:160 }}</p>
+      <form method="post" action="{% url 'community:review_reply' post.pk %}" class="community-comment-form">
+        {% csrf_token %}
+        <input type="hidden" name="feed" value="{{ feed_query }}">
+        {{ reply_form.non_field_errors }}
+        {{ reply_form.content.label_tag }}
+        {{ reply_form.content }}
+        {{ reply_form.content.errors }}
+        <div class="community-comment-dialog__actions">
+          <button type="button" class="btn btn--outline btn--sm" data-review-reply-close>Batal</button>
+          <button type="submit" class="btn btn--primary btn--sm">Simpan balasan</button>
+        </div>
+      </form>
+    </dialog>
+    {% endif %}
+  </article>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if can_reply %}<script src="{% static 'community/js/review_reply.js' %}"></script>{% endif %}
+{% endblock %}

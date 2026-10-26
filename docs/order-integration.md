@@ -1,5 +1,7 @@
 # Modul Order: Pemesanan dan Status Pickup
 
+Catatan terbaru: integrasi review Community dan rating Merchant Store sudah diimplementasikan. Lihat [order-review-integration.md](order-review-integration.md) untuk hasil verifikasi dan kontrak relasi terbaru. Bagian sinkronisasi di bawah mencatat kondisi saat implementasi Order awal.
+
 Branch: `feature/order-module`. Tidak ada push atau merge ke main.
 
 ## Basis dan keselarasan
