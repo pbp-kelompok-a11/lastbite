@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profil Merchant — LastBite{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="merchant-profile">
+  <h1 class="merchant-profile__heading">Profil Saya</h1>
+
+  <p class="merchant-profile__description">
+    Kelola foto profil dan toko mitra LastBite kamu.
+  </p>
+
+  <div class="merchant-profile__card">
+    <div class="merchant-profile__avatar">
+      {% if user.profile.photo %}
+        <img src="{{ user.profile.photo.url }}"
+              alt="Foto profil merchant">
+      {% else %}
+        <span>{{ user.username|first|upper }}</span>
+      {% endif %}
+    </div>
+
+    <h2>{{ user.username }}</h2>
+    <p>Merchant LastBite</p>
+
+    <form method="post"
+          enctype="multipart/form-data"
+          class="merchant-profile__form">
+      {% csrf_token %}
+
+      <label for="profile-photo">Foto profil</label>
+
+      <input type="file"
+              id="profile-photo"
+              name="photo"
+              accept="image/*"
+              required>
+
+      <button type="submit" class="btn btn--primary btn--md">
+        Simpan Foto
+      </button>
+    </form>
+  </div>
+
+  <div class="merchant-profile__card">
+    <h2>Toko Saya</h2>
+
+    <p>
+      Kelola informasi toko, alamat, nomor telepon,
+      jam operasional, dan status toko kamu.
+    </p>
+
+    <a href="{% url 'merchant_store:my_store' %}"
+      class="btn btn--primary btn--md">
+      Buka Toko Saya
+    </a>
+  </div>
+
+  <div class="merchant-profile__logout">
+    <button type="button"
+            class="btn btn--outline btn--md"
+            id="logout-open"
+            aria-haspopup="dialog"
+            aria-controls="logout-dialog">
+      Logout
+    </button>
+  </div>
+</section>
+{% endblock %}

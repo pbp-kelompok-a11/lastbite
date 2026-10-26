@@ -17,6 +17,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-f4b0()y0xii)mw_3f-!i0p4v(m=ptv1u7wq14%(lsj%1a#a!08')
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 
 ALLOWED_HOSTS = [
     'fathir-atha-lastbite-pbp-kelompok-a11.pws.cs.ui.ac.id',
@@ -126,6 +128,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+
+# MEDIA
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 # WhiteNoise storage for production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

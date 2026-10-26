@@ -1,0 +1,81 @@
+/* ===== Halaman Profil Merchant ===== */
+
+.merchant-profile {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px 40px;
+}
+
+.merchant-profile__heading {
+  margin-bottom: 8px;
+}
+
+.merchant-profile__description {
+  margin-bottom: 28px;
+  color: #64748b;
+}
+
+.merchant-profile__card {
+  margin-bottom: 20px;
+  padding: 28px;
+  border: 1px solid #dce5dc;
+  border-radius: 16px;
+  background: #fffdf8;
+}
+
+.merchant-profile__card h2 {
+  margin: 0 0 8px;
+}
+
+.merchant-profile__card p {
+  margin-bottom: 20px;
+  color: #64748b;
+}
+
+/* ===== Foto Profil ===== */
+
+.merchant-profile__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #dce8dc;
+  color: #28664f;
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.merchant-profile__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ===== Form Upload Foto ===== */
+
+.merchant-profile__form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.merchant-profile__form input[type="file"] {
+  max-width: 100%;
+  padding: 10px;
+  border: 1px solid #dce5dc;
+  border-radius: 8px;
+  background: #fff;
+}
+
+/* ===== Tombol Logout di Profil ===== */
+
+.merchant-profile__logout {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 24px;
+}
