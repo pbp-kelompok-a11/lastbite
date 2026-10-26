@@ -8,7 +8,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import CommunityComment, CommunityPost
+from .models import CommunityComment, CommunityPost, MerchantReviewReply
 from accounts.models import UserProfile
 from order.models import Order
 from surprise_bag.models import SurpriseBag
@@ -28,6 +28,143 @@ def completed_order(customer, merchant=None, **changes):
                 reservation_key=uuid.uuid4(), status=Order.Status.COMPLETED, completed_at=timezone.now())
     data.update(changes)
     return Order.objects.create(**data)
+
+
+class CommunityMineFilterTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.customer = get_user_model().objects.create_user(username='mine_customer')
+        cls.merchant = get_user_model().objects.create_user(username='mine_merchant')
+        UserProfile.objects.create(user=cls.customer, role=UserProfile.Role.CUSTOMER)
+        UserProfile.objects.create(user=cls.merchant, role=UserProfile.Role.MERCHANT)
+        cls.food_hacks = [CommunityPost.objects.create(
+            author=cls.customer, title=f'Tips roti {number}', content='Panggang roti.',
+        ) for number in range(12)]
+        for post in cls.food_hacks:
+            post.upvotes.add(cls.customer)
+        cls.review = CommunityPost.objects.create(
+            author=cls.customer, post_type='review', title='Review roti', content='Roti enak.',
+            rating=5, related_order=completed_order(cls.customer, cls.merchant),
+        )
+        cls.merchant_post = CommunityPost.objects.create(
+            author=cls.merchant, title='Tips merchant', content='Simpan roti.',
+        )
+
+    def test_mine_only_filters_author_in_all_posts(self):
+        self.client.force_login(self.customer)
+        for category, count in (('all', 13), ('food_hack', 13), ('review', 1)):
+            with self.subTest(category=category):
+                response = self.client.get(reverse('community:home'), {'mine': '1', 'post_type': category})
+                self.assertEqual(response.context['page_obj'].paginator.count, count)
+                self.assertEqual(response.context['mine_only'], category == 'all')
+                if category == 'all':
+                    self.assertTrue(all(post.author_id == self.customer.pk for post in response.context['posts']))
+                self.assertContains(response, 'name="mine"')
+
+    def test_mine_combines_with_filters_and_survives_pagination_and_tabs(self):
+        self.client.force_login(self.customer)
+        params = {'mine': '1', 'post_type': 'all', 'q': 'Tips roti', 'sort': 'oldest', 'page': 2}
+        response = self.client.get(reverse('community:home'), params)
+        self.assertEqual(response.context['page_obj'].number, 2)
+        self.assertEqual(list(response.context['posts']), self.food_hacks[10:])
+        for key in ('filter_query', 'clear_query', 'detail_query'):
+            self.assertIn('mine', response.context[key])
+        self.assertNotIn('mine', response.context['reviews_query'])
+        self.assertNotIn('mine', response.context['food_hacks_query'])
+        ajax = self.client.get(reverse('community:home'), params, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(list(ajax.context['posts']), self.food_hacks[10:])
+        self.assertContains(ajax, 'data-mine="1"')
+        review = self.client.get(reverse('community:home'), {'mine': '1', 'post_type': 'review', 'rating': '5'})
+        self.assertEqual(list(review.context['posts']), [self.review])
+
+    def test_merchant_and_default_feed(self):
+        self.client.force_login(self.merchant)
+        response = self.client.get(reverse('community:home'), {'mine': '1'})
+        self.assertEqual(list(response.context['posts']), [self.merchant_post])
+        response = self.client.get(reverse('community:home'), {'mine': '0'})
+        self.assertEqual(response.context['page_obj'].paginator.count, 14)
+
+    def test_guests_need_login_for_mine_and_do_not_see_control(self):
+        url = reverse('community:home')
+        self.assertNotContains(self.client.get(url), 'id="community-mine"')
+        response = self.client.get(url, {'mine': '1'})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.url.startswith(reverse('accounts:login') + '?next='))
+        ajax = self.client.get(url, {'mine': '1'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(ajax.status_code, 401)
+        self.assertIn('login_url', ajax.json())
+
+
+class MerchantReviewReplyTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.customer = get_user_model().objects.create_user(username='reply_customer')
+        cls.merchant = get_user_model().objects.create_user(username='reply_merchant')
+        cls.other_merchant = get_user_model().objects.create_user(username='reply_other_merchant')
+        for user, role in ((cls.customer, 'customer'), (cls.merchant, 'merchant'), (cls.other_merchant, 'merchant')):
+            UserProfile.objects.create(user=user, role=role)
+        cls.review = CommunityPost.objects.create(
+            author=cls.customer, post_type='review', title='Review roti', content='Rotinya enak.',
+            rating=5, related_order=completed_order(cls.customer, cls.merchant),
+        )
+        cls.url = reverse('community:review_reply', args=[cls.review.pk])
+        cls.detail_url = reverse('community:review_detail', args=[cls.review.pk])
+
+    def test_owner_can_reply_and_update_one_public_reply(self):
+        self.client.force_login(self.merchant)
+        self.assertContains(self.client.get(self.detail_url), 'Balas Review')
+        response = self.client.post(self.url, {'content': 'Terima kasih!', 'feed': 'post_type=review&rating=5'})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('feed=', response.url)
+        reply = MerchantReviewReply.objects.get()
+        self.assertEqual(reply.merchant, self.merchant)
+        self.client.post(self.url, {'content': 'Terima kasih, sampai jumpa kembali!'})
+        self.assertEqual(MerchantReviewReply.objects.count(), 1)
+        reply.refresh_from_db()
+        self.assertEqual(reply.content, 'Terima kasih, sampai jumpa kembali!')
+        self.client.logout()
+        detail = self.client.get(self.detail_url)
+        self.assertContains(detail, reply.content)
+        self.assertContains(detail, 'Balasan Merchant')
+        self.assertNotContains(detail, 'id="review-reply-open"')
+
+    def test_guests_customers_and_other_merchants_cannot_reply(self):
+        self.assertEqual(self.client.post(self.url, {'content': 'Balasan'}).status_code, 302)
+        for user in (self.customer, self.other_merchant):
+            self.client.force_login(user)
+            self.assertNotContains(self.client.get(self.detail_url), 'id="review-reply-open"')
+            self.assertEqual(self.client.post(self.url, {'content': 'Balasan'}).status_code, 403)
+        self.assertFalse(MerchantReviewReply.objects.exists())
+
+    def test_invalid_reply_does_not_create_or_overwrite_reply(self):
+        self.client.force_login(self.merchant)
+        self.client.post(self.url, {'content': 'Balasan awal'})
+        for content in ('   ', 'x' * 2001):
+            response = self.client.post(self.url, {'content': content})
+            self.assertEqual(response.status_code, 400)
+            self.assertContains(response, 'data-open-on-load="true"', status_code=400)
+            self.assertTrue(response.context['reply_form'].errors)
+        self.assertEqual(MerchantReviewReply.objects.get().content, 'Balasan awal')
+
+    def test_non_reviews_and_unverified_reviews_are_rejected(self):
+        self.client.force_login(self.merchant)
+        for category, status in (('food_hack', 404), ('review', 403)):
+            post = CommunityPost.objects.create(author=self.customer, title='Data lama', content='Konten', post_type=category)
+            self.assertEqual(self.client.post(reverse('community:review_reply', args=[post.pk]), {'content': 'Balasan'}).status_code, status)
+        self.assertFalse(MerchantReviewReply.objects.exists())
+
+    def test_post_only_csrf_and_user_content_escaping(self):
+        self.client.force_login(self.merchant)
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+        secure_client = Client(enforce_csrf_checks=True)
+        secure_client.force_login(self.merchant)
+        self.assertEqual(secure_client.post(self.url, {'content': 'Balasan'}).status_code, 403)
+        self.client.post(self.url, {'content': '<script>alert(1)</script>'})
+        page = self.client.get(self.detail_url)
+        self.assertContains(page, '&lt;script&gt;alert(1)&lt;/script&gt;')
+        self.assertNotContains(page, '<script>alert(1)</script>')
+
+
 
 
 class CommunityFeedTests(TestCase):
@@ -51,8 +188,7 @@ class CommunityFeedTests(TestCase):
         older = self.create_post(title='Tips roti lama')
         CommunityPost.objects.filter(pk=older.pk).update(created_at=timezone.now() - timedelta(days=1))
         newer = self.create_post(title='Tips sayur baru')
-        # Data demo dari sebelum migration tetap dapat dibaca, tanpa klaim terverifikasi.
-        review = CommunityPost.objects.create(author=self.author, title='Review masuk feed ini',
+        review = CommunityPost.objects.create(related_order=completed_order(self.author), author=self.author, title='Review masuk feed ini',
                                                content='Review lama.', post_type='review', rating=5)
         response = self.client.get(reverse('community:home'))
         self.assertEqual(response.status_code, 200)
@@ -62,13 +198,30 @@ class CommunityFeedTests(TestCase):
         self.assertContains(response, 'food_hack_writer')
         self.assertContains(response, 'Bekukan roti dalam wadah tertutup.')
         self.assertContains(response, review.title)
-        self.assertContains(response, 'Belum terverifikasi')
+        self.assertContains(response, 'Pembelian terverifikasi')
 
     def test_empty_feed(self):
         response = self.client.get(reverse('community:home'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Belum ada postingan')
         self.assertQuerySetEqual(response.context['posts'], [])
+
+    def test_invalid_reviews_are_hidden_from_feed_and_detail(self):
+        other = get_user_model().objects.create_user(username='invalid_review_other')
+        pending = completed_order(self.author, status='pending', completed_at=None)
+        foreign = completed_order(other)
+        for order in (None, pending, foreign):
+            review = CommunityPost.objects.create(
+                author=self.author, title='Review tidak valid', content='Konten', rating=5,
+                post_type='review', related_order=order,
+            )
+            for ajax in (False, True):
+                headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'} if ajax else {}
+                response = self.client.get(reverse('community:home'), **headers)
+                self.assertNotContains(response, review.title)
+                self.assertEqual(response.context['page_obj'].paginator.count, 0)
+            self.assertEqual(self.client.get(reverse('community:review_detail', args=[review.pk])).status_code, 404)
+
 
     def test_database_title_update_appears_on_refresh(self):
         post = self.create_post(title='Judul sebelum edit')
@@ -99,7 +252,7 @@ class CommunityFilterTests(TestCase):
         author = get_user_model().objects.create_user(username='filter_writer')
         cls.bread = CommunityPost.objects.create(author=author, title='Tips ROTI', content='Bekukan dalam wadah.')
         cls.vegetable = CommunityPost.objects.create(author=author, title='Tips sayur', content='Olah sisa brokoli.')
-        cls.review = CommunityPost.objects.create(author=author, title='Review roti', content='Enak.', post_type='review', rating=5)
+        cls.review = CommunityPost.objects.create(related_order=completed_order(author), author=author, title='Review roti', content='Enak.', post_type='review', rating=5)
 
     def test_search_matches_title_or_content_ignoring_case(self):
         for query, expected in (('roti', self.bread), ('BROKOLI', self.vegetable), ('  wadah  ', self.bread)):
@@ -176,7 +329,7 @@ class CommunityDetailTests(TestCase):
         cls.second = CommunityPost.objects.create(
             author=author, title='Tips sayur', content='Konten sayur yang berbeda.',
         )
-        cls.review = CommunityPost.objects.create(
+        cls.review = CommunityPost.objects.create(related_order=completed_order(author),
             author=author, post_type='review', rating=5, title='Review', content='Ulasan.',
         )
 
@@ -321,7 +474,7 @@ class FoodHackOwnershipTests(TestCase):
         UserProfile.objects.create(user=cls.owner, role=UserProfile.Role.CUSTOMER)
         UserProfile.objects.create(user=cls.other, role=UserProfile.Role.CUSTOMER)
         cls.post = CommunityPost.objects.create(author=cls.owner, title='Judul awal', content='Konten awal')
-        cls.review = CommunityPost.objects.create(
+        cls.review = CommunityPost.objects.create(related_order=completed_order(cls.owner),
             author=cls.owner, title='Review', content='Ulasan', post_type='review', rating=5,
         )
 
@@ -550,7 +703,7 @@ class CommunityPaginationTests(TestCase):
             CommunityPost(author=cls.author, title=f'Tips roti {number}', content='Simpan roti.')
             for number in range(23)
         ])
-        CommunityPost.objects.create(
+        CommunityPost.objects.create(related_order=completed_order(cls.author),
             author=cls.author, title='Review roti', content='Enak.', post_type='review', rating=5,
         )
 
@@ -772,7 +925,7 @@ class CommunityUpvoteTests(TestCase):
         self.assertFalse(self.post.upvotes.exists())
 
     def test_review_and_missing_post_cannot_be_upvoted(self):
-        review = CommunityPost.objects.create(author=self.customer, title='Review', content='Enak.', post_type='review', rating=5)
+        review = CommunityPost.objects.create(related_order=completed_order(self.customer), author=self.customer, title='Review', content='Enak.', post_type='review', rating=5)
         self.client.force_login(self.customer)
         for pk in (review.pk, review.pk + 1000):
             with self.subTest(pk=pk):
@@ -831,7 +984,7 @@ class CommunityCommentTests(TestCase):
         UserProfile.objects.create(user=cls.other, role='customer')
         cls.post = CommunityPost.objects.create(author=cls.customer, title='Tips komentar', content='Konten.')
         cls.other_post = CommunityPost.objects.create(author=cls.other, title='Post lain', content='Konten.')
-        cls.review = CommunityPost.objects.create(author=cls.customer, title='Review', content='Enak.', post_type='review', rating=5)
+        cls.review = CommunityPost.objects.create(related_order=completed_order(cls.customer), author=cls.customer, title='Review', content='Enak.', post_type='review', rating=5)
 
     def url(self, action='create', comment=None, post=None):
         args = [post.pk if post is not None else self.post.pk]
@@ -1301,7 +1454,7 @@ class ReviewPageTests(TestCase):
                 self.assertEqual(response.context['selected_sort'], sort if sort in expected else 'newest')
 
     def test_review_rating_sort_and_back_links_are_stable(self):
-        posts = [CommunityPost.objects.create(
+        posts = [CommunityPost.objects.create(related_order=completed_order(self.customer),
             author=self.customer, title=f'Review {number}', content='Ulasan.', post_type='review', rating=rating,
         ) for number, rating in enumerate((1, 5, 5))]
         for sort, expected in (
@@ -1332,10 +1485,10 @@ class ReviewPageTests(TestCase):
 
     def test_rating_filter_combines_with_search_sort_and_pagination(self):
         CommunityPost.objects.bulk_create([
-            CommunityPost(author=self.customer, post_type='review', title='Pesanan', rating=5, content='Roti enak.')
+            CommunityPost(related_order=completed_order(self.customer), author=self.customer, post_type='review', title='Pesanan', rating=5, content='Roti enak.')
             for _ in range(12)
         ])
-        CommunityPost.objects.create(author=self.customer, post_type='review', title='Pesanan', rating=1, content='Roti kering.')
+        CommunityPost.objects.create(related_order=completed_order(self.customer), author=self.customer, post_type='review', title='Pesanan', rating=1, content='Roti kering.')
         CommunityPost.objects.create(author=self.customer, title='Roti', content='Tips roti.')
         for ajax in (False, True):
             headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'} if ajax else {}
@@ -1369,8 +1522,8 @@ class ReviewPageTests(TestCase):
 
     def test_search_uses_titles_and_content_within_each_category(self):
         tip = CommunityPost.objects.create(author=self.customer, title='KataUnik', content='Simpan makanan.')
-        review_title = CommunityPost.objects.create(author=self.customer, post_type='review', title='KataUnik', content='Porsi cukup.', rating=5)
-        review_content = CommunityPost.objects.create(author=self.customer, post_type='review', title='Pesanan', content='KataUnik terasa enak.', rating=4)
+        review_title = CommunityPost.objects.create(related_order=completed_order(self.customer), author=self.customer, post_type='review', title='KataUnik', content='Porsi cukup.', rating=5)
+        review_content = CommunityPost.objects.create(related_order=completed_order(self.customer), author=self.customer, post_type='review', title='Pesanan', content='KataUnik terasa enak.', rating=4)
         for category, expected in (
             ('all', [review_content, review_title, tip]), ('food_hack', [tip]), ('review', [review_content, review_title]),
         ):

@@ -8,6 +8,7 @@ urlpatterns = [
     path('food-hacks/create/', views.create_food_hack, name='food_hack_create'),
     path('reviews/create/', views.create_review, name='review_create'),
     path('reviews/<int:pk>/', views.review_detail, name='review_detail'),
+    path('reviews/<int:pk>/reply/', views.reply_review, name='review_reply'),
     path('posts/<int:pk>/', views.post_detail, name='post_detail'),
     path('posts/<int:pk>/upvote/', views.toggle_upvote, name='post_upvote'),
     path('posts/<int:pk>/edit/', views.edit_food_hack, name='post_edit'),

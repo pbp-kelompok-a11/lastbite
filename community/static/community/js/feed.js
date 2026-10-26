@@ -8,6 +8,8 @@ if (searchForm) {
   const ratingFilter = document.querySelector('.community-rating-filter');
   const searchLabel = searchForm.querySelector('label[for="community-query"]');
   const liked = document.getElementById('community-liked');
+  const mine = document.getElementById('community-mine');
+  const mineFilter = document.querySelector('.community-mine-filter');
   const likedFilter = document.querySelector('.community-food-hack-filter');
   const tabs = document.querySelector('.community-tabs');
   const status = document.getElementById('community-search-status');
@@ -29,6 +31,7 @@ if (searchForm) {
   function makeUrl(postType = category.value, page = 1) {
     const url = new URL(searchForm.action);
     url.searchParams.set('post_type', postType);
+    if (mine?.value === '1' && postType === 'all') url.searchParams.set('mine', '1');
     const query = input.value.trim();
     if (query) url.searchParams.set('q', query);
     if (sort.value !== 'newest' && postType === category.value) {
@@ -75,6 +78,9 @@ if (searchForm) {
       if (actualPage > 1) url.searchParams.set('page', actualPage);
       else url.searchParams.delete('page');
       heading.textContent = results.dataset.heading;
+      if (mine) mine.value = results.dataset.mine;
+      if (mineFilter) mineFilter.hidden = postType !== 'all';
+      if (results.dataset.mine !== '1') url.searchParams.delete('mine');
       sort.replaceChildren(results.querySelector('#community-sort-options').content.cloneNode(true));
       sort.value = results.dataset.sort;
       if (sort.value === 'newest') url.searchParams.delete('sort');
@@ -128,6 +134,7 @@ if (searchForm) {
   sort.addEventListener('change', () => search());
   rating.addEventListener('change', () => search());
   liked.addEventListener('change', () => search());
+  mine?.addEventListener('change', () => search());
   document.addEventListener('community:like-changed', () => {
     if (liked.value === '1' || sort.value === 'likes') search(Number(results.dataset.page));
   });
@@ -147,6 +154,7 @@ if (searchForm) {
     const nextCategory = new URL(tab.href).searchParams.get('post_type');
     if (nextCategory === category.value) return;
     category.value = nextCategory;
+    if (mine) mine.value = '0';
     sort.value = 'newest';
     liked.value = '0';
     rating.value = 'all';

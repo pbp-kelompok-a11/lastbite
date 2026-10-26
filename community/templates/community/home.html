@@ -43,6 +43,15 @@
             <button class="btn btn--primary btn--md" type="submit">Cari</button>
           </div>
         </form>
+        {% if user.is_authenticated %}
+        <div class="community-sort community-mine-filter"{% if selected_post_type != 'all' %} hidden{% endif %}>
+          <label class="community-visually-hidden" for="community-mine">Filter penulis</label>
+          <select id="community-mine" name="mine" form="community-search-form">
+            <option value="0"{% if not mine_only %} selected{% endif %}>Semua penulis</option>
+            <option value="1"{% if mine_only %} selected{% endif %}>Milikku</option>
+          </select>
+        </div>
+        {% endif %}
         <div class="community-sort community-food-hack-filter"{% if selected_post_type != 'food_hack' %} hidden{% endif %}>
           <label class="community-visually-hidden" for="community-liked">Filter Food Hacks</label>
           <select id="community-liked" name="liked" form="community-search-form">
@@ -74,6 +83,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'community/js/feed.js' %}?v=community-filters-3"></script>
+<script src="{% static 'community/js/feed.js' %}?v=community-mine-2"></script>
 <script src="{% static 'community/js/like.js' %}"></script>
 {% endblock %}

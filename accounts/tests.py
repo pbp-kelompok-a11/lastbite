@@ -27,19 +27,22 @@ class AccountsTests(TestCase):
             self.assertFalse(user.is_superuser)
 
     def test_invalid_registration_does_not_save_user_or_profile(self):
+        initial_users = get_user_model().objects.count()
+        initial_profiles = UserProfile.objects.count()
         for changes in ({'role': 'admin'}, {'password2': 'wrong'}, {'password1': '123', 'password2': '123'}, {'username': ''}):
             with self.subTest(changes=changes):
                 response = self.client.post(reverse('accounts:register'), self.registration_data(**changes))
                 self.assertEqual(response.status_code, 200)
                 self.assertTrue(response.context['form'].errors)
-                self.assertFalse(get_user_model().objects.exists())
-                self.assertFalse(UserProfile.objects.exists())
+                self.assertEqual(get_user_model().objects.count(), initial_users)
+                self.assertEqual(UserProfile.objects.count(), initial_profiles)
 
     def test_duplicate_username_rejected(self):
+        initial_users = get_user_model().objects.count()
         self.client.post(reverse('accounts:register'), self.registration_data())
         response = self.client.post(reverse('accounts:register'), self.registration_data())
         self.assertIn('username', response.context['form'].errors)
-        self.assertEqual(get_user_model().objects.count(), 1)
+        self.assertEqual(get_user_model().objects.count(), initial_users + 1)
 
     def test_login_session_and_post_logout(self):
         user = get_user_model().objects.create_user(username='customer', password='LastBite-Test-937!')
@@ -126,6 +129,7 @@ class AccountsTests(TestCase):
 
     def test_authenticated_user_cannot_register_another_account(self):
         user = get_user_model().objects.create_user(username='existing')
+        initial_users = get_user_model().objects.count()
         self.client.force_login(user)
         self.assertRedirects(self.client.post(reverse('accounts:register'), self.registration_data()), reverse('main:home'))
-        self.assertEqual(get_user_model().objects.count(), 1)
+        self.assertEqual(get_user_model().objects.count(), initial_users)
