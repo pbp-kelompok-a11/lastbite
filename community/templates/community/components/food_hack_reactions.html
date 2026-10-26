@@ -1,0 +1,7 @@
+<div class="community-post-reactions">
+  {% include 'community/components/like.html' %}
+  <a class="community-comment-link" href="{% if detail_query %}{% url 'community:post_detail' post.pk %}?{{ detail_query }}{% endif %}#comment-form" aria-label="Beri komentar: {{ post.title }}" data-comment-link>
+    {% include 'community/components/comment_icon.html' %}
+    <span data-post-comment-count="{{ post.pk }}">{{ post.comment_count }}</span>
+  </a>
+</div>

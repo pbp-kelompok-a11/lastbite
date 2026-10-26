@@ -38,7 +38,7 @@
         <li><a href="{% url 'merchant_store:wishlist' %}" class="navbar__link">Wishlist</a></li>
         {% endif %}
         <li><a href="{% url 'surprise_bag:catalog' %}" class="navbar__link">Surprise Bags</a></li>
-        <li><a href="#" class="navbar__link">Community</a></li>
+        <li><a href="{% url 'community:home' %}" class="navbar__link">Community</a></li>
         {% if user.profile.role == 'customer' or user.profile.role == 'merchant' %}<li><a href="{% url 'order:list' %}" class="navbar__link">Pesanan</a></li>{% endif %}
         {% if user.profile.role == 'customer' %}<li><a href="{% url 'eco_impact:dashboard' %}" class="navbar__link">Eco Impact</a></li>{% endif %}
       </ul>
@@ -114,11 +114,9 @@
         <div class="footer__links-group">
           <h4 class="footer__heading">Platform</h4>
           <ul class="footer__links">
-            <li><a href="#" class="footer__link">Surprise Bags</a></li>
             <li><a href="{% url 'merchant_store:list' %}" class="footer__link">Merchant Store</a></li>
             <li><a href="{% url 'surprise_bag:catalog' %}" class="footer__link">Surprise Bags</a></li>
-            <li><a href="#" class="footer__link">Merchant Store</a></li>
-            <li><a href="#" class="footer__link">Community</a></li>
+            <li><a href="{% url 'community:home' %}" class="footer__link">Community</a></li>
             <li><a href="#" class="footer__link">Eco Impact</a></li>
           </ul>
         </div>

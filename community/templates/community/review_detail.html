@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hasil Review — LastBite{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'community/css/community.css' %}">
+{% endblock %}
+{% block content %}
+<div class="community section-container">
+  <a class="community-back" href="{{ back_url }}">Kembali ke Community</a>
+  <article class="community-detail">
+    <p class="community-eyebrow">REVIEW KOMUNITAS</p>
+    <h1>{{ post.title }}</h1>
+    <div class="community-detail__meta">
+      <span>Oleh {{ post.author.get_username }}</span>
+      <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:'j M Y, H:i' }}</time>
+    </div>
+    {% include 'community/components/review_rating.html' %}
+    <p class="community-review-notice">Review ini belum terhubung dengan pesanan. Pembelian belum terverifikasi.</p>
+    <div class="community-detail__content">{{ post.content|linebreaks }}</div>
+  </article>
+</div>
+{% endblock %}
