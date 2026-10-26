@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Tulis Review — LastBite{% endblock %}
+{% block title %}Tulis Review | LastBite{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'community/css/community.css' %}">
 {% endblock %}
@@ -12,14 +12,20 @@
     <p class="community-eyebrow">CERITAKAN PENGALAMANMU</p>
     <h1 id="form-title">Tulis Review</h1>
     <div class="community-review-order">
-      <span class="food-hack-card__badge">Pesanan contoh · Demo</span>
-      <h2>{{ post.title }}</h2>
-      <p class="community-muted">Nama pesanan asli akan mengikuti pesanan yang kamu ulas.</p>
+      <span class="food-hack-card__badge">Pembelian terverifikasi</span>
+      <h2>Review pesanan selesai</h2>
+      <p class="community-muted">Paket dan toko yang diulas mengikuti pilihan pesanan di bawah.</p>
     </div>
-    <p class="community-review-notice">Halaman demo ini belum terhubung dengan pesanan. Review yang disimpan akan tampil di Community dengan status “Belum terverifikasi”.</p>
+    <p class="community-review-notice">Review hanya dapat dibuat untuk pesanan Completed milikmu. Satu pesanan dapat diulas satu kali.</p>
+    {% if not has_eligible_orders %}<p class="community-review-notice">Belum ada pesanan selesai yang dapat diulas. <a href="{% url 'order:list' %}">Lihat Pesanan Saya</a>.</p>{% endif %}
     <form method="post" class="community-form community-review-form">
       {% csrf_token %}
       {{ form.non_field_errors }}
+      <div class="community-form__field">
+        {{ form.related_order.label_tag }}
+        {{ form.related_order }}
+        {{ form.related_order.errors }}
+      </div>
       <fieldset class="community-review-stars" aria-describedby="review-rating-feedback">
         <legend>{{ form.rating.label }}</legend>
         <div class="community-review-stars__options">
@@ -40,14 +46,15 @@
         {{ form.content.errors }}
       </div>
       <div class="community-form__actions">
-        <button class="btn btn--primary btn--md" type="submit">Simpan Review</button>
+        <button class="btn btn--primary btn--md" type="submit"{% if not has_eligible_orders %} disabled{% endif %}>Simpan Review</button>
         <a class="btn btn--outline btn--md" href="{% url 'community:home' %}">Batal</a>
       </div>
+      <p id="review-submit-feedback" role="status" aria-live="polite"></p>
     </form>
   </section>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'community/js/review_form.js' %}?v=text-review"></script>
+<script src="{% static 'community/js/review_form.js' %}?v=order-review"></script>
 {% endblock %}

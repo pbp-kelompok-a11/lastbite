@@ -1,4 +1,5 @@
-from datetime import timedelta
+import uuid
+from datetime import time, timedelta
 
 
 from django.contrib.auth import get_user_model
@@ -9,6 +10,24 @@ from django.utils import timezone
 
 from .models import CommunityComment, CommunityPost
 from accounts.models import UserProfile
+from order.models import Order
+from surprise_bag.models import SurpriseBag
+
+
+def completed_order(customer, merchant=None, **changes):
+    if merchant is None:
+        merchant, _ = get_user_model().objects.get_or_create(username=f'merchant_for_{customer.pk}')
+    bag = SurpriseBag.objects.create(
+        merchant=merchant, name='Paket Roti Sore', description='Pilihan roti.',
+        original_price=50000, discounted_price=30000, stock=5,
+        pickup_start=time(16), pickup_end=time(20),
+    )
+    data = dict(customer=customer, surprise_bag=bag, food_name=bag.name,
+                quantity=1, original_price=bag.original_price, discounted_price=bag.discounted_price,
+                pickup_date=timezone.localdate(), pickup_start=bag.pickup_start, pickup_end=bag.pickup_end,
+                reservation_key=uuid.uuid4(), status=Order.Status.COMPLETED, completed_at=timezone.now())
+    data.update(changes)
+    return Order.objects.create(**data)
 
 
 class CommunityFeedTests(TestCase):
@@ -32,7 +51,9 @@ class CommunityFeedTests(TestCase):
         older = self.create_post(title='Tips roti lama')
         CommunityPost.objects.filter(pk=older.pk).update(created_at=timezone.now() - timedelta(days=1))
         newer = self.create_post(title='Tips sayur baru')
-        review = self.create_post(title='Review masuk feed ini', post_type='review', rating=5)
+        # Data demo dari sebelum migration tetap dapat dibaca, tanpa klaim terverifikasi.
+        review = CommunityPost.objects.create(author=self.author, title='Review masuk feed ini',
+                                               content='Review lama.', post_type='review', rating=5)
         response = self.client.get(reverse('community:home'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'community/home.html')
@@ -1126,11 +1147,12 @@ class CommunityPostTests(TestCase):
             self.make_post(rating=3).full_clean()
 
     def test_review_rating_range(self):
+        order = completed_order(self.author)
         for rating in (None, 0, 6):
             with self.subTest(rating=rating), self.assertRaises(ValidationError):
-                self.make_post(post_type='review', rating=rating).full_clean()
+                self.make_post(post_type='review', rating=rating, related_order=order).full_clean()
         for rating in (1, 5):
-            self.make_post(post_type='review', rating=rating).full_clean()
+            self.make_post(post_type='review', rating=rating, related_order=order).full_clean()
 
     def test_admin_can_create_and_read_food_hack(self):
         self.client.force_login(self.author)
@@ -1172,13 +1194,15 @@ class ReviewPageTests(TestCase):
             (cls.merchant, UserProfile.Role.MERCHANT),
         ):
             UserProfile.objects.create(user=user, role=role)
+        cls.completed = completed_order(cls.customer, cls.merchant)
 
     def setUp(self):
         self.client.force_login(self.customer)
         self.url = reverse('community:review_create')
 
     def payload(self, **changes):
-        values = {'rating': '4', 'content': 'Makanannya enak dan porsinya cukup.'}
+        values = {'rating': '4', 'content': 'Makanannya enak dan porsinya cukup.',
+                  'related_order': str(self.completed.pk)}
         values.update(changes)
         return values
 
@@ -1186,31 +1210,32 @@ class ReviewPageTests(TestCase):
     def test_form_is_available_by_url_without_feed_button(self):
         response = self.client.get(self.url)
         self.assertContains(response, 'type="radio"', count=5)
-        self.assertContains(response, 'Pesanan contoh · Demo')
+        self.assertContains(response, 'Pesanan yang diulas')
         self.assertNotContains(response, 'multipart/form-data')
         self.assertNotContains(response, 'name="title"')
         self.assertNotContains(response, 'anonym')
-        self.assertEqual(set(response.context['form'].fields), {'rating', 'content'})
+        self.assertEqual(set(response.context['form'].fields), {'related_order', 'rating', 'content'})
         self.assertNotContains(self.client.get(reverse('community:home')), self.url)
 
     def test_review_is_saved_with_server_owned_fields_and_shown_in_feed(self):
         response = self.client.post(self.url, self.payload(
-            author=self.other.pk, title='Judul palsu', post_type='food_hack', verified='true', related_order=999,
+            author=self.other.pk, title='Judul palsu', post_type='food_hack', verified='true',
         ))
         post = CommunityPost.objects.get()
         self.assertEqual(post.author, self.customer)
         self.assertEqual(post.post_type, 'review')
-        self.assertEqual(post.title, 'Review pesanan contoh')
+        self.assertEqual(post.title, f'Review {self.completed.food_name}')
+        self.assertEqual(post.related_order, self.completed)
         self.assertEqual(post.rating, 4)
         self.assertRedirects(response, reverse('community:review_detail', args=[post.pk]))
         result = self.client.get(response.url)
-        self.assertContains(result, 'Belum terverifikasi')
+        self.assertContains(result, 'Pembelian terverifikasi')
         self.assertContains(result, post.content)
         self.assertNotContains(result, 'Verified Purchase')
         feed = self.client.get(reverse('community:home'))
         self.assertContains(feed, post.content)
         self.assertContains(feed, response.url + '?feed=')
-        self.assertContains(feed, 'Belum terverifikasi')
+        self.assertContains(feed, 'Pembelian terverifikasi')
 
     def test_rating_and_description_validation(self):
         invalid = [self.payload(rating=value) for value in ('', '0', '6', 'four')]
@@ -1236,11 +1261,11 @@ class ReviewPageTests(TestCase):
         response = self.client.post(self.url, self.payload())
         url = response.url
         self.client.force_login(self.other)
-        self.assertContains(self.client.get(url), 'Belum terverifikasi')
+        self.assertContains(self.client.get(url), 'Pembelian terverifikasi')
         self.client.force_login(self.merchant)
-        self.assertContains(self.client.get(url), 'Belum terverifikasi')
+        self.assertContains(self.client.get(url), 'Pembelian terverifikasi')
         self.client.logout()
-        self.assertContains(self.client.get(url), 'Belum terverifikasi')
+        self.assertContains(self.client.get(url), 'Pembelian terverifikasi')
         self.client.force_login(self.customer)
         food_hack = CommunityPost.objects.create(author=self.customer, title='Tips', content='Konten.')
         self.assertEqual(self.client.get(reverse('community:review_detail', args=[food_hack.pk])).status_code, 404)
@@ -1406,3 +1431,109 @@ class ReviewPageTests(TestCase):
         self.assertContains(result, '&lt;script&gt;alert(1)&lt;/script&gt;')
         self.assertNotContains(result, '<script>alert(1)</script>')
         self.assertEqual(self.client.post(response.url).status_code, 405)
+
+    def test_order_selector_only_offers_unreviewed_completed_orders_owned_by_customer(self):
+        foreign = completed_order(self.other, self.merchant)
+        pending = completed_order(self.customer, self.merchant, status='pending', completed_at=None)
+        response = self.client.get(self.url, {'order': self.completed.pk})
+        field = response.context['form'].fields['related_order']
+        self.assertEqual(list(field.queryset), [self.completed])
+        self.assertEqual(response.context['form'].initial['related_order'], self.completed.pk)
+        self.assertNotContains(response, str(foreign.pk))
+        self.assertNotContains(response, str(pending.pk))
+
+    def test_foreign_missing_malformed_or_uncompleted_order_cannot_be_reviewed(self):
+        foreign = completed_order(self.other, self.merchant)
+        invalid_ids = [foreign.pk, uuid.uuid4(), 'invalid-id', '']
+        for status in ('pending', 'ready_to_pickup', 'cancelled'):
+            invalid_ids.append(completed_order(self.customer, self.merchant, status=status, completed_at=None).pk)
+        for order_id in invalid_ids:
+            with self.subTest(order_id=order_id):
+                response = self.client.post(self.url, self.payload(related_order=str(order_id)))
+                self.assertTrue(response.context['form'].errors.get('related_order'))
+                if order_id:
+                    self.assertEqual(self.client.get(self.url, {'order': order_id}).status_code, 404)
+        self.assertFalse(CommunityPost.objects.exists())
+
+    def test_completed_order_can_only_be_reviewed_once_even_after_repeated_post(self):
+        response = self.client.post(self.url, self.payload())
+        repeat = self.client.post(self.url, self.payload())
+        self.assertTrue(repeat.context['form'].errors.get('related_order'))
+        self.assertEqual(CommunityPost.objects.count(), 1)
+        self.assertRedirects(self.client.get(self.url, {'order': self.completed.pk}), response.url)
+        self.assertFalse(self.client.get(self.url).context['has_eligible_orders'])
+
+    def test_duplicate_review_is_also_rejected_by_database(self):
+        from django.db import IntegrityError, transaction
+        self.client.post(self.url, self.payload())
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            CommunityPost.objects.create(author=self.customer, related_order=self.completed,
+                                         post_type='review', title='Duplikat', content='Duplikat', rating=5)
+
+    def test_model_validates_review_order_ownership_status_and_food_hack_relation(self):
+        for owner, order in ((self.other, self.completed),
+                             (self.customer, completed_order(self.customer, self.merchant, status='pending', completed_at=None)),
+                             (self.customer, None)):
+            with self.assertRaises(ValidationError):
+                CommunityPost(author=owner, related_order=order, post_type='review',
+                              title='Review', content='Enak', rating=5).full_clean()
+        with self.assertRaises(ValidationError):
+            CommunityPost(author=self.customer, related_order=self.completed,
+                          title='Tips', content='Tips.').full_clean()
+
+    def test_review_submission_is_asynchronous_with_validated_json_errors(self):
+        headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+        invalid = self.client.post(self.url, self.payload(related_order=str(uuid.uuid4())), **headers)
+        self.assertEqual(invalid.status_code, 400)
+        self.assertIn('related_order', invalid.json()['errors'])
+        response = self.client.post(self.url, self.payload(), **headers)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()['detail_url'], reverse('community:review_detail', args=[CommunityPost.objects.get().pk]))
+        repeated = self.client.post(self.url, self.payload(), **headers)
+        self.assertEqual(repeated.status_code, 400)
+        self.assertEqual(CommunityPost.objects.count(), 1)
+
+    def test_order_cards_link_completed_orders_to_review_then_existing_review(self):
+        pending = completed_order(self.customer, self.merchant, status='pending', completed_at=None)
+        expected = self.url + '?order=' + str(self.completed.pk)
+        self.assertContains(self.client.get(reverse('order:list')), expected)
+        self.assertNotContains(self.client.get(reverse('order:list')), self.url + '?order=' + str(pending.pk))
+        response = self.client.post(self.url, self.payload())
+        cards = self.client.get(reverse('order:orders_api')).json()['html']
+        self.assertIn(response.url, cards)
+        self.assertIn('Lihat Review', cards)
+        self.assertNotIn(expected, cards)
+        self.client.force_login(self.merchant)
+        self.assertNotContains(self.client.get(reverse('order:list')), 'Tulis Review')
+
+    def test_public_verified_review_does_not_expose_private_transaction_code(self):
+        response = self.client.post(self.url, self.payload())
+        self.client.logout()
+        for url in (response.url, reverse('community:home')):
+            page = self.client.get(url)
+            self.assertContains(page, 'Pembelian terverifikasi')
+            self.assertContains(page, self.merchant.username)
+            self.assertNotContains(page, self.completed.pickup_code)
+            self.assertNotContains(page, str(self.completed.reservation_key))
+
+    def test_store_rating_counts_only_verified_reviews_for_its_owner(self):
+        from merchant_store.models import MerchantStore
+        from merchant_store.ratings import get_rating, get_rating_map
+        store = MerchantStore.objects.create(owner=self.merchant, name='Toko Roti',
+                    address='Depok', phone='081234567890', opening_time=time(8), closing_time=time(22))
+        self.client.post(self.url, self.payload(rating=4))
+        second = completed_order(self.other, self.merchant)
+        CommunityPost.objects.create(author=self.other, related_order=second, post_type='review',
+                                     title='Review lain', content='Enak.', rating=5)
+        CommunityPost.objects.create(author=self.customer, post_type='review',
+                                     title='Demo lama', content='Demo.', rating=1)
+        pending = completed_order(self.customer, self.merchant, status='pending', completed_at=None)
+        CommunityPost.objects.create(author=self.customer, related_order=pending, post_type='review',
+                                     title='Tidak valid', content='Tidak valid.', rating=1)
+        foreign = completed_order(self.other, self.merchant)
+        CommunityPost.objects.create(author=self.customer, related_order=foreign, post_type='review',
+                                     title='Bukan pemilik', content='Tidak valid.', rating=1)
+        self.assertEqual(get_rating(store.pk), (4.5, 2))
+        self.assertEqual(get_rating_map([]), {})
+        self.assertEqual(get_rating(99999), (None, 0))
+        self.assertEqual(self.client.get(reverse('merchant_store:detail', args=[store.pk])).status_code, 200)

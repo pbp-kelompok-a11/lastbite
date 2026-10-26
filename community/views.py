@@ -1,19 +1,22 @@
 from urllib.parse import urlencode
+from uuid import UUID
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Count, Exists, OuterRef, Q
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST, require_safe
 from django.views.decorators.vary import vary_on_headers
+from django.views.decorators.cache import never_cache
 
 from .forms import CommunityCommentForm, FoodHackForm, ReviewForm
 from .models import CommunityComment, CommunityPost
 from accounts.permissions import is_customer, is_merchant
+from order.models import Order
 
 
 def can_use_food_hacks(user):
@@ -24,7 +27,7 @@ def posts_for(user):
     votes = CommunityPost.upvotes.through.objects.filter(
         communitypost_id=OuterRef('pk'), user_id=user.pk,
     )
-    return CommunityPost.objects.select_related('author__profile').annotate(
+    return CommunityPost.objects.select_related('author__profile', 'related_order__surprise_bag__merchant').annotate(
         upvote_count=Count('upvotes', distinct=True), has_upvoted=Exists(votes),
         comment_count=Count('comments', distinct=True),
     ).order_by('-created_at', '-pk')
@@ -336,28 +339,64 @@ def delete_food_hack(request, pk):
 
 
 @login_required
+@never_cache
 @require_http_methods(['GET', 'POST'])
 def create_review(request):
     if not is_customer(request.user):
         raise PermissionDenied('Hanya Customer yang dapat menulis review.')
     post = CommunityPost(
         author=request.user, post_type=CommunityPost.PostType.REVIEW,
-        title='Review pesanan contoh',
+        title='Review pesanan',
     )
     form = ReviewForm(
         request.POST if request.method == 'POST' else None,
-        instance=post,
+        instance=post, user=request.user,
     )
+    selected_order = None
+    if request.method == 'GET' and request.GET.get('order'):
+        try:
+            order_id = UUID(request.GET['order'])
+        except ValueError:
+            raise Http404
+        selected_order = get_object_or_404(
+            Order.objects.select_related('surprise_bag__merchant'),
+            pk=order_id, customer=request.user, status=Order.Status.COMPLETED,
+        )
+        existing = CommunityPost.objects.filter(related_order=selected_order, post_type='review').first()
+        if existing:
+            return redirect('community:review_detail', pk=existing.pk)
+        form.initial['related_order'] = selected_order.pk
     if request.method == 'POST' and form.is_valid():
-        post = form.save()
-        return redirect('community:review_detail', pk=post.pk)
-    return render(request, 'community/review_form.html', {'form': form, 'post': post})
+        try:
+            with transaction.atomic():
+                order = get_object_or_404(
+                    Order.objects.select_for_update(), pk=form.cleaned_data['related_order'].pk,
+                    customer=request.user, status=Order.Status.COMPLETED,
+                )
+                if CommunityPost.objects.filter(related_order=order, post_type='review').exists():
+                    form.add_error('related_order', 'Pesanan ini sudah memiliki review.')
+                else:
+                    post = form.save()
+        except IntegrityError:
+            form.add_error('related_order', 'Pesanan ini sudah memiliki review.')
+        if not form.errors:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'detail_url': reverse('community:review_detail', args=[post.pk]),
+                                     'message': 'Review berhasil disimpan.'}, status=201)
+            return redirect('community:review_detail', pk=post.pk)
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
+    return render(request, 'community/review_form.html', {
+        'form': form, 'post': post, 'selected_order': selected_order,
+        'has_eligible_orders': form.fields['related_order'].queryset.exists(),
+    })
 
 
 @require_safe
 def review_detail(request, pk):
     post = get_object_or_404(
-        CommunityPost.objects.select_related('author'), pk=pk, post_type=CommunityPost.PostType.REVIEW,
+        CommunityPost.objects.select_related('author', 'related_order__surprise_bag__merchant'),
+        pk=pk, post_type=CommunityPost.PostType.REVIEW,
     )
     back_url = reverse('community:home')
     if request.GET.get('feed'):
