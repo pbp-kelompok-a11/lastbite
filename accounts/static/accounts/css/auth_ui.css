@@ -1,0 +1,33 @@
+.notifications {
+  position: fixed;
+  top: calc(var(--navbar-height) + var(--space-md));
+  right: var(--space-lg);
+  width: min(400px, calc(100% - var(--space-2xl)));
+  display: grid;
+  gap: var(--space-sm);
+  z-index: 1100;
+}
+.notification {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: var(--shadow-lg);
+  overflow-wrap: anywhere;
+}
+.notification--success { background: var(--color-primary-light); color: var(--color-primary-dark); border-color: var(--color-primary); }
+.notification p { flex: 1; }
+.notification__close { flex-shrink: 0; color: inherit; font-size: 1.5rem; line-height: 1; padding: .25rem; border-radius: var(--radius-sm); }
+.notification__close:hover { background: var(--color-bg); }
+.notification__close:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.logout-dialog { margin: auto; width: min(460px, calc(100% - 2rem)); padding: var(--space-xl); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-bg); color: var(--color-text); box-shadow: var(--shadow-xl); }
+.logout-dialog::backdrop { background: rgba(26, 43, 30, .55); }
+.logout-dialog h2 { font-family: var(--font-heading); font-size: 1.5rem; line-height: 1.35; margin-bottom: var(--space-md); }
+.logout-dialog__actions { display: flex; flex-wrap: wrap; gap: var(--space-md); margin-top: var(--space-lg); }
+.logout-dialog__error { color: #a12b22; margin-top: var(--space-md); }
+.logout-dialog button:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
+.logout-dialog button:disabled { cursor: wait; opacity: .6; }

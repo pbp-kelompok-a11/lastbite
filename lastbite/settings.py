@@ -20,7 +20,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-f4b0()y0xii)mw_3f-!i0
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost 127.0.0.1').split()
+ALLOWED_HOSTS = [
+    'fathir-atha-lastbite-pbp-kelompok-a11.pws.cs.ui.ac.id',
+    'localhost',
+    '127.0.0.1',
+]
 
 # ===========================================================
 # APPLICATIONS
@@ -33,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # LastBite apps
+    'accounts',
     'main',
     'surprise_bag',
     'order',
@@ -83,8 +88,15 @@ WSGI_APPLICATION = 'lastbite.wsgi.application'
 # ===========================================================
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'fathir.atha',
+        'USER': 'fathir.atha',
+        'PASSWORD': 'Q00U2X1ruoFjnw4Nz7C6lxRuRuOvocRY',
+        'HOST': '10.119.106.139',
+        'PORT': '5432',
+        'OPTIONS': {
+            'options': '-c search_path=lastbite,public'
+        },
     }
 }
 
@@ -124,6 +136,10 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # DEFAULT PRIMARY KEY
 # ===========================================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'main:home'
+LOGOUT_REDIRECT_URL = 'main:home'
 
 # ===========================================================
 # CSRF TRUSTED ORIGINS (for PWS deployment)

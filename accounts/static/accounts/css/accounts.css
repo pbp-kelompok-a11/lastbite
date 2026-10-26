@@ -1,0 +1,15 @@
+.accounts { padding-top: calc(var(--navbar-height) + var(--space-2xl)); padding-bottom: var(--space-3xl); }
+.accounts-panel { max-width: 520px; margin: 0 auto; padding: var(--space-xl); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
+.accounts-eyebrow { color: var(--color-primary); font-size: .75rem; letter-spacing: .1em; font-weight: 700; }
+.accounts h1 { font-family: var(--font-heading); font-size: clamp(1.5rem, 5vw, 2rem); margin: var(--space-md) 0; line-height: 1.3; }
+.accounts-form { display: grid; gap: var(--space-lg); margin-top: var(--space-xl); }
+.accounts-field label { display: block; font-weight: 600; margin-bottom: var(--space-sm); }
+.accounts-field input, .accounts-field select { width: 100%; padding: .75rem 1rem; font: inherit; color: var(--color-text); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+.accounts-help { color: var(--color-text-muted); font-size: .8125rem; margin-top: var(--space-sm); }
+.accounts-help ul { list-style: disc; padding-left: var(--space-lg); }
+.accounts .errorlist { color: #a12b22; font-size: .875rem; }
+.accounts-switch { margin-top: var(--space-lg); }
+.accounts a { color: var(--color-primary); text-decoration: underline; text-underline-offset: 4px; }
+.accounts :is(input, select, button, a):focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
+.accounts-form button { justify-self: start; }
+@media (max-width: 480px) { .accounts-panel { padding: var(--space-lg); } }
