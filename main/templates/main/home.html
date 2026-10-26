@@ -46,7 +46,7 @@
     <div class="hero__visual">
       <div class="hero__card-stack">
         <div class="hero__bag-card hero__bag-card--1">
-          <div class="hero__bag-emoji"><img src="{% static 'img/croissant.png' %}" alt="Bento"/></div>
+          <div class="hero__bag-emoji"><img src="{% static 'img/croissant.png' %}" alt="Croissant" style="width: 56px; height: 56px; object-fit: contain;"/></div>
           <div class="hero__bag-info">
             <p class="hero__bag-name">Bakers Corner</p>
             <p class="hero__bag-type">Pastry Surprise Bag</p>
@@ -58,7 +58,7 @@
           </div>
         </div>
         <div class="hero__bag-card hero__bag-card--2">
-          <div class="hero__bag-emoji"><img src="{% static 'img/bento.png' %}" alt="Bento"/></div>
+          <div class="hero__bag-emoji"><img src="{% static 'img/bento.png' %}" alt="Bento" style="width: 56px; height: 56px; object-fit: contain;"/></div>
           <div class="hero__bag-info">
             <p class="hero__bag-name">Bento Corner</p>
             <p class="hero__bag-type">Lunch Box Surprise</p>
@@ -233,7 +233,7 @@
           Pantau jejak dampak lingkungan dan penghematan finansialmu langsung di LastBite.
           Setiap transaksi tercatat dan dihitung emisi karbon yang berhasil dicegah.
         </p>
-        <a href="#" class="btn btn--primary">Lihat Eco Impact Journal</a>
+        <a href="{% url 'eco_impact:dashboard' %}" class="btn btn--primary">Lihat Eco Impact Journal</a>
       </div>
       <div class="eco-impact__stats">
         <div class="eco-stat">

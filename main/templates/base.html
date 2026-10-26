@@ -40,6 +40,7 @@
         <li><a href="{% url 'surprise_bag:catalog' %}" class="navbar__link">Surprise Bags</a></li>
         <li><a href="#" class="navbar__link">Community</a></li>
         {% if user.profile.role == 'customer' or user.profile.role == 'merchant' %}<li><a href="{% url 'order:list' %}" class="navbar__link">Pesanan</a></li>{% endif %}
+        {% if user.profile.role == 'customer' %}<li><a href="{% url 'eco_impact:dashboard' %}" class="navbar__link">Eco Impact</a></li>{% endif %}
       </ul>
 
       <!-- Auth Buttons -->
