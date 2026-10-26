@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit Toko{% else %}Daftarkan Toko{% endif %} — LastBite{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="{% static 'merchant_store/css/merchant_store.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="ms-page section-container">
+  <section class="ms-card-panel" aria-labelledby="ms-form-title">
+    <p class="ms-eyebrow">MERCHANT</p>
+    <h1 id="ms-form-title" class="ms-title">{% if is_edit %}Edit profil toko{% else %}Daftarkan toko kamu{% endif %}</h1>
+    <p class="ms-subtitle">Data ini tampil di direktori toko. Lokasi di peta dicari otomatis dari alamat.</p>
+
+    <form method="post" class="ms-form" id="ms-store-form" novalidate
+          data-geocode-url="{% url 'merchant_store:api_geocode' %}">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+      <div class="ms-field{% if field.name == 'phone' or field.name == 'business_email' or field.name == 'opening_time' or field.name == 'closing_time' %} ms-field--half{% endif %}">
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.help_text %}<p class="ms-help">{{ field.help_text }}</p>{% endif %}
+        {{ field.errors }}
+        {% if field.name == 'address' %}
+          <div class="ms-geocode">
+            <button type="button" id="ms-check-location" class="btn btn--outline btn--sm">📍 Cek lokasi di peta</button>
+            <p id="ms-geocode-status" class="ms-status" role="status" aria-live="polite"></p>
+            <div id="ms-form-map" class="ms-map ms-map--form" hidden></div>
+          </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      <div class="ms-form__actions">
+        <button type="submit" class="btn btn--primary btn--md">{% if is_edit %}Simpan perubahan{% else %}Daftarkan toko{% endif %}</button>
+        <a href="{% url 'merchant_store:my_store' %}" class="btn btn--ghost btn--md">Batal</a>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'merchant_store/js/store_form.js' %}"></script>
+{% endblock %}

@@ -33,3 +33,5 @@ build/
 
 # Media files (user uploads)
 media/
+.test-deps/
+.local-qa/

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Wishlist Toko — LastBite{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'merchant_store/css/merchant_store.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="ms-page section-container" data-csrf="{{ csrf_token }}">
+  <header class="ms-header">
+    <h1 class="ms-title">Toko Favorit</h1>
+    <p class="ms-subtitle">Toko yang kamu simpan ke wishlist.</p>
+  </header>
+
+  <ul class="ms-results ms-results--grid" id="ms-wishlist-list">
+    {% for entry in entries %}
+    <li class="ms-card" data-wishlist-card>
+      <div class="ms-card__main">
+        <h3><a href="{% url 'merchant_store:detail' entry.store.id %}">{{ entry.store.name }}</a></h3>
+        {% if not entry.store.is_active %}<span class="ms-badge ms-badge--off">Nonaktif</span>
+        {% elif entry.store.is_open_now %}<span class="ms-badge ms-badge--open">Buka</span>
+        {% else %}<span class="ms-badge ms-badge--closed">Tutup</span>{% endif %}
+        <p class="ms-card__address">{{ entry.store.address }}</p>
+        <p class="ms-card__meta">
+          <span>🕐 {{ entry.store.hours_display }}</span>
+          <span>{% if entry.rating_average %}⭐ {{ entry.rating_average|floatformat:1 }} ({{ entry.rating_count }}){% else %}Belum ada rating{% endif %}</span>
+        </p>
+      </div>
+      <div class="ms-card__actions">
+        <button type="button" class="btn btn--outline btn--sm js-wishlist-toggle"
+                data-url="{% url 'merchant_store:wishlist_toggle' entry.store.id %}"
+                data-wishlisted="true" data-remove-on-unwish="true" aria-pressed="true">♥ Tersimpan</button>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <div class="ms-empty" id="ms-wishlist-empty" {% if entries %}hidden{% endif %}>
+    <p>Wishlist kamu masih kosong.</p>
+    <a href="{% url 'merchant_store:list' %}" class="btn btn--primary btn--md">Jelajahi direktori toko</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'merchant_store/js/wishlist.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ bag.name }} — LastBite{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/surprise_bag.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="sb-page">
+  <div class="section-container">
+    <a href="{% url 'surprise_bag:catalog' %}" class="sb-back">← Kembali ke katalog</a>
+
+    <div class="sb-detail">
+      <div class="sb-detail__visual">
+        {% if bag.image_url %}
+          <img src="{{ bag.image_url }}" alt="{{ bag.name }}" class="sb-detail__image"
+               onerror="this.replaceWith('{{ bag.emoji }}')">
+        {% else %}
+          {{ bag.emoji }}
+        {% endif %}
+      </div>
+      <div class="sb-detail__info">
+        <span class="bag-card__merchant">{{ bag.merchant_name }}</span>
+        <h1 class="sb-detail__name">{{ bag.name }}</h1>
+        <div>
+          <span class="sb-badge">{{ bag.get_category_display }}</span>
+          {% if not bag.is_active %}<span class="sb-badge sb-badge--off">Nonaktif</span>{% endif %}
+        </div>
+
+        <div class="bag-card__prices sb-detail__prices">
+          <span class="bag-card__price-orig">Rp {{ bag.original_price|floatformat:"0g" }}</span>
+          <span class="bag-card__price-disc">Rp {{ bag.discounted_price|floatformat:"0g" }}</span>
+          <span class="bag-card__discount-badge">-{{ bag.discount_percent }}%</span>
+        </div>
+
+        <p>{{ bag.description|linebreaksbr }}</p>
+
+        <dl class="sb-detail__meta">
+          <div><dt>Waktu pickup</dt><dd>{{ bag.pickup_time }}</dd></div>
+          <div><dt>Sisa stok</dt><dd id="detail-stock">{% if bag.stock %}{{ bag.stock }} paket{% else %}Habis{% endif %}</dd></div>
+        </dl>
+
+        <div class="sb-detail__actions">
+          {% if is_owner %}
+            <a href="{% url 'surprise_bag:edit' bag.pk %}" class="btn btn--primary btn--md">Edit Paket</a>
+            <a href="{% url 'surprise_bag:my_bags' %}" class="btn btn--outline btn--md">Kelola Inventaris</a>
+          {% elif is_customer %}
+            <a href="{% url 'order:create' bag.pk %}" id="order-btn" class="btn btn--primary btn--lg{% if not bag.is_available %} is-disabled{% endif %}">Pesan Sekarang</a>
+          {% elif user.is_authenticated %}
+            <p>Pemesanan hanya tersedia untuk akun Customer.</p>
+          {% else %}
+            <a href="{{ login_url }}" class="btn btn--primary btn--lg">Login untuk Memesan</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const BAG_API = "{% url 'surprise_bag:bag_api' bag.pk %}";
+const stockEl = document.getElementById('detail-stock');
+const orderBtn = document.getElementById('order-btn');
+
+// sisa stok di-refresh tiap 15 detik tanpa reload halaman
+function refreshStock() {
+  fetch(BAG_API)
+    .then(r => (r.ok ? r.json() : null))
+    .then(bag => {
+      if (!bag) return;
+      stockEl.textContent = bag.stock > 0 ? `${bag.stock} paket` : 'Habis';
+      if (orderBtn) orderBtn.classList.toggle('is-disabled', !bag.is_available);
+    });
+}
+
+setInterval(() => { if (!document.hidden) refreshStock(); }, 15000);
+</script>
+{% endblock %}
