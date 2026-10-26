@@ -2,7 +2,7 @@ from django import forms
 
 from order.models import Order
 
-from .models import CommunityComment, CommunityPost
+from .models import CommunityComment, CommunityPost, MerchantReviewReply
 
 
 class FoodHackForm(forms.ModelForm):
@@ -57,6 +57,19 @@ class ReviewForm(forms.ModelForm):
         if order:
             self.instance.title = f'Review {order.food_name}'
         return cleaned
+
+
+class ReviewReplyForm(forms.ModelForm):
+    class Meta:
+        model = MerchantReviewReply
+        fields = ['content']
+        labels = {'content': 'Balasan Merchant'}
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'rows': 4, 'maxlength': 2000,
+                'placeholder': 'Tanggapi pengalaman Customer dengan ramah.',
+            }),
+        }
 
 
 class CommunityCommentForm(forms.ModelForm):

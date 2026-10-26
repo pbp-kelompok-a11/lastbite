@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Exists, OuterRef, Q
+from django.db.models import Count, Exists, F, OuterRef, Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -13,8 +13,8 @@ from django.views.decorators.http import require_http_methods, require_POST, req
 from django.views.decorators.vary import vary_on_headers
 from django.views.decorators.cache import never_cache
 
-from .forms import CommunityCommentForm, FoodHackForm, ReviewForm
-from .models import CommunityComment, CommunityPost
+from .forms import CommunityCommentForm, FoodHackForm, ReviewForm, ReviewReplyForm
+from .models import CommunityComment, CommunityPost, MerchantReviewReply
 from accounts.permissions import is_customer, is_merchant
 from order.models import Order
 
@@ -27,7 +27,11 @@ def posts_for(user):
     votes = CommunityPost.upvotes.through.objects.filter(
         communitypost_id=OuterRef('pk'), user_id=user.pk,
     )
-    return CommunityPost.objects.select_related('author__profile', 'related_order__surprise_bag__merchant').annotate(
+    return CommunityPost.objects.filter(
+        Q(post_type=CommunityPost.PostType.FOOD_HACK)
+        | Q(post_type=CommunityPost.PostType.REVIEW, related_order__status=Order.Status.COMPLETED,
+            related_order__customer_id=F('author_id'))
+    ).select_related('author__profile', 'related_order__surprise_bag__merchant').annotate(
         upvote_count=Count('upvotes', distinct=True), has_upvoted=Exists(votes),
         comment_count=Count('comments', distinct=True),
     ).order_by('-created_at', '-pk')
@@ -54,15 +58,18 @@ def home(request):
     if sort not in dict(sort_options[post_type]):
         sort = 'newest'
     liked_only = post_type == 'food_hack' and request.GET.get('liked') == '1'
+    mine_only = post_type == 'all' and request.GET.get('mine') == '1'
     rating = request.GET.get('rating', 'all') if post_type == 'review' else 'all'
     if rating not in ('all', '1', '2', '3', '4', '5'):
         rating = 'all'
-    if liked_only and not request.user.is_authenticated:
+    if (liked_only or mine_only) and not request.user.is_authenticated:
         login_url = reverse('accounts:login') + '?' + urlencode({'next': request.get_full_path()})
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'login_url': login_url}, status=401)
         return redirect(login_url)
     posts = posts_for(request.user)
+    if mine_only:
+        posts = posts.filter(author=request.user)
     if post_type != 'all':
         posts = posts.filter(post_type=post_type)
     if query:
@@ -94,6 +101,8 @@ def home(request):
             page_numbers.append(number)
             previous = number
     filter_params = {'post_type': post_type}
+    if mine_only:
+        filter_params['mine'] = '1'
     if sort != 'newest':
         filter_params['sort'] = sort
     if liked_only:
@@ -107,11 +116,14 @@ def home(request):
     for category in sort_options:
         params = {**filter_params, 'post_type': category}
         if category != post_type:
+            params.pop('mine', None)
             params.pop('sort', None)
             params.pop('liked', None)
             params.pop('rating', None)
         tab_queries[category] = urlencode(params)
     heading = 'Hasil pencarian' if query else 'Postingan yang disukai' if liked_only else 'Food Hacks' if post_type == 'food_hack' else 'Reviews' if post_type == 'review' else 'Postingan komunitas'
+    if mine_only and not query:
+        heading = {'all': 'Postingan milikku', 'food_hack': 'Food Hacks milikku', 'review': 'Reviews milikku'}[post_type]
     search_label, search_placeholder = {
         'all': ('Search Community', 'Search Community...'),
         'food_hack': ('Search Food Hacks', 'Search Food Hacks...'),
@@ -124,7 +136,7 @@ def home(request):
         'posts': page_obj.object_list, 'can_create_food_hack': can_use_food_hacks(request.user),
         'can_upvote': can_use_food_hacks(request.user),
         'selected_post_type': post_type, 'query': query,
-        'selected_sort': sort, 'liked_only': liked_only, 'feed_heading': heading,
+        'selected_sort': sort, 'liked_only': liked_only, 'mine_only': mine_only, 'feed_heading': heading,
         'sort_options': sort_options[post_type],
         'selected_rating': rating, 'rating_options': ['5', '4', '3', '2', '1'],
         'search_label': search_label, 'search_placeholder': search_placeholder,
@@ -352,7 +364,6 @@ def create_review(request):
         request.POST if request.method == 'POST' else None,
         instance=post, user=request.user,
     )
-    selected_order = None
     if request.method == 'GET' and request.GET.get('order'):
         try:
             order_id = UUID(request.GET['order'])
@@ -387,9 +398,28 @@ def create_review(request):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
     return render(request, 'community/review_form.html', {
-        'form': form, 'post': post, 'selected_order': selected_order,
+        'form': form,
         'has_eligible_orders': form.fields['related_order'].queryset.exists(),
     })
+
+
+def render_review_detail(request, post, reply_form=None, status=200):
+    reply = MerchantReviewReply.objects.filter(review=post).select_related('merchant').first()
+    can_reply = (
+        is_merchant(request.user) and post.is_verified_purchase
+        and post.related_order.surprise_bag.merchant_id == request.user.pk
+    )
+    if can_reply and reply_form is None:
+        reply_form = ReviewReplyForm(instance=reply)
+    back_url = reverse('community:home')
+    feed_query = request.POST.get('feed', '') if request.method == 'POST' else request.GET.get('feed', '')
+    if feed_query:
+        back_url += '?' + feed_query
+    return render(request, 'community/review_detail.html', {
+        'post': post, 'back_url': back_url, 'reply': reply, 'can_reply': can_reply,
+        'reply_form': reply_form, 'reply_dialog_open': bool(reply_form and reply_form.is_bound),
+        'feed_query': feed_query,
+    }, status=status)
 
 
 @require_safe
@@ -397,8 +427,29 @@ def review_detail(request, pk):
     post = get_object_or_404(
         CommunityPost.objects.select_related('author', 'related_order__surprise_bag__merchant'),
         pk=pk, post_type=CommunityPost.PostType.REVIEW,
+        related_order__status=Order.Status.COMPLETED, related_order__customer_id=F('author_id'),
     )
-    back_url = reverse('community:home')
-    if request.GET.get('feed'):
-        back_url += '?' + request.GET['feed']
-    return render(request, 'community/review_detail.html', {'post': post, 'back_url': back_url})
+    return render_review_detail(request, post)
+
+
+@login_required
+@require_POST
+def reply_review(request, pk):
+    with transaction.atomic():
+        post = get_object_or_404(
+            CommunityPost.objects.select_for_update(), pk=pk, post_type=CommunityPost.PostType.REVIEW,
+        )
+        if not (is_merchant(request.user) and post.is_verified_purchase
+                and post.related_order.surprise_bag.merchant_id == request.user.pk):
+            raise PermissionDenied('Hanya Merchant pemilik pesanan yang dapat membalas Review ini.')
+        reply = MerchantReviewReply.objects.filter(review=post).first()
+        form = ReviewReplyForm(request.POST, instance=reply or MerchantReviewReply(
+            review=post, merchant=request.user,
+        ))
+        if not form.is_valid():
+            return render_review_detail(request, post, reply_form=form, status=400)
+        form.save()
+    url = reverse('community:review_detail', args=[post.pk])
+    if request.POST.get('feed'):
+        url += '?' + urlencode({'feed': request.POST['feed']})
+    return redirect(url + '#merchant-reply')
