@@ -5,23 +5,34 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import ImpactLog
 from .forms import ImpactLogForm
+from django.core.exceptions import PermissionDenied
+from accounts.permissions import is_customer
 
 
 @login_required
 def dashboard(request):
     # halaman utama — data diisi via AJAX, jadi view ini cukup render template kosong
+    # hanya role customer yang boleh mengakses eco impact
+    if not is_customer(request.user):
+        raise PermissionDenied
     return render(request, 'eco_impact/dashboard.html')
 
 
 @login_required
 def log_list(request):
     # ambil semua log milik user yang sedang login saja
+    # hanya role customer yang boleh mengakses eco impact
+    if not is_customer(request.user):
+        raise PermissionDenied
     logs = ImpactLog.objects.filter(user=request.user)
     return render(request, 'eco_impact/log_list.html', {'logs': logs})
 
 
 @login_required
 def create_log(request):
+    # hanya role customer yang boleh mengakses eco impact
+    if not is_customer(request.user):
+        raise PermissionDenied
     if request.method == 'POST':
         form = ImpactLogForm(request.POST)
         if form.is_valid():
@@ -37,6 +48,10 @@ def create_log(request):
 
 @login_required
 def edit_log(request, pk):
+    # hanya role customer yang boleh mengakses eco impact
+    if not is_customer(request.user):
+        raise PermissionDenied
+
     # pastikan log ini punya user yang login, bukan punya orang lain
     log = get_object_or_404(ImpactLog, pk=pk, user=request.user)
 
@@ -56,6 +71,9 @@ def edit_log(request, pk):
 
 @login_required
 def delete_log(request, pk):
+    # hanya role customer yang boleh mengakses eco impact
+    if not is_customer(request.user):
+        raise PermissionDenied
     log = get_object_or_404(ImpactLog, pk=pk, user=request.user)
     # hanya log manual yang boleh dihapus user
     if log.source == 'manual':
@@ -68,6 +86,9 @@ def delete_log(request, pk):
 
 @login_required
 def summary_api(request):
+    # hanya role customer yang boleh mengakses eco impact
+    if not is_customer(request.user):
+        raise PermissionDenied
     """Ringkasan metrik (total hemat, total karbon, jumlah log) dalam JSON"""
     period = request.GET.get('period', 'all')  # bisa: weekly, monthly, all
     logs = ImpactLog.objects.filter(user=request.user)
@@ -92,6 +113,9 @@ def summary_api(request):
 
 @login_required
 def logs_api(request):
+    # hanya role customer yang boleh mengakses eco impact
+    if not is_customer(request.user):
+        raise PermissionDenied
     """Daftar log dalam JSON, bisa difilter per periode"""
     period = request.GET.get('period', 'all')
     logs = ImpactLog.objects.filter(user=request.user)
