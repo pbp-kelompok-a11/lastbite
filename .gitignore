@@ -35,3 +35,6 @@ build/
 media/
 .test-deps/
 .local-qa/
+
+# Panduan
+panduan_tk.txt
