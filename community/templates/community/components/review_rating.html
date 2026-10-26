@@ -1,4 +1,4 @@
 <div class="community-review-rating">
   <span class="community-review-rating__score"><span aria-hidden="true">★</span> {{ post.rating }} / 5</span>
-  <span class="community-review-status">Belum terverifikasi</span>
+  <span class="community-review-status">{% if post.is_verified_purchase %}Pembelian terverifikasi{% else %}Belum terverifikasi{% endif %}</span>
 </div>

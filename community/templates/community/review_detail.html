@@ -16,7 +16,9 @@
       <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:'j M Y, H:i' }}</time>
     </div>
     {% include 'community/components/review_rating.html' %}
-    <p class="community-review-notice">Review ini belum terhubung dengan pesanan. Pembelian belum terverifikasi.</p>
+    {% if post.is_verified_purchase %}
+    <p class="community-review-notice">{{ post.related_order.food_name }} · {{ post.related_order.surprise_bag.merchant_name }} · Pickup {{ post.related_order.pickup_date|date:'j M Y' }}</p>
+    {% else %}<p class="community-review-notice">Review lama ini belum terhubung dengan pesanan. Pembelian belum terverifikasi.</p>{% endif %}
     <div class="community-detail__content">{{ post.content|linebreaks }}</div>
   </article>
 </div>

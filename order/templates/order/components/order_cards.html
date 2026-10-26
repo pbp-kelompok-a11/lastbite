@@ -13,6 +13,10 @@
       <div><dt>Dibuat</dt><dd>{{ order.created_at|date:'d M Y, H:i' }}</dd></div>
     </dl>
     {% if is_customer %}
+      {% if order.status == 'completed' %}
+        {% if order.review_id %}<a class="btn btn--outline btn--md" href="{% url 'community:review_detail' order.review_id %}">Lihat Review</a>
+        {% else %}<a class="btn btn--primary btn--md" href="{% url 'community:review_create' %}?order={{ order.pk }}">Tulis Review</a>{% endif %}
+      {% endif %}
       {% if order.status == 'pending' or order.status == 'ready_to_pickup' %}<div class="order-pickup"><span>Kode pickup kamu</span><strong>{{ order.pickup_code }}</strong><small>Tunjukkan kode ini saat serah terima di toko.</small></div>{% endif %}
       {% if order.status == 'pending' %}<button type="button" class="btn btn--outline btn--md" data-order-action="cancel" data-order-url="{% url 'order:update_api' order.pk 'cancel' %}">Batalkan Pesanan</button>{% endif %}
     {% elif is_merchant %}

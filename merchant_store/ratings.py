@@ -1,31 +1,30 @@
-"""Jembatan ke Modul Community untuk rata-rata rating toko.
+"""Rating toko dari review pesanan selesai, menggunakan owner SurpriseBag asli."""
+from django.db.models import Avg, Count, F
 
-Rating toko dihitung dari CommunityPost (post_type='review') milik Modul 4.
-Saat file ini dibuat, model CommunityPost dan Order belum ada, sehingga
-fungsi di bawah mengembalikan dict kosong (tampil "Belum ada rating").
+from community.models import CommunityPost
 
-Setelah Modul Community & Order selesai, cukup isi get_rating_map() di sini
-(modul Merchant Store lainnya tidak perlu diubah). Contoh, jika Order
-menyimpan relasi ke toko lewat field `store`:
-
-    from django.db.models import Avg, Count
-    from community.models import CommunityPost
-
-    rows = (
-        CommunityPost.objects
-        .filter(post_type='review', related_order__store_id__in=store_ids)
-        .values('related_order__store_id')
-        .annotate(avg=Avg('rating'), total=Count('id'))
-    )
-    return {r['related_order__store_id']: (round(r['avg'], 1), r['total']) for r in rows}
-"""
+from .models import MerchantStore
 
 
 def get_rating_map(store_ids):
-    """Return {store_id: (rata_rata, jumlah_review)} untuk store_ids yang punya review."""
-    return {}
+    """Return {store_id: (rata_rata, jumlah_review)} tanpa menghitung review demo."""
+    owners = dict(MerchantStore.objects.filter(pk__in=store_ids).values_list('owner_id', 'pk'))
+    if not owners:
+        return {}
+    rows = CommunityPost.objects.filter(
+        post_type=CommunityPost.PostType.REVIEW,
+        related_order__status='completed',
+        related_order__customer_id=F('author_id'),
+        related_order__surprise_bag__merchant_id__in=owners,
+    ).values('related_order__surprise_bag__merchant_id').annotate(
+        average=Avg('rating'), total=Count('pk'),
+    )
+    return {
+        owners[row['related_order__surprise_bag__merchant_id']]: (round(row['average'], 1), row['total'])
+        for row in rows
+    }
 
 
 def get_rating(store_id):
-    """Return (rata_rata, jumlah_review). rata_rata = None jika belum ada review."""
+    """Return (rata_rata, jumlah_review); (None, 0) jika belum ada review terverifikasi."""
     return get_rating_map([store_id]).get(store_id, (None, 0))

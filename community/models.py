@@ -27,14 +27,32 @@ class CommunityPost(models.Model):
         blank=True,
         validators=[MinValueValidator(1), MaxValueValidator(5)],
     )
+    related_order = models.ForeignKey(
+        'order.Order', on_delete=models.PROTECT, null=True, blank=True,
+        related_name='community_posts',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at', '-pk']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['related_order'], condition=models.Q(post_type='review'),
+                name='community_unique_order_review',
+            ),
+        ]
 
     def __str__(self):
         return self.title
+
+    @property
+    def is_verified_purchase(self):
+        return bool(
+            self.post_type == self.PostType.REVIEW and self.related_order_id
+            and self.related_order.status == 'completed'
+            and self.related_order.customer_id == self.author_id
+        )
 
     def clean(self):
         super().clean()
@@ -47,6 +65,10 @@ class CommunityPost(models.Model):
             errors['rating'] = 'Food Hack tidak boleh memiliki rating.'
         elif self.post_type == self.PostType.REVIEW and self.rating is None:
             errors['rating'] = 'Review wajib memiliki rating.'
+        if self.post_type == self.PostType.REVIEW and not self.is_verified_purchase:
+            errors['related_order'] = 'Review harus memakai pesanan Completed milik penulis.'
+        elif self.post_type != self.PostType.REVIEW and self.related_order_id:
+            errors['related_order'] = 'Food Hack tidak boleh dihubungkan ke pesanan.'
         if errors:
             raise ValidationError(errors)
 

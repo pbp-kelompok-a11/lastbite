@@ -242,7 +242,7 @@
   margin-bottom: var(--space-sm);
 }
 
-.community-form input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]), .community-form textarea  {
+.community-form input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]), .community-form textarea, .community-form select  {
   width: 100%;
   padding: .85rem 1rem;
   font: inherit;
@@ -257,7 +257,7 @@
   min-height: 200px;
 }
 
-.community-form input:focus-visible, .community-form textarea:focus-visible, .community-form button:focus-visible, .community-form a:focus-visible  {
+.community-form input:focus-visible, .community-form textarea:focus-visible, .community-form select:focus-visible, .community-form button:focus-visible, .community-form a:focus-visible  {
   outline: 3px solid var(--color-primary);
   outline-offset: 3px;
 }

@@ -4,6 +4,7 @@
     <h3><a class="food-hack-card__link" href="{% url 'community:review_detail' post.pk %}?{{ detail_query }}">{{ post.title }}</a></h3>
   </header>
   {% include 'community/components/review_rating.html' %}
+  {% if post.is_verified_purchase %}<p class="community-muted">{{ post.related_order.surprise_bag.merchant_name }}</p>{% endif %}
   <p class="food-hack-card__excerpt">{{ post.content|truncatewords:45 }}</p>
   <footer class="food-hack-card__meta">
     <span>{{ post.author.get_username }}</span>
