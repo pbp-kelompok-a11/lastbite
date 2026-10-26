@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Pesanan | LastBite{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'order/css/order.css' %}">{% endblock %}
+{% block content %}
+<section class="order-page section-container" id="order-page" data-list-url="{% url 'order:orders_api' %}">
+  <header class="order-header">
+    <div><p class="order-eyebrow">LASTBITE / PESANAN</p>
+      <h1>{% if is_merchant %}Pesanan Masuk{% else %}Pesanan Saya{% endif %}</h1>
+      <p>{% if is_merchant %}Siapkan paket dan verifikasi pickup customer di sini.{% else %}Pantau reservasi, cek kode pickup, dan lihat makanan yang sudah kamu selamatkan.{% endif %}</p>
+    </div>
+    <a href="{% url 'surprise_bag:catalog' %}" class="btn btn--outline btn--md">Lihat Surprise Bag</a>
+  </header>
+  <div class="order-toolbar">
+    <label for="status-filter">Status pesanan</label>
+    <select id="status-filter"><option value="">Semua status</option>{% for value,label in statuses %}<option value="{{ value }}"{% if selected_status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    <button type="button" class="btn btn--outline btn--sm" id="orders-refresh">Perbarui</button>
+  </div>
+  <p id="order-notice" role="status" aria-live="polite"></p>
+  <div id="order-cards">{% include 'order/components/order_cards.html' %}</div>
+  <dialog id="order-dialog" class="order-dialog" aria-labelledby="order-dialog-title" aria-describedby="order-dialog-description">
+    <h2 id="order-dialog-title">Konfirmasi pesanan</h2>
+    <p id="order-dialog-description"></p>
+    <form id="order-action-form" method="post">
+      {% csrf_token %}
+      <div id="pickup-code-field" hidden>
+        <label for="pickup-code">Kode pickup customer</label>
+        <input id="pickup-code" name="pickup_code" minlength="8" maxlength="8" pattern="[A-Fa-f0-9]{8}" autocomplete="off" aria-describedby="pickup-help">
+        <p id="pickup-help">Minta customer menunjukkan kode dari halaman pesanannya.</p>
+      </div>
+      <p id="order-dialog-error" role="alert" hidden></p>
+      <div class="order-actions"><button type="submit" class="btn btn--primary btn--md" id="order-confirm">Konfirmasi</button><button type="button" class="btn btn--outline btn--md" id="order-close">Kembali</button></div>
+    </form>
+  </dialog>
+</section>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'order/js/order.js' %}" defer></script>{% endblock %}

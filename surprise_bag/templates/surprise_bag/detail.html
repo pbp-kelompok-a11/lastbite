@@ -46,9 +46,10 @@
           {% if is_owner %}
             <a href="{% url 'surprise_bag:edit' bag.pk %}" class="btn btn--primary btn--md">Edit Paket</a>
             <a href="{% url 'surprise_bag:my_bags' %}" class="btn btn--outline btn--md">Kelola Inventaris</a>
+          {% elif is_customer %}
+            <a href="{% url 'order:create' bag.pk %}" id="order-btn" class="btn btn--primary btn--lg{% if not bag.is_available %} is-disabled{% endif %}">Pesan Sekarang</a>
           {% elif user.is_authenticated %}
-            {# TODO Modul Order: ganti href ke url pembuatan order untuk bag ini (bag.pk) #}
-            <a href="#" id="order-btn" class="btn btn--primary btn--lg{% if not bag.is_available %} is-disabled{% endif %}">Pesan Sekarang</a>
+            <p>Pemesanan hanya tersedia untuk akun Customer.</p>
           {% else %}
             <a href="{{ login_url }}" class="btn btn--primary btn--lg">Login untuk Memesan</a>
           {% endif %}

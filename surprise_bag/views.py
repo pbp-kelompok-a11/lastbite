@@ -6,18 +6,14 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.db.models.deletion import ProtectedError
 from django.http import Http404, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, resolve_url
 from django.views.decorators.http import require_POST
+from accounts.permissions import is_customer, is_merchant
 
 from .forms import SurpriseBagForm, SurpriseBagUpdateForm
 from .models import SurpriseBag
-
-
-def is_merchant(user):
-    # sementara role merchant ditandai lewat Group "Merchant";
-    # nanti bisa diganti cek ke MerchantStore setelah modul itu di-merge
-    return user.is_authenticated and user.groups.filter(name='Merchant').exists()
 
 
 def merchant_required(view_func):
@@ -63,6 +59,7 @@ def bag_detail(request, pk):
     return render(request, 'surprise_bag/detail.html', {
         'bag': bag,
         'is_owner': bag.merchant == request.user,
+        'is_customer': is_customer(request.user),
         'login_url': f'{resolve_url(settings.LOGIN_URL)}?next={request.path}',
     })
 
@@ -110,7 +107,13 @@ def edit_bag(request, pk):
 def delete_bag(request, pk):
     bag = get_object_or_404(SurpriseBag, pk=pk, merchant=request.user)
     name = bag.name
-    bag.delete()
+    try:
+        bag.delete()
+    except ProtectedError:
+        bag.is_active = False
+        bag.save(update_fields=['is_active', 'updated_at'])
+        messages.success(request, f'Paket "{name}" dinonaktifkan karena memiliki riwayat pesanan.')
+        return redirect('surprise_bag:my_bags')
     messages.success(request, f'Surprise Bag "{name}" berhasil dihapus.')
     return redirect('surprise_bag:my_bags')
 
