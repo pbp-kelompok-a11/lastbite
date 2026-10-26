@@ -13,8 +13,14 @@
     <a href="{% url 'surprise_bag:catalog' %}" class="sb-back">← Kembali ke katalog</a>
 
     <div class="sb-detail">
-      <div class="sb-detail__visual">{{ bag.emoji }}</div>
-
+      <div class="sb-detail__visual">
+        {% if bag.image_url %}
+          <img src="{{ bag.image_url }}" alt="{{ bag.name }}" class="sb-detail__image"
+               onerror="this.replaceWith('{{ bag.emoji }}')">
+        {% else %}
+          {{ bag.emoji }}
+        {% endif %}
+      </div>
       <div class="sb-detail__info">
         <span class="bag-card__merchant">{{ bag.merchant_name }}</span>
         <h1 class="sb-detail__name">{{ bag.name }}</h1>

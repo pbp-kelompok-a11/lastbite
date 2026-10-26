@@ -3,6 +3,10 @@
 
 {% block title %}LastBite — Selamatkan Makanan, Hemat Pengeluaran{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/surprise_bag.css' %}">
+{% endblock %}
+
 {% block content %}
 
 <!-- ========== HERO SECTION ========== -->
@@ -122,7 +126,14 @@
     <div class="bags-grid">
       {% for bag in featured_bags %}
         <a href="{{ bag.get_absolute_url }}" class="bag-card">
-          <div class="bag-card__emoji">{{ bag.emoji }}</div>
+          {% if bag.image_url %}
+            <div class="bag-card__emoji bag-card__emoji--image">
+              <img src="{{ bag.image_url }}" alt="{{ bag.name }}" class="bag-card__image" loading="lazy"
+                   onerror="this.parentElement.classList.remove('bag-card__emoji--image'); this.replaceWith('{{ bag.emoji }}')">
+            </div>
+          {% else %}
+            <div class="bag-card__emoji">{{ bag.emoji }}</div>
+          {% endif %}
           <div class="bag-card__body">
             <p class="bag-card__merchant">{{ bag.merchant_name }}</p>
             <h3 class="bag-card__name">{{ bag.name }}</h3>

@@ -27,12 +27,13 @@ class SurpriseBagForm(DiscountRangeMixin, forms.ModelForm):
     class Meta:
         model = SurpriseBag
         fields = [
-            'name', 'description', 'category', 'original_price', 'discounted_price',
+            'name', 'description', 'category', 'image_url', 'original_price', 'discounted_price',
             'stock', 'pickup_start', 'pickup_end', 'is_active',
         ]
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'Contoh: Paket Roti Manis Sore'}),
             'description': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Isi paket kira-kira apa saja?'}),
+            'image_url': forms.URLInput(attrs={'placeholder': 'https://...'}),
             'original_price': forms.NumberInput(attrs={'min': 0, 'step': 100, 'placeholder': 'Harga normal (Rp)'}),
             'discounted_price': forms.NumberInput(attrs={'min': 0, 'step': 100, 'placeholder': 'Harga jual (Rp)'}),
             'stock': forms.NumberInput(attrs={'min': 0}),
@@ -42,6 +43,7 @@ class SurpriseBagForm(DiscountRangeMixin, forms.ModelForm):
         labels = {
             'name': 'Nama Paket',
             'description': 'Deskripsi',
+            'image_url': 'Link Gambar (opsional)',
             'category': 'Kategori',
             'original_price': 'Harga Normal (Rp)',
             'discounted_price': 'Harga Diskon (Rp)',
@@ -55,4 +57,4 @@ class SurpriseBagForm(DiscountRangeMixin, forms.ModelForm):
 class SurpriseBagUpdateForm(SurpriseBagForm):
     # sesuai README: yang boleh diubah hanya harga diskon, stok, dan jam pickup
     class Meta(SurpriseBagForm.Meta):
-        fields = ['discounted_price', 'stock', 'pickup_start', 'pickup_end', 'is_active']
+        fields = ['image_url', 'discounted_price', 'stock', 'pickup_start', 'pickup_end', 'is_active']

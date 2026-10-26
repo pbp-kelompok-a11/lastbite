@@ -82,11 +82,20 @@ const countEl = document.getElementById('result-count');
 let debounceTimer;
 let controller;
 
-// cegah XSS karena data dimasukkan lewat innerHTML
+// cegah XSS — escape juga tanda kutip karena dipakai di atribut src/alt
 function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str ?? '';
-  return div.innerHTML;
+  return String(str ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+function bagVisual(bag) {
+  if (!bag.image_url) return `<div class="bag-card__emoji">${bag.emoji}</div>`;
+  // kalau link gambar rusak, kembali ke emoji kategori
+  return `<div class="bag-card__emoji bag-card__emoji--image">
+    <img src="${escapeHtml(bag.image_url)}" alt="${escapeHtml(bag.name)}" class="bag-card__image" loading="lazy"
+         onerror="this.parentElement.classList.remove('bag-card__emoji--image'); this.replaceWith('${bag.emoji}')">
+  </div>`;
 }
 
 function formatRupiah(num) {
@@ -107,9 +116,9 @@ function renderBags(bags) {
   }
   grid.innerHTML = bags.map(bag => `
     <a href="${bag.detail_url}" class="bag-card${bag.stock === 0 ? ' bag-card--soldout' : ''}">
-      <div class="bag-card__emoji">${bag.emoji}</div>
+      ${bagVisual(bag)}
       <div class="bag-card__body">
-        <span class="bag-card__merchant">${escapeHtml(bag.merchant)}</span>
+    <span class="bag-card__merchant">${escapeHtml(bag.merchant)}</span>
         <span class="bag-card__name">${escapeHtml(bag.name)}</span>
         <span class="sb-category">${escapeHtml(bag.category_label)}</span>
         <div class="bag-card__prices">

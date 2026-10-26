@@ -36,6 +36,8 @@ class SurpriseBag(models.Model):
 
     name = models.CharField(max_length=100)
     description = models.TextField()
+    # link gambar (opsional); kalau kosong, kartu pakai emoji kategori
+    image_url = models.URLField(blank=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='mixed')
 
     original_price = models.DecimalField(
@@ -115,6 +117,7 @@ class SurpriseBag(models.Model):
             'category': self.category,
             'category_label': self.get_category_display(),
             'emoji': self.emoji,
+            'image_url': self.image_url,
             'merchant': self.merchant_name,
             'original_price': float(self.original_price),
             'discounted_price': float(self.discounted_price),
