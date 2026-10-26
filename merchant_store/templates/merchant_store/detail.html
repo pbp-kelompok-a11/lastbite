@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static l10n %}
+
+{% block title %}{{ store.name }} — LastBite{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="{% static 'merchant_store/css/merchant_store.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="ms-page section-container" data-csrf="{{ csrf_token }}">
+  <a href="{% url 'merchant_store:list' %}" class="ms-back">← Kembali ke direktori</a>
+
+  <div class="ms-detail">
+    <section class="ms-detail__info">
+      <div class="ms-detail__head">
+        <h1 class="ms-title">{{ store.name }}</h1>
+        {% if not store.is_active %}
+          <span class="ms-badge ms-badge--off">Nonaktif</span>
+        {% elif store.is_open_now %}
+          <span class="ms-badge ms-badge--open">Buka sekarang</span>
+        {% else %}
+          <span class="ms-badge ms-badge--closed">Tutup</span>
+        {% endif %}
+      </div>
+
+      <p class="ms-rating">
+        {% if rating_average %}⭐ {{ rating_average|floatformat:1 }} <span class="ms-muted">({{ rating_count }} ulasan)</span>
+        {% else %}<span class="ms-muted">Belum ada rating</span>{% endif %}
+      </p>
+
+      {% if store.description %}<p class="ms-description">{{ store.description|linebreaksbr }}</p>{% endif %}
+
+      <dl class="ms-facts">
+        <div><dt>📍 Alamat</dt><dd>{{ store.address }}</dd></div>
+        <div><dt>🕐 Jam operasional</dt><dd>{{ store.hours_display }}</dd></div>
+        <div><dt>📞 Telepon</dt><dd><a href="tel:{{ store.phone }}">{{ store.phone }}</a></dd></div>
+        {% if store.business_email %}
+        <div><dt>✉️ Email</dt><dd><a href="mailto:{{ store.business_email }}">{{ store.business_email }}</a></dd></div>
+        {% endif %}
+      </dl>
+
+      <div class="ms-actions">
+        {% if can_wishlist %}
+          <button type="button" class="btn btn--outline btn--md js-wishlist-toggle"
+                  data-url="{% url 'merchant_store:wishlist_toggle' store.id %}"
+                  data-wishlisted="{{ is_wishlisted|yesno:'true,false' }}"
+                  aria-pressed="{{ is_wishlisted|yesno:'true,false' }}">
+            {% if is_wishlisted %}♥ Tersimpan{% else %}♡ Simpan ke wishlist{% endif %}
+          </button>
+        {% elif not user.is_authenticated %}
+          <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn--outline btn--md">Login untuk menyimpan ke wishlist</a>
+        {% endif %}
+        {% if store.has_coordinates %}
+          <a class="btn btn--ghost btn--md" target="_blank" rel="noopener"
+            href="https://www.openstreetmap.org/?mlat={{ store.latitude|unlocalize }}&amp;mlon={{ store.longitude|unlocalize }}#map=17/{{ store.latitude|unlocalize }}/{{ store.longitude|unlocalize }}">
+            Buka di OpenStreetMap ↗
+          </a>
+        {% endif %}
+        {% if is_owner %}
+          <a href="{% url 'merchant_store:my_store' %}" class="btn btn--primary btn--md">Kelola toko</a>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="ms-detail__map">
+      {% if store.has_coordinates %}
+        <div id="ms-detail-map" class="ms-map ms-map--detail"
+              data-lat="{{ store.latitude|unlocalize }}" data-lng="{{ store.longitude|unlocalize }}"
+              data-name="{{ store.name }}" role="region" aria-label="Peta lokasi {{ store.name }}"></div>
+      {% else %}
+        <div class="ms-empty">Lokasi toko ini belum tersedia di peta.</div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'merchant_store/js/wishlist.js' %}"></script>
+<script src="{% static 'merchant_store/js/detail.js' %}"></script>
+{% endblock %}

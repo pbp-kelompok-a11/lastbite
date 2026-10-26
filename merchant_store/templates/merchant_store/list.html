@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static l10n %}
+
+{% block title %}Direktori Toko — LastBite{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="{% static 'merchant_store/css/merchant_store.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="ms-page section-container">
+  <header class="ms-header">
+    <h1 class="ms-title">Direktori Toko Mitra</h1>
+    <p class="ms-subtitle">Temukan toko di sekitarmu, lihat lokasinya di peta, dan saring berdasarkan jarak.</p>
+  </header>
+
+  <div id="store-directory" class="ms-directory"
+        data-csrf="{{ csrf_token }}"
+        data-search-url="{% url 'merchant_store:api_search' %}"
+        data-geocode-url="{% url 'merchant_store:api_geocode' %}"
+        data-default-lat="{{ default_center.lat|unlocalize }}"
+        data-default-lng="{{ default_center.lng|unlocalize }}">
+
+    <aside class="ms-panel" aria-label="Pencarian toko">
+      <form id="ms-search-form" class="ms-search" role="search">
+        <label for="ms-q" class="ms-label">Cari toko</label>
+        <input type="search" id="ms-q" class="ms-input" placeholder="Nama toko atau alamat…" autocomplete="off">
+      </form>
+
+      <form id="ms-location-form" class="ms-search">
+        <label for="ms-location" class="ms-label">Lokasimu</label>
+        <div class="ms-inline">
+          <input type="text" id="ms-location" class="ms-input" placeholder="mis. Margonda, Depok" autocomplete="off">
+          <button type="submit" class="btn btn--primary btn--sm">Cari</button>
+        </div>
+        <div class="ms-inline ms-inline--wrap">
+          <button type="button" id="ms-use-location" class="btn btn--outline btn--sm">📍 Gunakan lokasi saya</button>
+          <button type="button" id="ms-clear-location" class="btn btn--ghost btn--sm" hidden>Hapus lokasi</button>
+        </div>
+      </form>
+
+      <fieldset class="ms-radius">
+        <legend class="ms-label">Radius jarak</legend>
+        <div class="ms-chips">
+          <label class="ms-chip"><input type="radio" name="radius" value="" checked><span>Semua</span></label>
+          {% for km in radius_choices %}
+          <label class="ms-chip"><input type="radio" name="radius" value="{{ km }}"><span>{{ km }} km</span></label>
+          {% endfor %}
+        </div>
+      </fieldset>
+
+      <p id="ms-status" class="ms-status" role="status" aria-live="polite"></p>
+      <ul id="ms-results" class="ms-results"></ul>
+    </aside>
+
+    <div id="ms-map" class="ms-map" role="region" aria-label="Peta lokasi toko"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'merchant_store/js/wishlist.js' %}"></script>
+<script src="{% static 'merchant_store/js/directory.js' %}"></script>
+{% endblock %}

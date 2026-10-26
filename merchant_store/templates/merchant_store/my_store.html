@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Toko Saya — LastBite{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'merchant_store/css/merchant_store.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="ms-page section-container">
+  <section class="ms-card-panel" aria-labelledby="ms-my-title">
+    <p class="ms-eyebrow">MERCHANT</p>
+    <h1 id="ms-my-title" class="ms-title">Toko Saya</h1>
+
+    {% if store %}
+      <div class="ms-detail__head">
+        <h2 class="ms-subtitle-strong">{{ store.name }}</h2>
+        {% if store.is_active %}
+          <span class="ms-badge ms-badge--open">Aktif</span>
+        {% else %}
+          <span class="ms-badge ms-badge--off">Nonaktif (disembunyikan dari direktori)</span>
+        {% endif %}
+      </div>
+
+      <p class="ms-rating">
+        {% if rating_average %}⭐ {{ rating_average|floatformat:1 }} <span class="ms-muted">({{ rating_count }} ulasan)</span>
+        {% else %}<span class="ms-muted">Belum ada rating</span>{% endif %}
+      </p>
+
+      <dl class="ms-facts">
+        <div><dt>📍 Alamat</dt><dd>{{ store.address }}</dd></div>
+        <div><dt>🕐 Jam operasional</dt><dd>{{ store.hours_display }}</dd></div>
+        <div><dt>📞 Telepon</dt><dd>{{ store.phone }}</dd></div>
+        {% if store.business_email %}<div><dt>✉️ Email</dt><dd>{{ store.business_email }}</dd></div>{% endif %}
+        <div>
+          <dt>🗺️ Lokasi peta</dt>
+          <dd>{% if store.has_coordinates %}Terdeteksi ({{ store.latitude|floatformat:5 }}, {{ store.longitude|floatformat:5 }}){% else %}<span class="ms-warn">Belum ditemukan — perbarui alamat lalu simpan ulang.</span>{% endif %}</dd>
+        </div>
+      </dl>
+
+      <div class="ms-actions">
+        <a href="{% url 'merchant_store:detail' store.id %}" class="btn btn--ghost btn--md">Lihat halaman publik</a>
+        <a href="{% url 'merchant_store:edit' %}" class="btn btn--primary btn--md">Edit toko</a>
+        <form method="post" action="{% url 'merchant_store:toggle_active' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn--outline btn--md">{% if store.is_active %}Nonaktifkan{% else %}Aktifkan kembali{% endif %}</button>
+        </form>
+        <button type="button" class="btn btn--danger btn--md" id="ms-delete-open" aria-haspopup="dialog" aria-controls="ms-delete-dialog">Hapus toko</button>
+      </div>
+
+      <dialog id="ms-delete-dialog" class="ms-dialog" aria-labelledby="ms-delete-title">
+        <h2 id="ms-delete-title">Hapus profil toko?</h2>
+        <p>Profil <strong>{{ store.name }}</strong> akan dihapus permanen beserta daftar wishlist yang menyimpannya. Jika hanya ingin berhenti sementara, gunakan <em>Nonaktifkan</em>.</p>
+        <form method="post" action="{% url 'merchant_store:delete' %}">
+          {% csrf_token %}
+          <div class="ms-dialog__actions">
+            <button type="submit" class="btn btn--danger btn--md">Ya, hapus</button>
+            <button type="button" class="btn btn--outline btn--md" id="ms-delete-cancel" autofocus>Batal</button>
+          </div>
+        </form>
+      </dialog>
+    {% else %}
+      <p class="ms-subtitle">Kamu belum mendaftarkan toko. Daftarkan sekarang agar tokomu muncul di direktori dan peta LastBite.</p>
+      <div class="ms-actions">
+        <a href="{% url 'merchant_store:create' %}" class="btn btn--primary btn--lg">Daftarkan toko</a>
+      </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'merchant_store/js/my_store.js' %}"></script>
+{% endblock %}
