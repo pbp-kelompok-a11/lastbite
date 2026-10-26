@@ -717,3 +717,39 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   .bags-grid { grid-template-columns: 1fr; }
   .cta-section__buttons { flex-direction: column; align-items: center; }
 }
+
+
+/* ===== Ikon Profil Merchant di Navbar ===== */
+
+.navbar__profile-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.navbar__profile-link:hover {
+  background: var(--color-primary-light);
+}
+
+.navbar__profile-icon {
+  width: 23px;
+  height: 23px;
+}
+
+.navbar__profile-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+

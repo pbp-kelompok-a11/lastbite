@@ -32,9 +32,7 @@
       <ul class="navbar__links" id="navLinks">
         <li><a href="{% url 'main:home' %}" class="navbar__link">Home</a></li>
         <li><a href="{% url 'merchant_store:list' %}" class="navbar__link">Merchants</a></li>
-        {% if user.profile.role == 'merchant' %}
-        <li><a href="{% url 'merchant_store:my_store' %}" class="navbar__link">Toko Saya</a></li>
-        {% elif user.profile.role == 'customer' %}
+        {% if user.profile.role == 'customer' %}
         <li><a href="{% url 'merchant_store:wishlist' %}" class="navbar__link">Wishlist</a></li>
         {% endif %}
         <li><a href="{% url 'surprise_bag:catalog' %}" class="navbar__link">Surprise Bags</a></li>
@@ -44,16 +42,66 @@
       </ul>
 
       <!-- Auth Buttons -->
+      
       <div class="navbar__auth">
         {% if user.is_authenticated %}
-          <span class="navbar__user">Hi, {{ user.username }}!</span>
-          {% if user.profile %}<span class="navbar__user">{{ user.profile.get_role_display }}</span>{% endif %}
-          <button type="button" class="btn btn--outline btn--sm" id="logout-open" aria-haspopup="dialog" aria-controls="logout-dialog">Logout</button>
+          <span class="navbar__user">
+            Hi, {{ user.username }}!
+          </span>
+
+          {% if user.profile.role == 'merchant' %}
+            <a href="{% url 'accounts:profile' %}"
+              class="navbar__profile-link"
+              aria-label="Buka profil merchant"
+              title="Profil">
+
+              {% if user.profile.photo %}
+                <img src="{{ user.profile.photo.url }}"
+                    alt="Foto profil"
+                    class="navbar__profile-image">
+              {% else %}
+                <svg class="navbar__profile-icon"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M5 21v-2a7 7 0 0 1 14 0v2"/>
+                </svg>
+              {% endif %}
+            </a>
+
+          {% else %}
+            {% if user.profile %}
+              <span class="navbar__user">
+                {{ user.profile.get_role_display }}
+              </span>
+            {% endif %}
+
+            <button type="button"
+                    class="btn btn--outline btn--sm"
+                    id="logout-open"
+                    aria-haspopup="dialog"
+                    aria-controls="logout-dialog">
+              Logout
+            </button>
+          {% endif %}
+
         {% else %}
-          <a href="{% url 'accounts:login' %}" class="btn btn--outline btn--sm">Login</a>
-          <a href="{% url 'accounts:register' %}" class="btn btn--primary btn--sm">Register</a>
+          <a href="{% url 'accounts:login' %}"
+            class="btn btn--outline btn--sm">Login</a>
+          <a href="{% url 'accounts:register' %}"
+            class="btn btn--primary btn--sm">Register</a>
         {% endif %}
       </div>
+
+
 
       <!-- Hamburger (mobile) -->
       <button class="navbar__hamburger" id="hamburgerBtn" aria-label="Toggle menu">
