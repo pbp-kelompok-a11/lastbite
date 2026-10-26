@@ -3,6 +3,10 @@
 
 {% block title %}LastBite — Selamatkan Makanan, Hemat Pengeluaran{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/surprise_bag.css' %}">
+{% endblock %}
+
 {% block content %}
 
 <!-- ========== HERO SECTION ========== -->
@@ -19,7 +23,7 @@
         Dapatkan <strong>Surprise Bag</strong> dengan harga hemat, selamatkan makanan dari pembuangan.
       </p>
       <div class="hero__cta">
-        <a href="#" class="btn btn--primary btn--lg">Temukan Surprise Bag 🍱</a>
+        <a href="{% url 'surprise_bag:catalog' %}" class="btn btn--primary btn--lg">Temukan Surprise Bag 🍱</a>
         <a href="{% url 'accounts:register' %}?role=merchant" class="btn btn--ghost btn--lg">Daftar sebagai Merchant</a>
       </div>
       <div class="hero__stats">
@@ -121,14 +125,21 @@
     </div>
     <div class="bags-grid">
       {% for bag in featured_bags %}
-        <div class="bag-card">
-          <div class="bag-card__emoji">{{ bag.emoji }}</div>
+        <a href="{{ bag.get_absolute_url }}" class="bag-card">
+          {% if bag.image_url %}
+            <div class="bag-card__emoji bag-card__emoji--image">
+              <img src="{{ bag.image_url }}" alt="{{ bag.name }}" class="bag-card__image" loading="lazy"
+                   onerror="this.parentElement.classList.remove('bag-card__emoji--image'); this.replaceWith('{{ bag.emoji }}')">
+            </div>
+          {% else %}
+            <div class="bag-card__emoji">{{ bag.emoji }}</div>
+          {% endif %}
           <div class="bag-card__body">
-            <p class="bag-card__merchant">{{ bag.merchant }}</p>
+            <p class="bag-card__merchant">{{ bag.merchant_name }}</p>
             <h3 class="bag-card__name">{{ bag.name }}</h3>
             <div class="bag-card__prices">
-              <span class="bag-card__price-orig">Rp {{ bag.original_price }}</span>
-              <span class="bag-card__price-disc">Rp {{ bag.discount_price }}</span>
+              <span class="bag-card__price-orig">Rp {{ bag.original_price|floatformat:"0g" }}</span>
+              <span class="bag-card__price-disc">Rp {{ bag.discounted_price|floatformat:"0g" }}</span>
               <span class="bag-card__discount-badge">-{{ bag.discount_percent }}%</span>
             </div>
             <div class="bag-card__footer">
@@ -136,7 +147,7 @@
               <span class="bag-card__remaining">{{ bag.stock }} tersisa</span>
             </div>
           </div>
-        </div>
+        </a>
       {% empty %}
         <!-- Placeholder cards if no data yet -->
         <div class="bag-card">
@@ -206,7 +217,7 @@
       {% endfor %}
     </div>
     <div class="section-cta">
-      <a href="#" class="btn btn--primary btn--lg">Lihat Semua Surprise Bag →</a>
+      <a href="{% url 'surprise_bag:catalog' %}" class="btn btn--primary btn--lg">Lihat Semua Surprise Bag →</a>
     </div>
   </div>
 </section>

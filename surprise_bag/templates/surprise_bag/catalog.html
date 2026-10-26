@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Katalog Surprise Bag — LastBite{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/surprise_bag.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="sb-page">
+  <div class="section-container">
+    <div class="section-header sb-header">
+      <h1 class="section-title">🛍️ Surprise Bag Hari Ini</h1>
+      <p class="section-subtitle">Selamatkan makanan surplus dari merchant sekitar dengan diskon 30–50%</p>
+      {% if is_merchant %}
+        <a href="{% url 'surprise_bag:my_bags' %}" class="btn btn--outline btn--sm sb-header__action">Kelola Surprise Bag Saya</a>
+      {% endif %}
+    </div>
+
+    <div class="sb-layout">
+      <!-- Filter (dikirim via AJAX, tanpa reload) -->
+      <form id="filter-form" class="sb-filter" autocomplete="off">
+        <h2 class="sb-filter__title">Filter</h2>
+
+        <label class="sb-field">
+          <span>Cari</span>
+          <input type="search" name="q" placeholder="Nama paket...">
+        </label>
+
+        <label class="sb-field">
+          <span>Kategori</span>
+          <select name="category">
+            <option value="">Semua kategori</option>
+            {% for value, label in categories %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <div class="sb-field">
+          <span>Harga diskon (Rp)</span>
+          <div class="sb-field__row">
+            <input type="number" name="min_price" min="0" step="1000" placeholder="Min">
+            <input type="number" name="max_price" min="0" step="1000" placeholder="Maks">
+          </div>
+        </div>
+
+        <label class="sb-field">
+          <span>Urutkan</span>
+          <select name="sort">
+            <option value="newest">Terbaru</option>
+            <option value="price_asc">Harga termurah</option>
+            <option value="price_desc">Harga termahal</option>
+            <option value="discount">Diskon terbesar</option>
+          </select>
+        </label>
+
+        <label class="sb-check">
+          <input type="checkbox" name="available" value="1" checked>
+          <span>Hanya yang masih ada stok</span>
+        </label>
+
+        <button type="reset" class="btn btn--outline btn--sm">Reset Filter</button>
+      </form>
+
+      <div>
+        <p id="result-count" class="sb-result-count">Memuat...</p>
+        <div id="bag-grid" class="bags-grid"></div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API_URL = "{% url 'surprise_bag:catalog_api' %}";
+const form = document.getElementById('filter-form');
+const grid = document.getElementById('bag-grid');
+const countEl = document.getElementById('result-count');
+let debounceTimer;
+let controller;
+
+// cegah XSS — escape juga tanda kutip karena dipakai di atribut src/alt
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+function bagVisual(bag) {
+  if (!bag.image_url) return `<div class="bag-card__emoji">${bag.emoji}</div>`;
+  // kalau link gambar rusak, kembali ke emoji kategori
+  return `<div class="bag-card__emoji bag-card__emoji--image">
+    <img src="${escapeHtml(bag.image_url)}" alt="${escapeHtml(bag.name)}" class="bag-card__image" loading="lazy"
+         onerror="this.parentElement.classList.remove('bag-card__emoji--image'); this.replaceWith('${bag.emoji}')">
+  </div>`;
+}
+
+function formatRupiah(num) {
+  return 'Rp ' + Number(num).toLocaleString('id-ID');
+}
+
+function stockLabel(bag) {
+  if (bag.stock === 0) return '<span class="sb-stock sb-stock--empty">Habis</span>';
+  if (bag.stock <= 3) return `<span class="sb-stock sb-stock--low">Sisa ${bag.stock}!</span>`;
+  return `<span class="sb-stock">Stok ${bag.stock}</span>`;
+}
+
+function renderBags(bags) {
+  countEl.textContent = `${bags.length} Surprise Bag ditemukan`;
+  if (bags.length === 0) {
+    grid.innerHTML = '<p class="sb-empty">Tidak ada Surprise Bag yang cocok dengan filter.</p>';
+    return;
+  }
+  grid.innerHTML = bags.map(bag => `
+    <a href="${bag.detail_url}" class="bag-card${bag.stock === 0 ? ' bag-card--soldout' : ''}">
+      ${bagVisual(bag)}
+      <div class="bag-card__body">
+    <span class="bag-card__merchant">${escapeHtml(bag.merchant)}</span>
+        <span class="bag-card__name">${escapeHtml(bag.name)}</span>
+        <span class="sb-category">${escapeHtml(bag.category_label)}</span>
+        <div class="bag-card__prices">
+          <span class="bag-card__price-orig">${formatRupiah(bag.original_price)}</span>
+          <span class="bag-card__price-disc">${formatRupiah(bag.discounted_price)}</span>
+          <span class="bag-card__discount-badge">-${bag.discount_percent}%</span>
+        </div>
+        <div class="bag-card__footer">
+          <span class="bag-card__stock">🕐 ${bag.pickup_start}–${bag.pickup_end}</span>
+          ${stockLabel(bag)}
+        </div>
+      </div>
+    </a>`).join('');
+}
+
+function loadBags() {
+  const params = new URLSearchParams(new FormData(form));
+  // batalkan request lama kalau user masih ngetik
+  if (controller) controller.abort();
+  controller = new AbortController();
+  return fetch(`${API_URL}?${params}`, { signal: controller.signal })
+    .then(r => r.json())
+    .then(data => renderBags(data.bags))
+    .catch(err => {
+      if (err.name !== 'AbortError') countEl.textContent = 'Gagal memuat data. Coba lagi.';
+    });
+}
+
+form.addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(loadBags, 300);
+});
+form.addEventListener('reset', () => setTimeout(loadBags, 0));
+form.addEventListener('submit', e => { e.preventDefault(); loadBags(); });
+
+// stok di katalog diperbarui otomatis tiap 30 detik
+setInterval(() => { if (!document.hidden) loadBags(); }, 30000);
+
+loadBags();
+</script>
+{% endblock %}

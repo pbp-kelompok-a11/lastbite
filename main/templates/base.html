@@ -31,7 +31,7 @@
       <!-- Nav Links (desktop) -->
       <ul class="navbar__links" id="navLinks">
         <li><a href="{% url 'main:home' %}" class="navbar__link">Home</a></li>
-        <li><a href="#" class="navbar__link">Surprise Bags</a></li>
+        <li><a href="{% url 'surprise_bag:catalog' %}" class="navbar__link">Surprise Bags</a></li>
         <li><a href="#" class="navbar__link">Merchants</a></li>
         <li><a href="#" class="navbar__link">Community</a></li>
       </ul>
@@ -107,7 +107,7 @@
         <div class="footer__links-group">
           <h4 class="footer__heading">Platform</h4>
           <ul class="footer__links">
-            <li><a href="#" class="footer__link">Surprise Bags</a></li>
+            <li><a href="{% url 'surprise_bag:catalog' %}" class="footer__link">Surprise Bags</a></li>
             <li><a href="#" class="footer__link">Merchant Store</a></li>
             <li><a href="#" class="footer__link">Community</a></li>
             <li><a href="#" class="footer__link">Eco Impact</a></li>

@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'main',
     'surprise_bag',
     'order',
-    # 'merchant_store',  # TODO: uncomment setelah branch merchant_store di-merge
+    # 'merchant_store',  # uncomment setelah branch merchant_store di-merge
     'community',
     'eco_impact',
 ]

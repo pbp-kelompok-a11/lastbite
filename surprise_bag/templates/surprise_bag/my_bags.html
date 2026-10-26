@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Kelola Surprise Bag — LastBite{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/surprise_bag.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="sb-page">
+  <div class="section-container">
+    <div class="section-header sb-header">
+      <h1 class="section-title">📦 Inventaris Surprise Bag</h1>
+      <p class="section-subtitle">Kelola stok makanan surplus tokomu hari ini</p>
+    </div>
+
+    {% if messages %}
+      <div class="sb-messages">
+        {% for message in messages %}<div class="sb-message">{{ message }}</div>{% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="sb-toolbar">
+      <a href="{% url 'surprise_bag:catalog' %}" class="sb-link">← Lihat katalog publik</a>
+      <a href="{% url 'surprise_bag:create' %}" class="btn btn--primary btn--md">+ Tambah Surprise Bag</a>
+    </div>
+
+    {% if bags %}
+      <div class="sb-table-wrap">
+        <table class="sb-table">
+          <thead>
+            <tr>
+              <th>Paket</th>
+              <th>Harga</th>
+              <th>Pickup</th>
+              <th>Stok</th>
+              <th>Status</th>
+              <th>Aktif</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for bag in bags %}
+              <tr class="sb-row"
+                  data-stock-url="{% url 'surprise_bag:update_stock_api' bag.pk %}"
+                  data-toggle-url="{% url 'surprise_bag:toggle_active_api' bag.pk %}">
+                <td>
+                  <a href="{{ bag.get_absolute_url }}" class="sb-link">{{ bag.emoji }} {{ bag.name }}</a><br>
+                  <span class="sb-category">{{ bag.get_category_display }}</span>
+                </td>
+                <td>
+                  <span class="bag-card__price-orig">Rp {{ bag.original_price|floatformat:"0g" }}</span><br>
+                  <strong>Rp {{ bag.discounted_price|floatformat:"0g" }}</strong>
+                  <span class="bag-card__discount-badge">-{{ bag.discount_percent }}%</span>
+                </td>
+                <td>{{ bag.pickup_time }}</td>
+                <td>
+                  <div class="sb-stepper">
+                    <button type="button" data-delta="-1" aria-label="Kurangi stok">−</button>
+                    <input type="number" min="0" value="{{ bag.stock }}" class="sb-stock-input" aria-label="Stok">
+                    <button type="button" data-delta="1" aria-label="Tambah stok">+</button>
+                  </div>
+                </td>
+                <td>
+                  {% if not bag.is_active %}
+                    <span class="sb-badge sb-status sb-badge--off">Nonaktif</span>
+                  {% elif bag.stock == 0 %}
+                    <span class="sb-badge sb-status sb-badge--empty">Habis</span>
+                  {% else %}
+                    <span class="sb-badge sb-status">Tersedia</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <label class="sb-switch">
+                    <input type="checkbox" class="sb-toggle-input" {% if bag.is_active %}checked{% endif %} aria-label="Tampilkan di katalog">
+                    <span></span>
+                  </label>
+                </td>
+                <td>
+                  <div class="sb-actions">
+                    <a href="{% url 'surprise_bag:edit' bag.pk %}" class="sb-link">Edit</a>
+                    <form method="post" action="{% url 'surprise_bag:delete' bag.pk %}"
+                          onsubmit="return confirm('Hapus Surprise Bag ini secara permanen?')">
+                      {% csrf_token %}
+                      <button type="submit" class="sb-link sb-link--danger">Hapus</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="sb-empty">Belum ada Surprise Bag. Yuk tambahkan penawaran pertamamu!</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+
+async function postJSON(url, payload = {}) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Terjadi kesalahan, coba lagi.');
+  return data;
+}
+
+function renderStatus(row, bag) {
+  const badge = row.querySelector('.sb-status');
+  let label = 'Tersedia';
+  let modifier = '';
+  if (!bag.is_active) { label = 'Nonaktif'; modifier = 'sb-badge--off'; }
+  else if (bag.stock === 0) { label = 'Habis'; modifier = 'sb-badge--empty'; }
+  badge.className = `sb-badge sb-status ${modifier}`;
+  badge.textContent = label;
+}
+
+document.querySelectorAll('.sb-row').forEach(row => {
+  const stockInput = row.querySelector('.sb-stock-input');
+  const toggle = row.querySelector('.sb-toggle-input');
+  let lastStock = Number(stockInput.value);
+
+  async function updateStock(payload) {
+    try {
+      const bag = await postJSON(row.dataset.stockUrl, payload);
+      lastStock = bag.stock;
+      stockInput.value = bag.stock;
+      renderStatus(row, bag);
+    } catch (err) {
+      stockInput.value = lastStock;  // kembalikan ke nilai terakhir yang valid
+      alert(err.message);
+    }
+  }
+
+  row.querySelectorAll('[data-delta]').forEach(btn => {
+    btn.addEventListener('click', () => updateStock({ delta: Number(btn.dataset.delta) }));
+  });
+  stockInput.addEventListener('change', () => updateStock({ stock: Number(stockInput.value) }));
+
+  toggle.addEventListener('change', async () => {
+    try {
+      const bag = await postJSON(row.dataset.toggleUrl, { is_active: toggle.checked });
+      toggle.checked = bag.is_active;
+      renderStatus(row, bag);
+    } catch (err) {
+      toggle.checked = !toggle.checked;
+      alert(err.message);
+    }
+  });
+});
+</script>
+{% endblock %}

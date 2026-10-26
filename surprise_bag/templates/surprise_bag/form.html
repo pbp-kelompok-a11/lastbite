@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ action }} Surprise Bag — LastBite{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/surprise_bag.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="sb-page">
+  <div class="section-container">
+    <div class="section-header sb-header">
+      <h1 class="section-title">{% if bag %}✏️ Edit {{ bag.name }}{% else %}➕ Tambah Surprise Bag{% endif %}</h1>
+      {% if bag %}
+        <p class="section-subtitle">Harga normal: Rp {{ bag.original_price|floatformat:"0g" }}</p>
+      {% endif %}
+    </div>
+
+    <form method="post" class="sb-form">
+      {% csrf_token %}
+
+      {% for error in form.non_field_errors %}
+        <p class="sb-form__error">{{ error }}</p>
+      {% endfor %}
+
+      {% for field in form %}
+        <div class="sb-form__field{% if field.field.widget.input_type == 'checkbox' %} sb-form__field--check{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<small class="sb-form__help">{{ field.help_text }}</small>{% endif %}
+          {% for error in field.errors %}<small class="sb-form__error">{{ error }}</small>{% endfor %}
+        </div>
+      {% endfor %}
+
+      <!-- preview persentase diskon secara live -->
+      <p id="discount-preview" class="sb-form__help"
+         data-original="{% if bag %}{{ bag.original_price|stringformat:'s' }}{% endif %}"></p>
+
+      <div class="sb-form__actions">
+        <a href="{% url 'surprise_bag:my_bags' %}" class="btn btn--outline btn--md">Batal</a>
+        <button type="submit" class="btn btn--primary btn--md">{{ action }}</button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const originalInput = document.getElementById('id_original_price');
+const discountedInput = document.getElementById('id_discounted_price');
+const preview = document.getElementById('discount-preview');
+const fixedOriginal = Number(preview.dataset.original || 0);
+
+function updatePreview() {
+  // di form edit, harga normal tidak bisa diubah jadi diambil dari data-original
+  const orig = originalInput ? Number(originalInput.value) : fixedOriginal;
+  const disc = Number(discountedInput.value);
+  if (!orig || !disc) { preview.textContent = ''; return; }
+  const percent = Math.round((1 - disc / orig) * 100);
+  const ok = percent >= 30 && percent <= 50;
+  preview.textContent = `Diskon ${percent}% ${ok ? '✓' : '— harus 30–50%'}`;
+  preview.classList.toggle('sb-form__error', !ok);
+}
+
+[originalInput, discountedInput].forEach(el => el && el.addEventListener('input', updatePreview));
+updatePreview();
+</script>
+{% endblock %}
