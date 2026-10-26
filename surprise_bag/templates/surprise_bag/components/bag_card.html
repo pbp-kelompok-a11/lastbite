@@ -1,0 +1,30 @@
+<a href="{{ bag.get_absolute_url }}" class="bag-card{% if not bag.stock %} bag-card--soldout{% endif %}">
+  {% if bag.image_url %}
+    <div class="bag-card__emoji bag-card__emoji--image">
+      <img src="{{ bag.image_url }}" alt="{{ bag.name }}" class="bag-card__image" loading="lazy"
+           onerror="this.parentElement.classList.remove('bag-card__emoji--image'); this.replaceWith('{{ bag.emoji }}')">
+    </div>
+  {% else %}
+    <div class="bag-card__emoji">{{ bag.emoji }}</div>
+  {% endif %}
+  <div class="bag-card__body">
+    <span class="bag-card__merchant">{{ bag.merchant_name }}</span>
+    <span class="bag-card__name">{{ bag.name }}</span>
+    <span class="sb-category">{{ bag.get_category_display }}</span>
+    <div class="bag-card__prices">
+      <span class="bag-card__price-orig">Rp {{ bag.original_price|floatformat:"0g" }}</span>
+      <span class="bag-card__price-disc">Rp {{ bag.discounted_price|floatformat:"0g" }}</span>
+      <span class="bag-card__discount-badge">-{{ bag.discount_percent }}%</span>
+    </div>
+    <div class="bag-card__footer">
+      <span class="bag-card__stock">🕐 {{ bag.pickup_time }}</span>
+      {% if not bag.stock %}
+        <span class="sb-stock sb-stock--empty">Habis</span>
+      {% elif bag.stock <= 3 %}
+        <span class="sb-stock sb-stock--low">Sisa {{ bag.stock }}!</span>
+      {% else %}
+        <span class="sb-stock">Stok {{ bag.stock }}</span>
+      {% endif %}
+    </div>
+  </div>
+</a>

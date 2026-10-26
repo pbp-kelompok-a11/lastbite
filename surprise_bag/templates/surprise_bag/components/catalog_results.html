@@ -1,0 +1,13 @@
+<div id="catalog-results" data-page="{{ page_obj.number }}">
+  <p class="sb-result-count">{{ page_obj.paginator.count }} Surprise Bag ditemukan</p>
+  <div class="bags-grid">
+    {% for bag in bags %}
+      {% include 'surprise_bag/components/bag_card.html' %}
+    {% empty %}
+      <p class="sb-empty">Tidak ada Surprise Bag yang cocok dengan filter.</p>
+    {% endfor %}
+  </div>
+  {% if page_obj.paginator.num_pages > 1 %}
+    {% include 'surprise_bag/components/pagination.html' %}
+  {% endif %}
+</div>
