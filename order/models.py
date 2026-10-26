@@ -10,7 +10,7 @@ def generate_pickup_code():
     return secrets.token_hex(4).upper()
 
 
-class Order(models.Model): 
+class Order(models.Model):
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'
         READY_TO_PICKUP = 'ready_to_pickup', 'Ready to Pickup'
