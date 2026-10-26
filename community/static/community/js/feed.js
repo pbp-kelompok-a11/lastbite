@@ -4,8 +4,11 @@ if (searchForm) {
   const input = searchForm.querySelector('[name="q"]');
   const category = searchForm.querySelector('[name="post_type"]');
   const sort = document.getElementById('community-sort');
-  const liked = searchForm.querySelector('[name="liked"]');
-  const likedFilter = document.querySelector('.community-liked-filter');
+  const rating = document.getElementById('community-rating');
+  const ratingFilter = document.querySelector('.community-rating-filter');
+  const searchLabel = searchForm.querySelector('label[for="community-query"]');
+  const liked = document.getElementById('community-liked');
+  const likedFilter = document.querySelector('.community-food-hack-filter');
   const tabs = document.querySelector('.community-tabs');
   const status = document.getElementById('community-search-status');
   const heading = document.getElementById('food-hacks-title');
@@ -28,8 +31,11 @@ if (searchForm) {
     url.searchParams.set('post_type', postType);
     const query = input.value.trim();
     if (query) url.searchParams.set('q', query);
-    if (sort.value !== 'newest') url.searchParams.set('sort', sort.value);
-    if (liked.value === '1') url.searchParams.set('liked', '1');
+    if (sort.value !== 'newest' && postType === category.value) {
+      url.searchParams.set('sort', sort.value);
+    }
+    if (liked.value === '1' && postType === 'food_hack') url.searchParams.set('liked', '1');
+    if (postType === 'review' && rating.value !== 'all') url.searchParams.set('rating', rating.value);
     if (page > 1) url.searchParams.set('page', page);
     return url;
   }
@@ -69,8 +75,19 @@ if (searchForm) {
       if (actualPage > 1) url.searchParams.set('page', actualPage);
       else url.searchParams.delete('page');
       heading.textContent = results.dataset.heading;
+      sort.replaceChildren(results.querySelector('#community-sort-options').content.cloneNode(true));
       sort.value = results.dataset.sort;
+      if (sort.value === 'newest') url.searchParams.delete('sort');
+      else url.searchParams.set('sort', sort.value);
       liked.value = results.dataset.liked;
+      likedFilter.hidden = postType !== 'food_hack';
+      if (liked.value !== '1') url.searchParams.delete('liked');
+      rating.value = results.dataset.rating;
+      ratingFilter.hidden = postType !== 'review';
+      if (rating.value === 'all') url.searchParams.delete('rating');
+      else url.searchParams.set('rating', rating.value);
+      searchLabel.textContent = results.dataset.searchLabel;
+      input.placeholder = results.dataset.searchPlaceholder;
       tabs.querySelectorAll('a').forEach((tab) => {
         const type = new URL(tab.href).searchParams.get('post_type');
         const active = type === postType;
@@ -79,22 +96,6 @@ if (searchForm) {
         else tab.removeAttribute('aria-current');
         tab.href = makeUrl(type).href;
       });
-      if (likedFilter) {
-        const active = liked.value === '1';
-        likedFilter.classList.toggle('community-liked-filter--active', active);
-        likedFilter.setAttribute('aria-label', active ? 'Tampilkan semua postingan' : 'Tampilkan postingan yang disukai');
-        const toggleUrl = makeUrl();
-        if (active) toggleUrl.searchParams.delete('liked');
-        else toggleUrl.searchParams.set('liked', '1');
-        if (likedFilter.hasAttribute('data-liked-filter')) {
-          likedFilter.href = toggleUrl.href;
-        } else {
-          const loginUrl = new URL(likedFilter.href);
-          loginUrl.searchParams.set('next', toggleUrl.pathname + toggleUrl.search);
-          likedFilter.href = loginUrl.href;
-          likedFilter.setAttribute('aria-label', 'Login untuk melihat postingan yang disukai');
-        }
-      }
       window.history.replaceState(null, '', url);
       if (scrollToResults) {
         results.querySelector('.community-page--current')?.focus({ preventScroll: true });
@@ -125,14 +126,8 @@ if (searchForm) {
   input.addEventListener('compositionstart', cancelPending);
   input.addEventListener('compositionend', debounceSearch);
   sort.addEventListener('change', () => search());
-  if (likedFilter?.hasAttribute('data-liked-filter')) {
-    likedFilter.addEventListener('click', (event) => {
-      if (!isPlainClick(event)) return;
-      event.preventDefault();
-      liked.value = liked.value === '1' ? '0' : '1';
-      search();
-    });
-  }
+  rating.addEventListener('change', () => search());
+  liked.addEventListener('change', () => search());
   document.addEventListener('community:like-changed', () => {
     if (liked.value === '1' || sort.value === 'likes') search(Number(results.dataset.page));
   });
@@ -149,7 +144,12 @@ if (searchForm) {
     const tab = event.target.closest('a');
     if (!tab || !isPlainClick(event)) return;
     event.preventDefault();
-    category.value = new URL(tab.href).searchParams.get('post_type');
+    const nextCategory = new URL(tab.href).searchParams.get('post_type');
+    if (nextCategory === category.value) return;
+    category.value = nextCategory;
+    sort.value = 'newest';
+    liked.value = '0';
+    rating.value = 'all';
     search();
   });
 

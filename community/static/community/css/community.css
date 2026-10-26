@@ -1,3 +1,8 @@
+.community-food-hack-filter[hidden],
+.community-rating-filter[hidden] {
+  display: none;
+}
+
 .community  {
   padding-top: calc(var(--navbar-height) + var(--space-2xl));
   padding-bottom: var(--space-3xl);
@@ -237,7 +242,7 @@
   margin-bottom: var(--space-sm);
 }
 
-.community-form input:not([type="hidden"]), .community-form textarea  {
+.community-form input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]), .community-form textarea  {
   width: 100%;
   padding: .85rem 1rem;
   font: inherit;
@@ -324,10 +329,7 @@
   color: var(--color-text-muted);
 }
 .community-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
+  display: grid;
   gap: var(--space-lg);
   margin-bottom: var(--space-lg);
 }
@@ -377,28 +379,6 @@
   cursor: pointer;
 }
 
-.community-liked-filter {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  color: var(--color-primary-dark);
-}
-
-.community-liked-filter:hover,
-.community-liked-filter--active {
-  border-color: #d35370;
-  background: #fff0f3;
-  color: #ae2848;
-}
-
-.community-liked-filter--active .community-like-icon {
-  fill: currentColor;
-}
-
 .community-visually-hidden {
   position: absolute;
   width: 1px;
@@ -436,7 +416,6 @@
 
 .community-search {
   flex: 1 1 320px;
-  max-width: 480px;
   min-width: 0;
 }
 
@@ -1083,4 +1062,122 @@
 .community-comment-thread-toggle:focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 3px;
+}
+
+.community-review-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.community-detail > .community-review-rating {
+  margin-top: var(--space-lg);
+}
+
+.community-review-rating__score {
+  color: #775014;
+  font-weight: 700;
+}
+
+.community-review-status {
+  padding: .3rem .65rem;
+  border-radius: var(--radius-full);
+  background: #fff0ce;
+  color: #775014;
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.community-review-notice {
+  margin-top: var(--space-md);
+  color: var(--color-text-muted);
+  font-size: .875rem;
+}
+
+.community-review-order {
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  overflow-wrap: anywhere;
+}
+
+.community-review-order .food-hack-card__badge {
+  margin-bottom: var(--space-sm);
+}
+
+.community-review-order h2 {
+  margin-bottom: var(--space-xs);
+  font-size: 1.125rem;
+}
+
+.community-review-stars {
+  min-width: 0;
+  padding: var(--space-lg) 0;
+  border: 0;
+  text-align: center;
+}
+
+.community-review-stars legend {
+  width: 100%;
+  font-weight: 600;
+}
+
+.community-review-stars__options {
+  display: flex;
+  justify-content: center;
+  gap: clamp(.25rem, 2vw, 1rem);
+}
+
+.community-review-stars__option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(44px, 10vw, 64px);
+  min-height: 64px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.community-review-stars__option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.community-review-stars__icon {
+  color: var(--color-border);
+  font-size: clamp(2.5rem, 8vw, 3.5rem);
+  line-height: 1;
+}
+
+.community-review-stars__option:has(input:checked) .community-review-stars__icon,
+.community-review-stars__option:has(~ label input:checked) .community-review-stars__icon {
+  color: #df9b13;
+}
+
+@media (hover: hover) {
+  .community-review-stars__options:has(label:hover) .community-review-stars__icon {
+    color: var(--color-border);
+  }
+
+  .community-review-stars__options label:hover .community-review-stars__icon,
+  .community-review-stars__options label:has(~ label:hover) .community-review-stars__icon {
+    color: #df9b13;
+  }
+}
+
+.community-review-stars__option:has(input:focus-visible) {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.community-review-stars__feedback {
+  min-height: 1.5em;
+  margin-top: var(--space-sm);
+  color: #775014;
+  font-weight: 600;
 }

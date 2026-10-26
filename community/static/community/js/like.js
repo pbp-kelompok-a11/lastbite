@@ -34,7 +34,6 @@ document.addEventListener('submit', async (event) => {
       if (currentButton) {
         currentButton.setAttribute('aria-pressed', String(data.has_upvoted));
         currentButton.classList.toggle('community-upvote__button--active', data.has_upvoted);
-        currentButton.querySelector('[data-like-label]').textContent = data.has_upvoted ? 'Liked' : 'Like';
       }
     });
     document.dispatchEvent(new CustomEvent('community:like-changed'));

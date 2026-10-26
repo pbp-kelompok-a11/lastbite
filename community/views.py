@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST, require_safe
 from django.views.decorators.vary import vary_on_headers
 
-from .forms import CommunityCommentForm, FoodHackForm
+from .forms import CommunityCommentForm, FoodHackForm, ReviewForm
 from .models import CommunityComment, CommunityPost
 from accounts.permissions import is_customer, is_merchant
 
@@ -20,45 +20,60 @@ def can_use_food_hacks(user):
     return is_customer(user) or is_merchant(user)
 
 
-def food_hacks_for(user):
+def posts_for(user):
     votes = CommunityPost.upvotes.through.objects.filter(
         communitypost_id=OuterRef('pk'), user_id=user.pk,
     )
-    return CommunityPost.objects.filter(
-        post_type=CommunityPost.PostType.FOOD_HACK,
-    ).select_related('author__profile').annotate(
+    return CommunityPost.objects.select_related('author__profile').annotate(
         upvote_count=Count('upvotes', distinct=True), has_upvoted=Exists(votes),
         comment_count=Count('comments', distinct=True),
     ).order_by('-created_at', '-pk')
+
+
+def food_hacks_for(user):
+    return posts_for(user).filter(post_type=CommunityPost.PostType.FOOD_HACK)
 
 
 @require_safe
 @vary_on_headers('X-Requested-With')
 def home(request):
     post_type = request.GET.get('post_type', 'all')
-    if post_type not in ('all', CommunityPost.PostType.FOOD_HACK):
+    if post_type not in ('all', CommunityPost.PostType.FOOD_HACK, CommunityPost.PostType.REVIEW):
         post_type = 'all'
     query = request.GET.get('q', '').strip()
+    sort_options = {
+        'all': [('newest', 'Newest'), ('oldest', 'Oldest')],
+        'food_hack': [('newest', 'Newest'), ('oldest', 'Oldest'), ('likes', 'Most Liked')],
+        'review': [('newest', 'Newest'), ('oldest', 'Oldest'),
+                   ('rating_highest', 'Highest Rated'), ('rating_lowest', 'Lowest Rated')],
+    }
     sort = request.GET.get('sort', 'newest')
-    if sort not in ('newest', 'oldest', 'likes'):
+    if sort not in dict(sort_options[post_type]):
         sort = 'newest'
-    liked_only = request.GET.get('liked') == '1'
+    liked_only = post_type == 'food_hack' and request.GET.get('liked') == '1'
+    rating = request.GET.get('rating', 'all') if post_type == 'review' else 'all'
+    if rating not in ('all', '1', '2', '3', '4', '5'):
+        rating = 'all'
     if liked_only and not request.user.is_authenticated:
         login_url = reverse('accounts:login') + '?' + urlencode({'next': request.get_full_path()})
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'login_url': login_url}, status=401)
         return redirect(login_url)
-    posts = food_hacks_for(request.user)
+    posts = posts_for(request.user)
     if post_type != 'all':
         posts = posts.filter(post_type=post_type)
     if query:
         posts = posts.filter(Q(title__icontains=query) | Q(content__icontains=query))
+    if rating != 'all':
+        posts = posts.filter(rating=int(rating))
     if liked_only:
         posts = posts.filter(has_upvoted=True)
     ordering = {
         'newest': ('-created_at', '-pk'),
         'oldest': ('created_at', 'pk'),
         'likes': ('-upvote_count', '-created_at', '-pk'),
+        'rating_highest': ('-rating', '-created_at', '-pk'),
+        'rating_lowest': ('rating', '-created_at', '-pk'),
     }
     posts = posts.order_by(*ordering[sort])
     paginator = Paginator(posts, 10)
@@ -80,18 +95,25 @@ def home(request):
         filter_params['sort'] = sort
     if liked_only:
         filter_params['liked'] = '1'
+    if rating != 'all':
+        filter_params['rating'] = rating
     clear_query = urlencode(filter_params)
     if query:
         filter_params['q'] = query
-    liked_params = dict(filter_params)
-    if liked_only:
-        liked_params.pop('liked')
-    else:
-        liked_params['liked'] = '1'
-    liked_url = reverse('community:home') + '?' + urlencode(liked_params)
-    if not request.user.is_authenticated:
-        liked_url = reverse('accounts:login') + '?' + urlencode({'next': liked_url})
-    heading = 'Hasil pencarian' if query else 'Postingan yang disukai' if liked_only else 'Food Hacks' if post_type == 'food_hack' else 'Postingan komunitas'
+    tab_queries = {}
+    for category in sort_options:
+        params = {**filter_params, 'post_type': category}
+        if category != post_type:
+            params.pop('sort', None)
+            params.pop('liked', None)
+            params.pop('rating', None)
+        tab_queries[category] = urlencode(params)
+    heading = 'Hasil pencarian' if query else 'Postingan yang disukai' if liked_only else 'Food Hacks' if post_type == 'food_hack' else 'Reviews' if post_type == 'review' else 'Postingan komunitas'
+    search_label, search_placeholder = {
+        'all': ('Search Community', 'Search Community...'),
+        'food_hack': ('Search Food Hacks', 'Search Food Hacks...'),
+        'review': ('Search Reviews', 'Search Reviews...'),
+    }[post_type]
     template = 'community/home.html'
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         template = 'community/components/feed_results.html'
@@ -100,9 +122,13 @@ def home(request):
         'can_upvote': can_use_food_hacks(request.user),
         'selected_post_type': post_type, 'query': query,
         'selected_sort': sort, 'liked_only': liked_only, 'feed_heading': heading,
-        'all_posts_query': urlencode({**filter_params, 'post_type': 'all'}),
-        'food_hacks_query': urlencode({**filter_params, 'post_type': 'food_hack'}),
-        'clear_query': clear_query, 'liked_url': liked_url,
+        'sort_options': sort_options[post_type],
+        'selected_rating': rating, 'rating_options': ['5', '4', '3', '2', '1'],
+        'search_label': search_label, 'search_placeholder': search_placeholder,
+        'all_posts_query': tab_queries['all'],
+        'food_hacks_query': tab_queries['food_hack'],
+        'reviews_query': tab_queries['review'],
+        'clear_query': clear_query,
         'page_obj': page_obj,
         'page_numbers': page_numbers,
         'filter_query': urlencode(filter_params),
@@ -115,7 +141,7 @@ def render_post_detail(request, post, form=None, editing_comment=None, replying_
     feed_query = request.POST.get('feed', '') if request.method == 'POST' else request.GET.get('feed', '')
     if feed_query:
         back_url += '?' + feed_query
-    template = 'community/post_detail.html'
+    template = 'community/food_hack_detail.html'
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         template = 'community/components/comments.html'
     likes = CommunityComment.likes.through.objects.filter(
@@ -307,3 +333,33 @@ def delete_food_hack(request, pk):
         post.delete()
         return redirect('community:home')
     return render(request, 'community/food_hack_confirm_delete.html', {'post': post})
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def create_review(request):
+    if not is_customer(request.user):
+        raise PermissionDenied('Hanya Customer yang dapat menulis review.')
+    post = CommunityPost(
+        author=request.user, post_type=CommunityPost.PostType.REVIEW,
+        title='Review pesanan contoh',
+    )
+    form = ReviewForm(
+        request.POST if request.method == 'POST' else None,
+        instance=post,
+    )
+    if request.method == 'POST' and form.is_valid():
+        post = form.save()
+        return redirect('community:review_detail', pk=post.pk)
+    return render(request, 'community/review_form.html', {'form': form, 'post': post})
+
+
+@require_safe
+def review_detail(request, pk):
+    post = get_object_or_404(
+        CommunityPost.objects.select_related('author'), pk=pk, post_type=CommunityPost.PostType.REVIEW,
+    )
+    back_url = reverse('community:home')
+    if request.GET.get('feed'):
+        back_url += '?' + request.GET['feed']
+    return render(request, 'community/review_detail.html', {'post': post, 'back_url': back_url})

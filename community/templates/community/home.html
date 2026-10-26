@@ -3,7 +3,7 @@
 
 {% block title %}Community — LastBite{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'community/css/community.css' %}">
+<link rel="stylesheet" href="{% static 'community/css/community.css' %}?v=community-filters-3">
 {% endblock %}
 
 {% block content %}
@@ -29,33 +29,43 @@
       {% endif %}
     </div>
     <div class="community-toolbar">
+      <nav class="community-tabs" aria-label="Kategori postingan">
+        <a class="community-tab{% if selected_post_type == 'all' %} community-tab--active{% endif %}" href="{% url 'community:home' %}?{{ all_posts_query }}"{% if selected_post_type == 'all' %} aria-current="page"{% endif %}>All Posts</a>
+        <a class="community-tab{% if selected_post_type == 'food_hack' %} community-tab--active{% endif %}" href="{% url 'community:home' %}?{{ food_hacks_query }}"{% if selected_post_type == 'food_hack' %} aria-current="page"{% endif %}>Food Hacks</a>
+        <a class="community-tab{% if selected_post_type == 'review' %} community-tab--active{% endif %}" href="{% url 'community:home' %}?{{ reviews_query }}"{% if selected_post_type == 'review' %} aria-current="page"{% endif %}>Reviews</a>
+      </nav>
       <div class="community-feed-controls">
-        <nav class="community-tabs" aria-label="Kategori postingan">
-          <a class="community-tab{% if selected_post_type == 'all' %} community-tab--active{% endif %}" href="{% url 'community:home' %}?{{ all_posts_query }}"{% if selected_post_type == 'all' %} aria-current="page"{% endif %}>All Posts</a>
-          <a class="community-tab{% if selected_post_type == 'food_hack' %} community-tab--active{% endif %}" href="{% url 'community:home' %}?{{ food_hacks_query }}"{% if selected_post_type == 'food_hack' %} aria-current="page"{% endif %}>Food Hacks</a>
-        </nav>
+        <form id="community-search-form" method="get" action="{% url 'community:home' %}" class="community-search" role="search">
+          <input type="hidden" name="post_type" value="{{ selected_post_type }}">
+          <label class="community-visually-hidden" for="community-query">{{ search_label }}</label>
+          <div class="community-search__controls">
+            <input type="search" id="community-query" name="q" value="{{ query }}" placeholder="{{ search_placeholder }}">
+            <button class="btn btn--primary btn--md" type="submit">Cari</button>
+          </div>
+        </form>
+        <div class="community-sort community-food-hack-filter"{% if selected_post_type != 'food_hack' %} hidden{% endif %}>
+          <label class="community-visually-hidden" for="community-liked">Filter Food Hacks</label>
+          <select id="community-liked" name="liked" form="community-search-form">
+            <option value="0"{% if not liked_only %} selected{% endif %}>All Food Hacks</option>
+            <option value="1"{% if liked_only %} selected{% endif %}>Liked by Me</option>
+          </select>
+        </div>
+        <div class="community-sort community-rating-filter"{% if selected_post_type != 'review' %} hidden{% endif %}>
+          <label class="community-visually-hidden" for="community-rating">Filter rating</label>
+          <select id="community-rating" name="rating" form="community-search-form">
+            <option value="all"{% if selected_rating == 'all' %} selected{% endif %}>All Ratings</option>
+            {% for value in rating_options %}
+            <option value="{{ value }}"{% if selected_rating == value %} selected{% endif %}>{{ value }} {% if value == '1' %}Star{% else %}Stars{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
         <div class="community-sort">
           <label class="community-visually-hidden" for="community-sort">Urutkan postingan</label>
           <select id="community-sort" name="sort" form="community-search-form">
-            <option value="newest"{% if selected_sort == 'newest' %} selected{% endif %}>Terbaru</option>
-            <option value="oldest"{% if selected_sort == 'oldest' %} selected{% endif %}>Terlama</option>
-            <option value="likes"{% if selected_sort == 'likes' %} selected{% endif %}>Like terbanyak</option>
+            {% include 'community/components/sort_options.html' %}
           </select>
         </div>
-        <a class="community-liked-filter{% if liked_only %} community-liked-filter--active{% endif %}" href="{{ liked_url }}"{% if user.is_authenticated %} data-liked-filter{% endif %} aria-label="{% if liked_only %}Tampilkan semua postingan{% elif user.is_authenticated %}Tampilkan postingan yang disukai{% else %}Login untuk melihat postingan yang disukai{% endif %}" title="Postingan yang disukai">
-          {% include 'community/components/like_icon.html' %}
-          <span class="community-visually-hidden">{% if liked_only %}Tampilkan semua postingan{% else %}Postingan yang disukai{% endif %}</span>
-        </a>
       </div>
-      <form id="community-search-form" method="get" action="{% url 'community:home' %}" class="community-search" role="search">
-        <input type="hidden" name="post_type" value="{{ selected_post_type }}">
-        <input type="hidden" name="liked" value="{{ liked_only|yesno:'1,0' }}">
-        <label for="community-query">Cari judul atau isi postingan</label>
-        <div class="community-search__controls">
-          <input type="search" id="community-query" name="q" value="{{ query }}" placeholder="Contoh: roti atau sayuran">
-          <button class="btn btn--primary btn--md" type="submit">Cari</button>
-        </div>
-      </form>
     </div>
     <p id="community-search-status" class="community-search-status" role="status" hidden></p>
     {% include 'community/components/feed_results.html' %}
@@ -64,6 +74,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'community/js/search.js' %}"></script>
-<script src="{% static 'community/js/upvote.js' %}"></script>
+<script src="{% static 'community/js/feed.js' %}?v=community-filters-3"></script>
+<script src="{% static 'community/js/like.js' %}"></script>
 {% endblock %}

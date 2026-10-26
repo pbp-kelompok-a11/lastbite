@@ -1,10 +1,15 @@
-<div id="community-results" data-page="{{ page_obj.number }}" data-sort="{{ selected_sort }}" data-liked="{{ liked_only|yesno:'1,0' }}" data-heading="{{ feed_heading }}">
+<div id="community-results" data-page="{{ page_obj.number }}" data-sort="{{ selected_sort }}" data-liked="{{ liked_only|yesno:'1,0' }}" data-heading="{{ feed_heading }}" data-rating="{{ selected_rating }}" data-search-label="{{ search_label }}" data-search-placeholder="{{ search_placeholder }}">
+  <template id="community-sort-options">{% include 'community/components/sort_options.html' %}</template>
   {% if query %}
   <p class="community-search-summary">Pencarian: <strong>{{ query }}</strong>. <a data-clear-search href="{% url 'community:home' %}?{{ clear_query }}">Hapus pencarian</a></p>
   {% endif %}
   <div class="community-feed">
     {% for post in posts %}
-      {% include 'community/components/food_hack_card.html' %}
+      {% if post.post_type == 'review' %}
+        {% include 'community/components/review_card.html' %}
+      {% else %}
+        {% include 'community/components/food_hack_card.html' %}
+      {% endif %}
     {% empty %}
       <div class="community-empty">
         <span aria-hidden="true">&#10047;</span>
@@ -15,7 +20,7 @@
         <h3>Belum ada postingan yang disukai</h3>
         <p>Tekan hati pada postingan yang kamu suka, lalu temukan kembali di sini.</p>
         {% else %}
-        <h3>Belum ada Food Hack</h3>
+        <h3>{% if selected_post_type == 'review' %}Belum ada Review{% elif selected_post_type == 'food_hack' %}Belum ada Food Hack{% else %}Belum ada postingan{% endif %}</h3>
         <p>Tips dari komunitas akan tampil di sini. Setiap ide kecil bisa membantu makanan dinikmati lebih lama.</p>
         {% endif %}
       </div>

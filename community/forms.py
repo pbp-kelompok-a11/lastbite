@@ -16,6 +16,23 @@ class FoodHackForm(forms.ModelForm):
         }
 
 
+class ReviewForm(forms.ModelForm):
+    rating = forms.TypedChoiceField(
+        choices=[(number, f'{number} bintang') for number in range(1, 6)],
+        coerce=int, widget=forms.RadioSelect, label='Bagaimana pengalamanmu?',
+        error_messages={'required': 'Pilih rating bintang terlebih dahulu.'},
+    )
+
+    class Meta:
+        model = CommunityPost
+        fields = ['rating', 'content']
+        labels = {'content': 'Ceritakan pengalamanmu'}
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'rows': 6, 'placeholder': 'Bagaimana rasa, porsi, dan kondisi makanan yang kamu terima?',
+            }),
+        }
+
 class CommunityCommentForm(forms.ModelForm):
     class Meta:
         model = CommunityComment

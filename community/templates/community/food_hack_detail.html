@@ -27,7 +27,7 @@
       </div>
     </header>
     <div class="community-detail__content">{{ post.content|linebreaks }}</div>
-    {% include 'community/components/post_reactions.html' %}
+    {% include 'community/components/food_hack_reactions.html' %}
     {% if can_manage_post %}
     <nav class="community-post-actions" aria-label="Kelola Food Hack">
       <a class="btn btn--outline btn--md" href="{% url 'community:post_edit' post.pk %}">Edit Food Hack</a>
@@ -40,6 +40,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'community/js/upvote.js' %}"></script>
+<script src="{% static 'community/js/like.js' %}"></script>
 <script src="{% static 'community/js/comments.js' %}"></script>
 {% endblock %}

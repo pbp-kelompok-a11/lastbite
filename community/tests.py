@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
@@ -27,24 +28,25 @@ class CommunityFeedTests(TestCase):
         post.save()
         return post
 
-    def test_guest_sees_food_hacks_newest_first_and_not_reviews(self):
+    def test_guest_sees_food_hacks_and_reviews_newest_first(self):
         older = self.create_post(title='Tips roti lama')
         CommunityPost.objects.filter(pk=older.pk).update(created_at=timezone.now() - timedelta(days=1))
         newer = self.create_post(title='Tips sayur baru')
-        self.create_post(title='Review tidak masuk feed ini', post_type='review', rating=5)
+        review = self.create_post(title='Review masuk feed ini', post_type='review', rating=5)
         response = self.client.get(reverse('community:home'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'community/home.html')
         self.assertTemplateUsed(response, 'base.html')
-        self.assertEqual(list(response.context['posts']), [newer, older])
+        self.assertEqual(list(response.context['posts']), [review, newer, older])
         self.assertContains(response, 'food_hack_writer')
         self.assertContains(response, 'Bekukan roti dalam wadah tertutup.')
-        self.assertNotContains(response, 'Review tidak masuk feed ini')
+        self.assertContains(response, review.title)
+        self.assertContains(response, 'Belum terverifikasi')
 
     def test_empty_feed(self):
         response = self.client.get(reverse('community:home'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Belum ada Food Hack')
+        self.assertContains(response, 'Belum ada postingan')
         self.assertQuerySetEqual(response.context['posts'], [])
 
     def test_database_title_update_appears_on_refresh(self):
@@ -81,7 +83,7 @@ class CommunityFilterTests(TestCase):
     def test_search_matches_title_or_content_ignoring_case(self):
         for query, expected in (('roti', self.bread), ('BROKOLI', self.vegetable), ('  wadah  ', self.bread)):
             with self.subTest(query=query):
-                response = self.client.get(reverse('community:home'), {'q': query})
+                response = self.client.get(reverse('community:home'), {'q': query, 'post_type': 'food_hack'})
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(list(response.context['posts']), [expected])
                 self.assertEqual(response.context['query'], query.strip())
@@ -103,15 +105,18 @@ class CommunityFilterTests(TestCase):
         self.assertContains(response, '&lt;script&gt;alert(1)&lt;/script&gt;')
         self.assertNotContains(response, '<script>alert(1)</script>')
 
-    def test_supported_tabs_do_not_expose_unverified_reviews(self):
-        for post_type in ('all', 'food_hack'):
+    def test_tabs_filter_post_types(self):
+        for post_type, expected in (
+            ('all', {self.bread, self.vegetable, self.review}),
+            ('food_hack', {self.bread, self.vegetable}),
+            ('review', {self.review}),
+        ):
             with self.subTest(post_type=post_type):
                 response = self.client.get(reverse('community:home'), {'post_type': post_type})
                 self.assertEqual(response.context['selected_post_type'], post_type)
-                self.assertEqual(set(response.context['posts']), {self.bread, self.vegetable})
-                self.assertNotContains(response, self.review.title)
+                self.assertEqual(set(response.context['posts']), expected)
                 self.assertContains(response, 'class="community-tab community-tab--active"', count=1)
-                label = 'All Posts' if post_type == 'all' else 'Food Hacks'
+                label = {'all': 'All Posts', 'food_hack': 'Food Hacks', 'review': 'Reviews'}[post_type]
                 self.assertContains(response, f'href="{reverse("community:home")}?post_type={post_type}" aria-current="page">{label}</a>')
 
     def test_search_is_combined_with_category_and_keeps_newest_order(self):
@@ -131,7 +136,7 @@ class CommunityFilterTests(TestCase):
         response = self.client.get(reverse('community:home'), {'post_type': 'invalid', 'q': '   '})
         self.assertEqual(response.context['selected_post_type'], 'all')
         self.assertEqual(response.context['query'], '')
-        self.assertEqual(set(response.context['posts']), {self.bread, self.vegetable})
+        self.assertEqual(set(response.context['posts']), {self.bread, self.vegetable, self.review})
 
     def test_search_text_is_escaped_and_tab_query_is_url_encoded(self):
         response = self.client.get(reverse('community:home'), {'q': '<script>& test'})
@@ -176,7 +181,7 @@ class CommunityDetailTests(TestCase):
             with self.subTest(post=post.pk):
                 response = self.client.get(reverse('community:post_detail', args=[post.pk]))
                 self.assertEqual(response.status_code, 200)
-                self.assertTemplateUsed(response, 'community/post_detail.html')
+                self.assertTemplateUsed(response, 'community/food_hack_detail.html')
                 self.assertTemplateUsed(response, 'base.html')
                 self.assertEqual(response.context['post'], post)
                 self.assertContains(response, post.title)
@@ -530,13 +535,13 @@ class CommunityPaginationTests(TestCase):
 
     def test_pages_have_ten_posts_and_preserve_newest_order_without_overlap(self):
         actual = []
-        for page, expected_count in ((1, 10), (2, 10), (3, 3)):
+        for page, expected_count in ((1, 10), (2, 10), (3, 4)):
             response = self.client.get(reverse('community:home'), {'page': page})
             posts = list(response.context['posts'])
             self.assertEqual(len(posts), expected_count)
-            self.assertEqual(response.context['page_obj'].paginator.count, 23)
+            self.assertEqual(response.context['page_obj'].paginator.count, 24)
             actual.extend(post.pk for post in posts)
-        expected = list(CommunityPost.objects.filter(post_type='food_hack').values_list('pk', flat=True))
+        expected = list(CommunityPost.objects.values_list('pk', flat=True))
         self.assertEqual(actual, expected)
 
     def test_links_preserve_filter_and_encoded_search(self):
@@ -552,7 +557,7 @@ class CommunityPaginationTests(TestCase):
                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertTemplateUsed(response, 'community/components/feed_results.html')
         self.assertContains(response, 'data-page="3"')
-        self.assertEqual(len(response.context['posts']), 3)
+        self.assertEqual(len(response.context['posts']), 4)
         self.assertNotContains(response, 'aria-label="Halaman berikutnya"')
 
     def test_invalid_page_is_handled(self):
@@ -584,7 +589,7 @@ class CommunityPaginationTests(TestCase):
     def test_hundred_pages_show_compact_numbers_at_start_middle_and_end(self):
         CommunityPost.objects.bulk_create([
             CommunityPost(author=self.author, title=f'Extra tips {number}', content='Konten.')
-            for number in range(977)
+            for number in range(976)
         ])
         for page, visible, hidden, ellipses in (
             (1, (2, 3, 100), (4, 50, 99), 1),
@@ -623,22 +628,22 @@ class CommunitySortAndLikedTests(TestCase):
             ('invalid', [self.newer, self.popular, self.older]),
         ):
             with self.subTest(sort=sort):
-                response = self.client.get(reverse('community:home'), {'sort': sort})
+                response = self.client.get(reverse('community:home'), {'post_type': 'food_hack', 'sort': sort})
                 self.assertEqual(list(response.context['posts']), expected)
 
     def test_equal_dates_and_likes_have_stable_order(self):
         CommunityPost.objects.update(created_at=timezone.now())
         self.newer.upvotes.add(self.other)
-        response = self.client.get(reverse('community:home'), {'sort': 'likes'})
+        response = self.client.get(reverse('community:home'), {'post_type': 'food_hack', 'sort': 'likes'})
         self.assertEqual(list(response.context['posts']), [self.popular, self.newer, self.older])
 
     def test_liked_filter_only_uses_current_user_and_keeps_total_counts(self):
         self.client.force_login(self.customer)
-        response = self.client.get(reverse('community:home'), {'liked': '1', 'sort': 'likes'})
+        response = self.client.get(reverse('community:home'), {'post_type': 'food_hack', 'liked': '1', 'sort': 'likes'})
         self.assertEqual(list(response.context['posts']), [self.popular, self.older])
         self.assertEqual(response.context['posts'][0].upvote_count, 2)
         self.client.force_login(self.other)
-        response = self.client.get(reverse('community:home'), {'liked': '1'})
+        response = self.client.get(reverse('community:home'), {'post_type': 'food_hack', 'liked': '1'})
         self.assertEqual(list(response.context['posts']), [self.popular])
 
     def test_search_sort_and_liked_filters_work_together_in_ajax(self):
@@ -663,17 +668,17 @@ class CommunitySortAndLikedTests(TestCase):
         self.assertContains(response, '?post_type=food_hack&amp;sort=oldest&amp;liked=1&amp;q=roti&amp;page=1')
 
     def test_guest_liked_filter_redirects_to_login_and_ajax_returns_login_url(self):
-        response = self.client.get(reverse('community:home'), {'liked': '1'})
+        response = self.client.get(reverse('community:home'), {'post_type': 'food_hack', 'liked': '1'})
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.url.startswith(reverse('accounts:login') + '?next='))
-        response = self.client.get(reverse('community:home'), {'liked': '1'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response = self.client.get(reverse('community:home'), {'post_type': 'food_hack', 'liked': '1'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertEqual(response.status_code, 401)
         self.assertIn('login_url', response.json())
 
     def test_empty_liked_state_after_unlike_and_toggle_off(self):
         self.client.force_login(self.other)
         self.client.post(reverse('community:post_upvote', args=[self.popular.pk]), HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        response = self.client.get(reverse('community:home'), {'liked': '1'})
+        response = self.client.get(reverse('community:home'), {'post_type': 'food_hack', 'liked': '1'})
         self.assertContains(response, 'Belum ada postingan yang disukai')
         self.assertEqual(len(response.context['posts']), 0)
         self.assertEqual(len(self.client.get(reverse('community:home')).context['posts']), 3)
@@ -733,12 +738,12 @@ class CommunityUpvoteTests(TestCase):
         self.assertTrue(response.json()['has_upvoted'])
         self.assertEqual(response.json()['upvote_count'], 1)
         self.assertTrue(self.post.upvotes.filter(pk=user.pk).exists())
-        liked_feed = self.client.get(reverse('community:home'), {'liked': '1'})
+        liked_feed = self.client.get(reverse('community:home'), {'post_type': 'food_hack', 'liked': '1'})
         self.assertEqual(list(liked_feed.context['posts']), [self.post])
         self.assertContains(liked_feed, 'aria-pressed="true"')
         self.assertFalse(self.vote().json()['has_upvoted'])
         self.assertFalse(self.post.upvotes.exists())
-        self.assertQuerySetEqual(self.client.get(reverse('community:home'), {'liked': '1'}).context['posts'], [])
+        self.assertQuerySetEqual(self.client.get(reverse('community:home'), {'post_type': 'food_hack', 'liked': '1'}).context['posts'], [])
 
     def test_get_does_not_toggle(self):
         self.client.force_login(self.customer)
@@ -1152,3 +1157,252 @@ class CommunityPostTests(TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertFalse(CommunityPost.objects.exists())
+
+
+class ReviewPageTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.customer = get_user_model().objects.create_user(username='review_page_customer')
+        cls.other = get_user_model().objects.create_user(username='review_page_other')
+        cls.merchant = get_user_model().objects.create_user(username='review_page_merchant')
+        cls.no_profile = get_user_model().objects.create_user(username='review_page_no_profile')
+        for user, role in (
+            (cls.customer, UserProfile.Role.CUSTOMER),
+            (cls.other, UserProfile.Role.CUSTOMER),
+            (cls.merchant, UserProfile.Role.MERCHANT),
+        ):
+            UserProfile.objects.create(user=user, role=role)
+
+    def setUp(self):
+        self.client.force_login(self.customer)
+        self.url = reverse('community:review_create')
+
+    def payload(self, **changes):
+        values = {'rating': '4', 'content': 'Makanannya enak dan porsinya cukup.'}
+        values.update(changes)
+        return values
+
+
+    def test_form_is_available_by_url_without_feed_button(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, 'type="radio"', count=5)
+        self.assertContains(response, 'Pesanan contoh · Demo')
+        self.assertNotContains(response, 'multipart/form-data')
+        self.assertNotContains(response, 'name="title"')
+        self.assertNotContains(response, 'anonym')
+        self.assertEqual(set(response.context['form'].fields), {'rating', 'content'})
+        self.assertNotContains(self.client.get(reverse('community:home')), self.url)
+
+    def test_review_is_saved_with_server_owned_fields_and_shown_in_feed(self):
+        response = self.client.post(self.url, self.payload(
+            author=self.other.pk, title='Judul palsu', post_type='food_hack', verified='true', related_order=999,
+        ))
+        post = CommunityPost.objects.get()
+        self.assertEqual(post.author, self.customer)
+        self.assertEqual(post.post_type, 'review')
+        self.assertEqual(post.title, 'Review pesanan contoh')
+        self.assertEqual(post.rating, 4)
+        self.assertRedirects(response, reverse('community:review_detail', args=[post.pk]))
+        result = self.client.get(response.url)
+        self.assertContains(result, 'Belum terverifikasi')
+        self.assertContains(result, post.content)
+        self.assertNotContains(result, 'Verified Purchase')
+        feed = self.client.get(reverse('community:home'))
+        self.assertContains(feed, post.content)
+        self.assertContains(feed, response.url + '?feed=')
+        self.assertContains(feed, 'Belum terverifikasi')
+
+    def test_rating_and_description_validation(self):
+        invalid = [self.payload(rating=value) for value in ('', '0', '6', 'four')]
+        invalid += [self.payload(content='   ')]
+        for payload in invalid:
+            response = self.client.post(self.url, payload)
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.context['form'].errors)
+        self.assertFalse(CommunityPost.objects.exists())
+
+    def test_guest_uses_shared_login_and_roles_are_enforced(self):
+        self.client.logout()
+        for method in (self.client.get, self.client.post):
+            response = method(self.url, self.payload())
+            self.assertEqual(response.status_code, 302)
+            self.assertTrue(response.url.startswith(reverse('accounts:login') + '?next='))
+        for user in (self.merchant, self.no_profile):
+            self.client.force_login(user)
+            self.assertEqual(self.client.get(self.url).status_code, 403)
+            self.assertEqual(self.client.post(self.url, self.payload()).status_code, 403)
+
+    def test_review_is_public_but_food_hacks_and_missing_ids_are_rejected(self):
+        response = self.client.post(self.url, self.payload())
+        url = response.url
+        self.client.force_login(self.other)
+        self.assertContains(self.client.get(url), 'Belum terverifikasi')
+        self.client.force_login(self.merchant)
+        self.assertContains(self.client.get(url), 'Belum terverifikasi')
+        self.client.logout()
+        self.assertContains(self.client.get(url), 'Belum terverifikasi')
+        self.client.force_login(self.customer)
+        food_hack = CommunityPost.objects.create(author=self.customer, title='Tips', content='Konten.')
+        self.assertEqual(self.client.get(reverse('community:review_detail', args=[food_hack.pk])).status_code, 404)
+        self.assertEqual(self.client.get(reverse('community:review_detail', args=[99999])).status_code, 404)
+
+
+    def test_review_search_ajax_and_detail_back_link_preserve_feed(self):
+        response = self.client.post(self.url, self.payload(content='Croissant renyah sekali.'))
+        post = CommunityPost.objects.get()
+        feed = self.client.get(reverse('community:home'), {
+            'post_type': 'review', 'q': 'croissant', 'sort': 'oldest',
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(list(feed.context['posts']), [post])
+        self.assertTemplateUsed(feed, 'community/components/review_card.html')
+        self.assertNotContains(feed, 'data-upvote-form')
+        query = 'post_type=review&q=croissant&sort=oldest&page=3'
+        detail = self.client.get(response.url, {'feed': query})
+        self.assertEqual(detail.context['back_url'], reverse('community:home') + '?' + query)
+
+    def test_category_sort_options_and_invalid_sort_fallback(self):
+        for category, expected in (
+            ('all', ['newest', 'oldest']),
+            ('food_hack', ['newest', 'oldest', 'likes']),
+            ('review', ['newest', 'oldest', 'rating_highest', 'rating_lowest']),
+        ):
+            for ajax in (False, True):
+                headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'} if ajax else {}
+                response = self.client.get(reverse('community:home'), {'post_type': category}, **headers)
+                self.assertEqual([value for value, label in response.context['sort_options']], expected)
+                self.assertContains(response, 'id="community-sort-options"')
+            for sort in ('likes', 'rating_highest', 'rating_lowest'):
+                response = self.client.get(reverse('community:home'), {'post_type': category, 'sort': sort})
+                self.assertEqual(response.context['selected_sort'], sort if sort in expected else 'newest')
+
+    def test_review_rating_sort_and_back_links_are_stable(self):
+        posts = [CommunityPost.objects.create(
+            author=self.customer, title=f'Review {number}', content='Ulasan.', post_type='review', rating=rating,
+        ) for number, rating in enumerate((1, 5, 5))]
+        for sort, expected in (
+            ('rating_highest', [posts[2], posts[1], posts[0]]),
+            ('rating_lowest', [posts[0], posts[2], posts[1]]),
+        ):
+            response = self.client.get(reverse('community:home'), {'post_type': 'review', 'sort': sort, 'q': 'Ulasan'})
+            self.assertEqual(list(response.context['posts']), expected)
+            self.assertIn('sort=' + sort, response.context['filter_query'])
+            self.assertNotIn('sort=', response.context['all_posts_query'])
+            self.assertNotIn('sort=', response.context['food_hacks_query'])
+            self.assertIn('q=Ulasan', response.context['all_posts_query'])
+
+    def test_review_hides_heart_and_ignores_liked_filter_even_for_guest(self):
+        self.client.post(self.url, self.payload())
+        self.client.logout()
+        response = self.client.get(reverse('community:home'), {'post_type': 'review', 'liked': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['liked_only'])
+        self.assertEqual(len(response.context['posts']), 1)
+        self.assertNotIn('liked=', response.context['filter_query'])
+        self.assertRegex(response.content.decode(), r'class="community-sort community-food-hack-filter"[^>]* hidden')
+        response = self.client.get(reverse('community:home'), {'post_type': 'food_hack', 'sort': 'likes'})
+        self.assertNotRegex(response.content.decode(), r'class="community-sort community-food-hack-filter"[^>]* hidden')
+        self.assertNotIn('liked=', response.context['reviews_query'])
+        self.assertNotIn('sort=', response.context['reviews_query'])
+
+
+    def test_rating_filter_combines_with_search_sort_and_pagination(self):
+        CommunityPost.objects.bulk_create([
+            CommunityPost(author=self.customer, post_type='review', title='Pesanan', rating=5, content='Roti enak.')
+            for _ in range(12)
+        ])
+        CommunityPost.objects.create(author=self.customer, post_type='review', title='Pesanan', rating=1, content='Roti kering.')
+        CommunityPost.objects.create(author=self.customer, title='Roti', content='Tips roti.')
+        for ajax in (False, True):
+            headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'} if ajax else {}
+            response = self.client.get(reverse('community:home'), {
+                'post_type': 'review', 'rating': '5', 'q': 'roti', 'sort': 'oldest', 'page': 2,
+            }, **headers)
+            self.assertEqual(response.context['selected_rating'], '5')
+            self.assertEqual(response.context['page_obj'].paginator.count, 12)
+            self.assertEqual(len(response.context['posts']), 2)
+            self.assertTrue(all(post.rating == 5 for post in response.context['posts']))
+            self.assertIn('rating=5', response.context['clear_query'])
+            self.assertIn('rating=5', response.context['filter_query'])
+            self.assertNotIn('rating=', response.context['all_posts_query'])
+            self.assertNotIn('rating=', response.context['food_hacks_query'])
+            self.assertContains(response, 'rating=5&amp;q=roti&amp;page=1')
+
+    def test_filters_are_ignored_outside_their_own_tab_and_invalid_ratings_are_safe(self):
+        for category in ('all', 'food_hack', 'review'):
+            for value in ('all', '0', '6', 'invalid', 'visuals'):
+                response = self.client.get(reverse('community:home'), {'post_type': category, 'rating': value})
+                self.assertEqual(response.context['selected_rating'], 'all')
+                self.assertNotIn('rating=', response.context['filter_query'])
+        self.client.logout()
+        for category in ('all', 'review'):
+            response = self.client.get(reverse('community:home'), {'post_type': category, 'liked': '1', 'rating': '5'})
+            self.assertEqual(response.status_code, 200)
+            self.assertFalse(response.context['liked_only'])
+            self.assertRegex(response.content.decode(), r'class="community-sort community-food-hack-filter"[^>]* hidden')
+            self.assertNotIn('liked=', response.context['filter_query'])
+
+
+    def test_search_uses_titles_and_content_within_each_category(self):
+        tip = CommunityPost.objects.create(author=self.customer, title='KataUnik', content='Simpan makanan.')
+        review_title = CommunityPost.objects.create(author=self.customer, post_type='review', title='KataUnik', content='Porsi cukup.', rating=5)
+        review_content = CommunityPost.objects.create(author=self.customer, post_type='review', title='Pesanan', content='KataUnik terasa enak.', rating=4)
+        for category, expected in (
+            ('all', [review_content, review_title, tip]), ('food_hack', [tip]), ('review', [review_content, review_title]),
+        ):
+            response = self.client.get(reverse('community:home'), {'post_type': category, 'q': 'kataunik'})
+            self.assertEqual(list(response.context['posts']), expected)
+            if category == 'review':
+                self.assertContains(response, 'Search Reviews...')
+
+    def test_controls_follow_tab_search_filter_sort_order_and_requested_labels(self):
+        response = self.client.get(reverse('community:home'), {'post_type': 'food_hack'})
+        html = response.content.decode()
+        positions = [html.index(marker) for marker in (
+            'class="community-tabs"', 'id="community-search-form"', 'id="community-liked"', 'id="community-sort"',
+        )]
+        self.assertEqual(positions, sorted(positions))
+        self.assertContains(response, 'All Food Hacks')
+        self.assertContains(response, 'Liked by Me')
+        self.assertNotContains(response, 'community-liked-filter')
+        for category, placeholder in (
+            ('all', 'Search Community...'), ('food_hack', 'Search Food Hacks...'), ('review', 'Search Reviews...'),
+        ):
+            response = self.client.get(reverse('community:home'), {'post_type': category})
+            self.assertContains(response, f'placeholder="{placeholder}"')
+        self.assertEqual(response.context['rating_options'], ['5', '4', '3', '2', '1'])
+
+    def test_switching_tab_links_resets_shared_sort_to_newest_too(self):
+        for category, other_keys in (
+            ('all', ('food_hacks_query', 'reviews_query')),
+            ('food_hack', ('all_posts_query', 'reviews_query')),
+            ('review', ('all_posts_query', 'food_hacks_query')),
+        ):
+            response = self.client.get(reverse('community:home'), {
+                'post_type': category, 'sort': 'oldest', 'rating': '5', 'q': 'roti',
+            })
+            for key in other_keys:
+                self.assertNotIn('sort=', response.context[key])
+                self.assertNotIn('rating=', response.context[key])
+                self.assertNotIn('liked=', response.context[key])
+                self.assertIn('q=roti', response.context[key])
+
+    def test_liked_food_hack_tab_links_drop_likes_for_all_and_reviews(self):
+        response = self.client.get(reverse('community:home'), {
+            'post_type': 'food_hack', 'liked': '1', 'sort': 'likes', 'q': 'roti',
+        })
+        self.assertIn('liked=1', response.context['food_hacks_query'])
+        for key in ('all_posts_query', 'reviews_query'):
+            self.assertNotIn('liked=', response.context[key])
+            self.assertNotIn('sort=', response.context[key])
+            self.assertIn('q=roti', response.context[key])
+
+    def test_csrf_methods_and_output_escaping(self):
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.customer)
+        self.assertEqual(client.post(self.url, self.payload()).status_code, 403)
+        self.assertEqual(self.client.put(self.url).status_code, 405)
+        response = self.client.post(self.url, self.payload(content='<script>alert(1)</script>'))
+        result = self.client.get(response.url)
+        self.assertContains(result, '&lt;script&gt;alert(1)&lt;/script&gt;')
+        self.assertNotContains(result, '<script>alert(1)</script>')
+        self.assertEqual(self.client.post(response.url).status_code, 405)
