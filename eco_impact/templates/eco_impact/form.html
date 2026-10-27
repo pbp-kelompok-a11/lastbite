@@ -1,37 +1,23 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ action }} Log — Eco Impact{% endblock %}
 
 {% block extra_css %}
-<style>
-  .impact-form input, .impact-form textarea {
-    width: 100%;
-    padding: 0.65rem 0.85rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    font-family: inherit;
-    font-size: 0.95rem;
-    background: #fff;
-    outline: none;
-    box-sizing: border-box;
-  }
-  .impact-form input:focus, .impact-form textarea:focus {
-    border-color: var(--color-primary);
-  }
-</style>
+<link rel="stylesheet" href="{% static 'eco_impact/css/eco_impact.css' %}">
 {% endblock %}
 
 {% block content %}
-<section style="padding: 3rem 0; min-height: 70vh;">
-  <div class="section-container" style="max-width: 550px; background: var(--color-surface); padding: 2rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border);">
-    <h1 class="section-title" style="font-size: 1.75rem; margin-bottom: 0.5rem;">{{ action }} Impact Log</h1>
-    <p style="color: var(--color-text-muted); margin-bottom: 1.5rem;">Catat makanan yang berhasil kamu selamatkan secara mandiri.</p>
+<section style="padding-top: calc(var(--navbar-height) + 2.5rem); padding-bottom: 5rem; min-height: 80vh;">
+  <div class="section-container" style="max-width: 550px; background: var(--color-surface); padding: 2.25rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);">
+    <h1 class="section-title" style="font-size: 1.75rem; margin-bottom: 0.4rem;">{{ action }} Impact Log</h1>
+    <p style="color: var(--color-text-muted); margin-bottom: 1.75rem; font-size: 0.95rem;">Catat penyelamatan makanan secara mandiri untuk menghitung penghematan dan reduksi emisi karbonmu.</p>
 
-    <form method="post" class="impact-form" style="display:flex; flex-direction:column; gap:1.25rem;">
+    <form method="post" class="impact-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
       {% csrf_token %}
       {% for field in form %}
       <div>
-        <label style="display:block; font-weight:600; margin-bottom:0.4rem; color:var(--color-text);">
+        <label style="display: block; font-weight: 600; margin-bottom: 0.4rem; color: var(--color-text); font-size: 0.9rem;">
           {{ field.label }}
         </label>
         {{ field }}
@@ -41,9 +27,9 @@
       </div>
       {% endfor %}
 
-      <div style="display:flex; gap:1rem; margin-top: 0.5rem;">
-        <button type="submit" class="btn btn--primary">Simpan Log</button>
-        <a href="{% url 'eco_impact:dashboard' %}" class="btn btn--outline">Batal</a>
+      <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+        <button type="submit" class="btn btn--primary btn--md">Simpan Log</button>
+        <a href="{% url 'eco_impact:dashboard' %}" class="btn btn--outline btn--md">Batal</a>
       </div>
     </form>
   </div>

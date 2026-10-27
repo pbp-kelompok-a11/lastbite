@@ -73,6 +73,27 @@ class CommunityPost(models.Model):
             raise ValidationError(errors)
 
 
+class MerchantReviewReply(models.Model):
+    review = models.OneToOneField(CommunityPost, on_delete=models.CASCADE, related_name='merchant_reply')
+    merchant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='review_replies')
+    content = models.TextField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        super().clean()
+        errors = {}
+        if not self.content or not self.content.strip():
+            errors['content'] = 'Balasan tidak boleh kosong.'
+        if self.review_id and (
+            not self.review.is_verified_purchase
+            or self.review.related_order.surprise_bag.merchant_id != self.merchant_id
+        ):
+            errors['review'] = 'Balasan hanya untuk Review terverifikasi dari pesanan Merchant ini.'
+        if errors:
+            raise ValidationError(errors)
+
+
 class CommunityComment(models.Model):
     post = models.ForeignKey(CommunityPost, on_delete=models.CASCADE, related_name='comments')
     parent = models.ForeignKey(

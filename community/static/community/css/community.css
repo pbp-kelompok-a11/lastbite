@@ -226,10 +226,6 @@
   margin: 0 auto;
 }
 
-.community-editor--login  {
-  max-width: 480px;
-}
-
 .community-form  {
   display: grid;
   gap: var(--space-lg);
@@ -276,10 +272,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-md);
-}
-
-.community-form > button  {
-  justify-self: start;
 }
 
 .community-post-actions  {
@@ -562,7 +554,6 @@
   position: relative;
   z-index: 1;
   align-self: flex-start;
-  margin-top: var(--space-md);
 }
 
 .community-upvote__button,
@@ -757,7 +748,8 @@
 .community-comment__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-md);
+  align-items: flex-start;
+  gap: var(--space-sm);
   margin-top: var(--space-md);
 }
 
@@ -850,11 +842,6 @@
 
 .community-comment-like--active .community-like-icon {
   fill: currentColor;
-}
-
-.community-comment__actions {
-  align-items: flex-start;
-  gap: var(--space-sm);
 }
 
 .community-comment__actions > form {
@@ -1069,6 +1056,33 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-sm);
+}
+
+.community-review-reply {
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow-wrap: anywhere;
+}
+
+.community-review-reply__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.community-review-reply__heading h2 {
+  font-size: 1rem;
+}
+
+.community-review-reply__meta {
+  color: var(--color-text-muted);
+  font-size: .8125rem;
 }
 
 .community-detail > .community-review-rating {
