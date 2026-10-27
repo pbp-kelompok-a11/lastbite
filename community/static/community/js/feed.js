@@ -48,7 +48,6 @@ if (searchForm) {
     const current = sequence;
     controller = new AbortController();
     const url = makeUrl(category.value, page);
-    const query = input.value.trim();
     const postType = category.value;
     results.setAttribute('aria-busy', 'true');
     status.textContent = 'Mencari postingan…';

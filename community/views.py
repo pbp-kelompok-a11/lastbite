@@ -123,7 +123,7 @@ def home(request):
         tab_queries[category] = urlencode(params)
     heading = 'Hasil pencarian' if query else 'Postingan yang disukai' if liked_only else 'Food Hacks' if post_type == 'food_hack' else 'Reviews' if post_type == 'review' else 'Postingan komunitas'
     if mine_only and not query:
-        heading = {'all': 'Postingan milikku', 'food_hack': 'Food Hacks milikku', 'review': 'Reviews milikku'}[post_type]
+        heading = 'Postingan milikku'
     search_label, search_placeholder = {
         'all': ('Search Community', 'Search Community...'),
         'food_hack': ('Search Food Hacks', 'Search Food Hacks...'),
