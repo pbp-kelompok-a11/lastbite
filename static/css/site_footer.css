@@ -1,0 +1,101 @@
+/* ============================================================
+   JOIN SECTION + FOOTER — mengikuti desain Figma LastBite
+   (tampil di semua halaman lewat base.html)
+   ============================================================ */
+
+/* ---- Join section ---- */
+.lb-join {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 380px;
+  padding: 70px 24px;
+  background: #315f4e;
+  font-family: var(--lb-sans);
+  text-align: center;
+}
+.lb-join__icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 17px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 26px;
+  color: var(--lb-lime);
+}
+.lb-join__icon svg { width: 22px; height: 22px; }
+.lb-join__title {
+  margin-bottom: 15px;
+  font-family: var(--lb-serif);
+  font-size: clamp(2rem, 4.5vw, 2.8125rem);
+  font-weight: 400;
+  line-height: 1.1;
+  color: #fff;
+}
+.lb-join__text { max-width: 440px; font-size: 14px; line-height: 25.2px; color: #d1ddd8; }
+.lb-join__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 27px; }
+.lb-join__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 27px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 19.5px;
+  transition: background var(--transition), transform var(--transition);
+}
+.lb-join__btn:hover { transform: translateY(-1px); }
+.lb-join__btn--solid { background: #fff; color: var(--lb-ink); }
+.lb-join__btn--solid:hover { background: var(--lb-pill-bg); }
+.lb-join__btn--outline { padding: 13px 25px; border: 1px solid rgba(255, 255, 255, 0.65); color: #fff; }
+.lb-join__btn--outline:hover { background: rgba(255, 255, 255, 0.08); }
+
+/* ---- Footer ---- */
+.lb-footer { padding: 70px 28px 24px; background: #142a20; font-family: var(--lb-sans); }
+.lb-footer__grid {
+  display: grid;
+  grid-template-columns: 342fr 228fr 228fr 228fr;
+  gap: 60px;
+  max-width: 1208px;
+  margin: 0 auto;
+}
+.lb-footer .lb-logo .navbar__logo-text { font-size: 11px; color: #fff; }
+.lb-footer .lb-logo__accent { color: var(--lb-lime); }
+.lb-footer__tagline { margin-top: 23px; max-width: 280px; font-size: 12px; line-height: 21.6px; color: #9fb0a8; }
+.lb-footer__heading {
+  margin-bottom: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #82958b;
+}
+.lb-footer__links { display: flex; flex-direction: column; align-items: flex-start; gap: 13px; }
+.lb-footer__links a { font-size: 11px; line-height: 16.5px; color: #c2cec8; transition: color var(--transition); }
+.lb-footer__links a:hover { color: #fff; }
+.lb-footer__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1208px;
+  margin: 55px auto 0;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 9px;
+  line-height: 13.5px;
+  color: #667b70;
+}
+
+@media (max-width: 1024px) {
+  .lb-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; }
+}
+@media (max-width: 640px) {
+  .lb-footer { padding: 56px 16px 24px; }
+  .lb-footer__grid { grid-template-columns: 1fr; }
+  .lb-footer__bottom { flex-direction: column; }
+}
