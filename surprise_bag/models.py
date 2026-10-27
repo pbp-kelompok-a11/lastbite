@@ -29,6 +29,8 @@ class SurpriseBag(models.Model):
         'mixed': '🛍️',
     }
 
+    distance_km = None
+
     # uuid biar id-nya unik dan aman dipakai di URL
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # pemilik paket — hanya user ini yang boleh mengubah/menghapus
@@ -92,8 +94,12 @@ class SurpriseBag(models.Model):
 
     @property
     def merchant_name(self):
-        # sementara pakai nama user; nanti bisa diganti nama toko dari MerchantStore
+        # utamakan nama toko dari Modul Merchant Store; kalau belum dibuat, pakai nama akun
+        store = getattr(self.merchant, 'merchant_store', None)
+        if store is not None:
+            return store.name
         return self.merchant.get_full_name() or self.merchant.username
+
 
     @property
     def pickup_time(self):
