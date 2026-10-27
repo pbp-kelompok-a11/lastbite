@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="stylesheet" href="{% static 'accounts/css/auth_ui.css' %}">
   <link rel="stylesheet" href="{% static 'css/navbar_lb.css' %}">
+  <link rel="stylesheet" href="{% static 'css/site_footer.css' %}">
 
   {% block extra_css %}{% endblock %}
 </head>
@@ -28,7 +29,7 @@
         <span class="lb-logo__mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5-6 3-.6 5-2 7-5"/></svg>
         </span>
-        <span class="navbar__logo-text">LastBite</span>
+        <span class="navbar__logo-text">Last<span class="lb-logo__accent">Bite</span></span>
       </a>
 
       <!-- Nav Links (desktop) -->
@@ -152,56 +153,73 @@
     {% block content %}{% endblock %}
   </main>
 
+  <!-- JOIN SECTION: tampil di semua halaman; halaman tertentu bisa menimpanya dengan block kosong -->
+  {% block join_section %}
+  <section class="lb-join" aria-labelledby="lb-join-title">
+    <span class="lb-join__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5-6 3-.6 5-2 7-5"/></svg>
+    </span>
+    <h2 class="lb-join__title" id="lb-join-title">Mulai Selamatkan Makanan Hari Ini</h2>
+    <p class="lb-join__text">Bergabung dengan ribuan mahasiswa dan pekerja muda yang sudah hemat sambil berkontribusi mengurangi food waste.</p>
+    <div class="lb-join__actions">
+      {% if user.is_authenticated %}
+        <a href="{% url 'surprise_bag:catalog' %}" class="lb-join__btn lb-join__btn--solid">Jelajahi Surprise Bag</a>
+      {% else %}
+        <a href="{% url 'accounts:register' %}" class="lb-join__btn lb-join__btn--solid">Daftar Sekarang — Gratis!</a>
+      {% endif %}
+      <a href="{% url 'community:home' %}" class="lb-join__btn lb-join__btn--outline">Pelajari Lebih Lanjut</a>
+    </div>
+  </section>
+  {% endblock %}
+
   <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer__container">
-      <div class="footer__top">
-        <!-- Brand -->
-        <div class="footer__brand">
-          <a href="{% url 'main:home' %}" class="navbar__logo">
-            <span class="navbar__logo-icon">🍱</span>
-            <span class="navbar__logo-text">Last<span class="navbar__logo-accent">Bite</span></span>
-          </a>
-          <p class="footer__tagline">
-            Selamatkan makanan, hemat pengeluaran, kurangi food waste.
-          </p>
-        </div>
-
-        <!-- Links -->
-        <div class="footer__links-group">
-          <h4 class="footer__heading">Platform</h4>
-          <ul class="footer__links">
-            <li><a href="{% url 'merchant_store:list' %}" class="footer__link">Merchant Store</a></li>
-            <li><a href="{% url 'surprise_bag:catalog' %}" class="footer__link">Surprise Bags</a></li>
-            <li><a href="{% url 'community:home' %}" class="footer__link">Community</a></li>
-            <li><a href="#" class="footer__link">Eco Impact</a></li>
-          </ul>
-        </div>
-
-        <div class="footer__links-group">
-          <h4 class="footer__heading">Bergabung</h4>
-          <ul class="footer__links">
-            <li><a href="{% url 'accounts:register' %}?role=customer" class="footer__link">Daftar sebagai Pembeli</a></li>
-            <li><a href="{% url 'accounts:register' %}?role=merchant" class="footer__link">Daftar sebagai Merchant</a></li>
-          </ul>
-        </div>
-
-        <div class="footer__links-group">
-          <h4 class="footer__heading">Tentang</h4>
-          <ul class="footer__links">
-            <li><a href="#" class="footer__link">Tentang Kami</a></li>
-            <li><a href="#" class="footer__link">FAQ</a></li>
-            <li><a href="#" class="footer__link">Hubungi Kami</a></li>
-          </ul>
-        </div>
+  <footer class="lb-footer">
+    <div class="lb-footer__grid">
+      <div>
+        <a href="{% url 'main:home' %}" class="navbar__logo lb-logo">
+          <span class="lb-logo__mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5-6 3-.6 5-2 7-5"/></svg>
+          </span>
+          <span class="navbar__logo-text">Last<span class="lb-logo__accent">Bite</span></span>
+        </a>
+        <p class="lb-footer__tagline">Selamatkan makanan, hemat pengeluaran,<br>kurangi food waste.</p>
       </div>
 
-      <div class="footer__bottom">
-        <p class="footer__copy">&copy; 2026 LastBite. Made with ❤️ to reduce food waste.</p>
-        <p class="footer__sub">Proyek PBP Kelompok A11 — Fasilkom UI</p>
-      </div>
+      <nav aria-labelledby="footer-platform">
+        <h2 class="lb-footer__heading" id="footer-platform">Platform</h2>
+        <ul class="lb-footer__links">
+          <li><a href="{% url 'surprise_bag:catalog' %}">Surprise Bags</a></li>
+          <li><a href="{% url 'merchant_store:list' %}">Merchant Store</a></li>
+          <li><a href="{% url 'community:home' %}">Community</a></li>
+          <li><a href="{% url 'eco_impact:dashboard' %}">Eco Impact</a></li>
+        </ul>
+      </nav>
+
+      <nav aria-labelledby="footer-join">
+        <h2 class="lb-footer__heading" id="footer-join">Bergabung</h2>
+        <ul class="lb-footer__links">
+          <li><a href="{% url 'accounts:register' %}?role=customer">Daftar sebagai Pembeli</a></li>
+          <li><a href="{% url 'accounts:register' %}?role=merchant">Daftar sebagai Merchant</a></li>
+          <li><a href="{% url 'accounts:login' %}">Masuk ke akun</a></li>
+        </ul>
+      </nav>
+
+      <nav aria-labelledby="footer-about">
+        <h2 class="lb-footer__heading" id="footer-about">Tentang</h2>
+        <ul class="lb-footer__links">
+          <li><a href="#">Tentang Kami</a></li>
+          <li><a href="#">FAQ</a></li>
+          <li><a href="#">Hubungi Kami</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="lb-footer__bottom">
+      <p>&copy; 2026 LastBite</p>
+      <p>Kebijakan Privasi · Syarat &amp; Ketentuan</p>
     </div>
   </footer>
+
 
   <!-- Base JS -->
   <script src="{% static 'js/base.js' %}"></script>
