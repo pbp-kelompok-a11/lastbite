@@ -1,0 +1,50 @@
+:root {
+  --navbar-height: 72px;
+  --lb-green: #1f7d58;
+  --lb-ink: #12392d;
+  --lb-link: #5d665f;
+  --lb-pill-bg: #e4efe3;
+}
+
+.navbar { background: rgba(255,253,248,.92); border-bottom: 1px solid #e8eae2; }
+.navbar__container { max-width: 1280px; padding: 0 2rem; gap: 2rem; }
+
+.lb-logo { gap: .6rem; font-family: 'Plus Jakarta Sans', var(--font-sans); }
+.lb-logo__mark {
+  display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%;
+  background: var(--lb-green); color: #fff; box-shadow: 0 4px 10px rgba(31,125,88,.25);
+}
+.lb-logo__mark svg { width: 18px; height: 18px; }
+.lb-logo .navbar__logo-text { font-size: 1.3rem; font-weight: 800; letter-spacing: -.01em; color: var(--lb-ink); }
+
+.navbar__links { flex: 1; justify-content: center; align-self: stretch; gap: 2rem; }
+.navbar__links > li { display: flex; align-items: stretch; }
+.navbar__link {
+  display: flex; align-items: center;
+  font-family: 'Plus Jakarta Sans', var(--font-sans);
+  font-size: .9rem; font-weight: 500; color: var(--lb-link);
+}
+.navbar__link:hover { color: var(--lb-ink); }
+.navbar__link::after { bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--lb-green); }
+.navbar__link.is-active { color: var(--lb-ink); font-weight: 600; }
+.navbar__link.is-active::after { width: 100%; }
+
+.navbar__auth { gap: .75rem; }
+.lb-nav-search {
+  display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%;
+  color: var(--lb-ink); transition: background var(--transition);
+}
+.lb-nav-search:hover { background: var(--lb-pill-bg); }
+.lb-login-btn {
+  display: inline-flex; align-items: center; gap: .5rem; padding: .6rem 1.2rem; border-radius: 14px;
+  background: var(--lb-pill-bg); color: var(--lb-ink);
+  font-family: 'Plus Jakarta Sans', var(--font-sans); font-size: .9rem; font-weight: 700;
+  transition: background var(--transition), transform var(--transition);
+}
+.lb-login-btn:hover { background: #d4e6d3; transform: translateY(-1px); }
+
+@media (max-width: 768px) {
+  .navbar__container { padding: 0 1rem; }
+  .navbar__links > li { align-items: center; }
+  .navbar__link::after { display: none; }
+}

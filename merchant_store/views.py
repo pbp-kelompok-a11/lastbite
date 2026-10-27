@@ -3,7 +3,7 @@ import math
 from django.contrib import messages
 from django.core.cache import cache
 from django.db import IntegrityError, transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -101,6 +101,7 @@ def _serialize_store(store, distance_km, rating_map, wishlisted_ids, can_wishlis
         'distance_km': None if distance_km is None else round(distance_km, 2),
         'rating': average,
         'rating_count': count,
+        'bag_count': getattr(store, 'bag_count', 0),
         'detail_url': reverse('merchant_store:detail', args=[store.id]),
     }
     if can_wishlist:
@@ -135,7 +136,13 @@ def store_search_api(request):
     if radius is not None and lat is None:
         return JsonResponse({'error': 'Tentukan lokasi Anda terlebih dahulu untuk memakai filter radius.'}, status=400)
 
-    stores = MerchantStore.objects.filter(is_active=True)
+    stores = MerchantStore.objects.filter(is_active=True).annotate(
+        bag_count = Count(
+            'owner__surprise_bags',
+            filter=Q(owner__surprise_bags__is_active=True, owner__surprise_bags__stock__gt=0),
+        ),
+    )
+
     query = request.GET.get('q', '').strip()
     if query:
         stores = stores.filter(
