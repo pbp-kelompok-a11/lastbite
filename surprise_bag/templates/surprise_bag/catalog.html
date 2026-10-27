@@ -4,76 +4,97 @@
 {% block title %}Katalog Surprise Bag — LastBite{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/surprise_bag.css' %}">
+<link rel="stylesheet" href="{% static 'css/catalog.css' %}">
 {% endblock %}
 
 {% block content %}
-<section class="sb-page">
-  <div class="section-container">
-    <div class="section-header sb-header">
-      <h1 class="section-title">🛍️ Surprise Bag Hari Ini</h1>
-      <p class="section-subtitle">Selamatkan makanan surplus dari merchant sekitar dengan diskon 30–50%</p>
+<section class="sb-catalog">
+  <div class="lb-container">
+    <div class="lb-section-head">
+      <div>
+        <span class="lb-eyebrow">Selamatkan hari ini</span>
+        <h1 class="lb-section-title">Surprise Bags</h1>
+        <p class="lb-section-sub">Kamu tak tahu persis isinya—tapi pasti enak, aman, dan worth it.</p>
+      </div>
       {% if is_merchant %}
-        <a href="{% url 'surprise_bag:my_bags' %}" class="btn btn--outline btn--sm sb-header__action">Kelola Surprise Bag Saya</a>
+        <a href="{% url 'surprise_bag:my_bags' %}" class="lb-btn lb-btn--ghost">
+          Kelola Surprise Bag Saya
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
       {% endif %}
     </div>
 
-    <div class="sb-layout">
-      <!-- Filter: tanpa JS dikirim sebagai GET biasa, dengan JS diambil via AJAX -->
-      <form id="filter-form" class="sb-filter" action="{% url 'surprise_bag:catalog' %}" method="get" autocomplete="off">
-        <h2 class="sb-filter__title">Filter</h2>
+    <!-- Filter: tanpa JS dikirim sebagai GET biasa, dengan JS diambil via AJAX -->
+    <form id="filter-form" action="{% url 'surprise_bag:catalog' %}" method="get" autocomplete="off">
+      <div class="sb-filterbar">
+        <div class="sb-filterbar__fields">
+          <label class="sb-field sb-field--search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <span class="sr-only">Cari</span>
+            <input type="search" name="q" value="{{ filters.q }}" placeholder="Cari makanan, toko, atau lokasi">
+          </label>
 
-        <label class="sb-field">
-          <span>Cari</span>
-          <input type="search" name="q" value="{{ filters.q }}" placeholder="Nama paket...">
-        </label>
-
-        <label class="sb-field">
-          <span>Kategori</span>
-          <select name="category">
-            <option value="">Semua kategori</option>
-            {% for value, label in categories %}
-              <option value="{{ value }}"{% if value == filters.category %} selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </label>
-
-        <div class="sb-field">
-          <span>Harga diskon (Rp)</span>
-          <div class="sb-field__row">
-            <input type="number" name="min_price" min="0" step="1000" value="{{ filters.min_price }}" placeholder="Min">
-            <input type="number" name="max_price" min="0" step="1000" value="{{ filters.max_price }}" placeholder="Maks">
+          <div class="sb-price" role="group" aria-labelledby="price-label">
+            <span class="sb-price__label" id="price-label">Harga diskon</span>
+            <label class="sb-field sb-field--price">
+              <span class="sr-only">Harga minimum</span>
+              <input type="number" name="min_price" min="0" step="1000" value="{{ filters.min_price }}" placeholder="Min (Rp)">
+            </label>
+            <span class="sb-price__dash" aria-hidden="true">–</span>
+            <label class="sb-field sb-field--price">
+              <span class="sr-only">Harga maksimum</span>
+              <input type="number" name="max_price" min="0" step="1000" value="{{ filters.max_price }}" placeholder="Maks (Rp)">
+            </label>
           </div>
+
+          <label class="sb-field sb-field--select">
+            <span class="sb-field__prefix">Stok:</span>
+            <select name="stock">
+              <option value="available">Masih ada stok</option>
+              <option value="all"{% if filters.stock == 'all' %} selected{% endif %}>Semua (termasuk habis)</option>
+            </select>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </label>
+
+          <a id="reset-filter" href="{% url 'surprise_bag:catalog' %}" class="sb-reset">Reset filter</a>
         </div>
 
-        <label class="sb-field">
-          <span>Urutkan</span>
+        <fieldset class="sb-chips">
+          <legend class="sr-only">Kategori</legend>
+          <label class="sb-chip">
+            <input type="radio" name="category" value=""{% if not filters.category %} checked{% endif %}>
+            <span>Semua</span>
+          </label>
+          {% for value, label in categories %}
+            <label class="sb-chip">
+              <input type="radio" name="category" value="{{ value }}"{% if value == filters.category %} checked{% endif %}>
+              <span>{{ label }}</span>
+            </label>
+          {% endfor %}
+        </fieldset>
+      </div>
+
+      <div class="sb-toolbar-row">
+        <p class="sb-count" id="catalog-count" aria-live="polite">{% include 'surprise_bag/components/catalog_count.html' %}</p>
+        <label class="sb-sort">
+          <span>Urutkan:</span>
           <select name="sort">
             {% for value, label in sort_options %}
               <option value="{{ value }}"{% if value == filters.sort %} selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </label>
-
-        <label class="sb-field">
-          <span>Stok</span>
-          <select name="stock">
-            <option value="available">Masih ada stok</option>
-            <option value="all"{% if filters.stock == 'all' %} selected{% endif %}>Semua (termasuk habis)</option>
-          </select>
-        </label>
-
-        <div class="sb-filter__actions">
-          <button type="submit" class="btn btn--primary btn--sm">Terapkan</button>
-          <a id="reset-filter" href="{% url 'surprise_bag:catalog' %}" class="btn btn--outline btn--sm">Reset Filter</a>
-        </div>
-      </form>
-
-      <div>
-        <p id="catalog-status" class="sb-catalog-status" role="status" hidden></p>
-        {% include 'surprise_bag/components/catalog_results.html' %}
       </div>
-    </div>
+
+      <!-- lokasi pengguna (dari browser) untuk urutan Terdekat & jarak di kartu -->
+      <input type="hidden" name="lat" value="{{ filters.lat }}">
+      <input type="hidden" name="lng" value="{{ filters.lng }}">
+      <noscript><button type="submit" class="lb-btn lb-btn--primary">Terapkan filter</button></noscript>
+    </form>
+
+    <p id="catalog-status" class="sb-catalog-status" role="status" hidden></p>
+    {% include 'surprise_bag/components/catalog_results.html' %}
   </div>
 </section>
 {% endblock %}
@@ -82,6 +103,8 @@
 <script>
 const form = document.getElementById('filter-form');
 const statusEl = document.getElementById('catalog-status');
+const countEl = document.getElementById('catalog-count');
+const sortSelect = form.elements.sort;
 const FILTER_DEFAULTS = { sort: 'newest', stock: 'available' };
 let results = document.getElementById('catalog-results');
 let debounceTimer;
@@ -98,7 +121,12 @@ function makeUrl(page = 1) {
   return url;
 }
 
-async function loadResults(page = 1, scrollToResults = false) {
+function showStatus(message) {
+  statusEl.textContent = message;
+  statusEl.hidden = false;
+}
+
+async function loadResults(page = 1, scrollToResults = false, keepStatus = false) {
   clearTimeout(debounceTimer);
   controller?.abort();
   controller = new AbortController();
@@ -116,13 +144,14 @@ async function loadResults(page = 1, scrollToResults = false) {
     if (!updated) throw new Error('Hasil katalog tidak ditemukan');
     results.replaceWith(updated);
     results = updated;
+    countEl.replaceChildren(results.querySelector('#catalog-count-template').content.cloneNode(true));
 
     // server bisa mengoreksi nomor halaman (misal kelewatan), jadi URL ikut disesuaikan
     const actualPage = Number(results.dataset.page);
     if (actualPage > 1) url.searchParams.set('page', actualPage);
     else url.searchParams.delete('page');
     window.history.replaceState(null, '', url);
-    statusEl.hidden = true;
+    if (!keepStatus) statusEl.hidden = true;
 
     if (scrollToResults) {
       results.querySelector('.sb-page-link--current')?.focus({ preventScroll: true });
@@ -131,12 +160,27 @@ async function loadResults(page = 1, scrollToResults = false) {
     }
   } catch (error) {
     if (error.name === 'AbortError') return;
-    statusEl.textContent = 'Gagal memuat katalog. Hasil sebelumnya tetap ditampilkan.';
-    statusEl.hidden = false;
+    showStatus('Gagal memuat katalog. Hasil sebelumnya tetap ditampilkan.');
   } finally {
     // request yang sudah dibatalkan tidak boleh mematikan status loading request terbaru
     if (controller.signal === signal) results.removeAttribute('aria-busy');
   }
+}
+
+// urutan Terdekat butuh lokasi pengguna; browser akan meminta izin sekali
+function requestLocation() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) return resolve(false);
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        form.elements.lat.value = position.coords.latitude.toFixed(5);
+        form.elements.lng.value = position.coords.longitude.toFixed(5);
+        resolve(true);
+      },
+      () => resolve(false),
+      { timeout: 10000, maximumAge: 600000 },
+    );
+  });
 }
 
 function isPlainClick(event) {
@@ -144,8 +188,16 @@ function isPlainClick(event) {
 }
 
 // filter berubah -> kembali ke halaman 1
-form.addEventListener('input', () => {
+form.addEventListener('input', event => {
   clearTimeout(debounceTimer);
+  if (event.target === sortSelect && sortSelect.value === 'nearest' && !form.elements.lat.value) {
+    showStatus('Meminta izin lokasi untuk mengurutkan dari yang terdekat…');
+    requestLocation().then(found => {
+      if (!found) showStatus('Lokasi tidak tersedia, jadi hasil diurutkan dari yang terbaru.');
+      loadResults(1, false, !found);
+    });
+    return;
+  }
   debounceTimer = setTimeout(() => loadResults(1), 300);
 });
 form.addEventListener('submit', event => {
@@ -156,8 +208,10 @@ form.addEventListener('submit', event => {
 document.getElementById('reset-filter').addEventListener('click', event => {
   if (!isPlainClick(event)) return;
   event.preventDefault();
-  form.querySelectorAll('input').forEach(input => { input.value = ''; });
-  form.querySelectorAll('select').forEach(select => { select.selectedIndex = 0; });
+  form.querySelectorAll('input[type="search"], input[type="number"]').forEach(input => { input.value = ''; });
+  form.querySelector('input[name="category"][value=""]').checked = true;
+  form.elements.stock.value = FILTER_DEFAULTS.stock;
+  sortSelect.value = FILTER_DEFAULTS.sort;
   loadResults(1);
 });
 

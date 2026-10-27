@@ -1,0 +1,154 @@
+/* ============================================================
+   KATALOG SURPRISE BAG — mengikuti frame "Surprise Bags" di Figma
+   ============================================================ */
+.sb-catalog {
+  min-height: 70vh;
+  padding: calc(var(--navbar-height) + 78px) 0 100px;
+  background: var(--lb-cream);
+  color: var(--lb-ink);
+  font-family: var(--lb-sans);
+}
+
+/* ---- Filter bar ---- */
+.sb-filterbar { display: flex; flex-direction: column; gap: 12px; padding-top: 34px; }
+.sb-filterbar__fields { display: flex; align-items: center; gap: 10px; }
+
+.sb-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--lb-line);
+  border-radius: 12px;
+  background: #f7f8f5;
+  color: #96a09b;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.sb-field:focus-within { border-color: var(--lb-green); box-shadow: 0 0 0 3px var(--lb-pill-bg); }
+.sb-field svg { width: 20px; height: 20px; flex-shrink: 0; }
+.sb-field input,
+.sb-field select {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  color: var(--lb-ink);
+  outline: none;
+}
+.sb-field input::placeholder { color: #96a09b; }
+.sb-field--search { flex: 1; }
+.sb-field--price { width: 112px; }
+.sb-field--select { width: 196px; padding-right: 12px; }
+.sb-field--select select { appearance: none; padding-right: 22px; font-weight: 600; cursor: pointer; }
+.sb-field--select svg { position: absolute; right: 12px; width: 16px; height: 16px; color: var(--lb-muted); pointer-events: none; }
+.sb-field__prefix { font-size: 11px; font-weight: 600; color: var(--lb-ink); white-space: nowrap; }
+
+.sb-price { display: flex; align-items: center; gap: 8px; }
+.sb-price__label { font-size: 10px; font-weight: 700; line-height: 15px; color: var(--lb-muted); white-space: nowrap; }
+.sb-price__dash { font-size: 11px; font-weight: 700; color: var(--lb-muted); }
+.sb-reset { padding: 0 6px; font-size: 11px; font-weight: 700; line-height: 16.5px; color: var(--lb-green); white-space: nowrap; }
+.sb-reset:hover { text-decoration: underline; }
+
+/* ---- Chip kategori (radio yang ditampilkan sebagai pill) ---- */
+.sb-chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; border: 0; }
+.sb-chip { position: relative; }
+.sb-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.sb-chip span {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 13px;
+  border: 1px solid var(--lb-line);
+  border-radius: 99px;
+  background: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 15px;
+  color: var(--lb-muted);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+.sb-chip span:hover { border-color: var(--lb-green); color: var(--lb-ink); }
+.sb-chip input:checked + span { background: var(--lb-ink); border-color: var(--lb-ink); color: #fff; }
+.sb-chip input:focus-visible + span { outline: 3px solid var(--lb-green); outline-offset: 2px; }
+
+/* ---- Baris info: jumlah hasil + urutkan ---- */
+.sb-toolbar-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 20px; }
+.sb-count { font-size: 11px; line-height: 16.5px; color: var(--lb-muted); }
+.sb-sort {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding-left: 14px;
+  border: 1px solid var(--lb-line);
+  border-radius: 99px;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--lb-ink);
+}
+.sb-sort:focus-within { border-color: var(--lb-green); box-shadow: 0 0 0 3px var(--lb-pill-bg); }
+.sb-sort select {
+  appearance: none;
+  padding: 8px 34px 8px 4px;
+  border: 0;
+  border-radius: 99px;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+}
+.sb-sort svg { position: absolute; right: 12px; width: 14px; height: 14px; pointer-events: none; }
+.sb-catalog-status { margin-top: 12px; font-size: 11px; color: var(--lb-muted); }
+
+/* ---- Grid hasil ---- */
+#catalog-results { scroll-margin-top: calc(var(--navbar-height) + 24px); }
+#catalog-results[aria-busy="true"] { opacity: 0.65; }
+.sb-bag-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; padding-top: 20px; }
+
+/* ---- Pagination (konsep sama dengan modul Community) ---- */
+.sb-pagination { margin-top: 32px; }
+.sb-pagination__summary { margin-bottom: 16px; font-size: 0.875rem; color: var(--lb-muted); }
+.sb-pagination__list { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sb-page-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--lb-line);
+  border-radius: 12px;
+  background: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--lb-ink);
+}
+.sb-page-link:hover { background: var(--lb-pill-bg); border-color: var(--lb-green); }
+.sb-page-link--current,
+.sb-page-link--current:hover { background: var(--lb-ink); border-color: var(--lb-ink); color: #fff; }
+.sb-page-link--ellipsis,
+.sb-page-link--ellipsis:hover { background: transparent; border-color: transparent; color: var(--lb-muted); }
+.sb-page-link:focus-visible { outline: 3px solid var(--lb-green); outline-offset: 3px; }
+
+/* ---- Responsive ---- */
+@media (max-width: 1100px) {
+  .sb-filterbar__fields { flex-wrap: wrap; }
+  .sb-field--search { flex-basis: 100%; }
+  .sb-bag-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 768px) {
+  .sb-bag-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sb-price { flex-basis: 100%; }
+  .sb-field--price { flex: 1; width: auto; }
+  .sb-field--select { flex: 1; width: auto; }
+}
+@media (max-width: 480px) {
+  .sb-bag-grid { grid-template-columns: 1fr; }
+  .sb-toolbar-row { flex-direction: column; align-items: flex-start; }
+}
