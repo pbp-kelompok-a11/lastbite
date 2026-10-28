@@ -1,5 +1,7 @@
 # LastBite
 
+Link Figma: [LastBite](https://www.figma.com/design/zDAuPEQmxaq2GS0vTwFvXr/LastBite?node-id=0-1&t=iZNwDjawzaXseNsp-1)
+
 ## Anggota Kelompok A11
 - 2506622802	SALWA ALYANI NAZNIN
 - 2506656910	KHAYLA SYAFIRA ARDIASIH
