@@ -5,19 +5,19 @@ from .models import ImpactLog
 class ImpactLogForm(forms.ModelForm):
     class Meta:
         model = ImpactLog
-        # hanya field yang boleh diisi user secara manual
-        fields = ['food_name', 'quantity', 'original_price', 'discounted_price', 'notes']
+        # Field yang diisi customer untuk pencatatan manual
+        fields = ['food_name', 'notes', 'quantity', 'original_price', 'discounted_price']
         widgets = {
-            'food_name': forms.TextInput(attrs={'placeholder': 'Nama makanan yang diselamatkan'}),
+            'food_name': forms.TextInput(attrs={'placeholder': 'Contoh: Croissant Almond, Nasi Bento, dll.'}),
+            'notes': forms.TextInput(attrs={'placeholder': 'Contoh: Bakers Corner, Toko Roti Barokah, dll.'}),
             'quantity': forms.NumberInput(attrs={'min': 1}),
             'original_price': forms.NumberInput(attrs={'placeholder': 'Harga normal (Rp)'}),
             'discounted_price': forms.NumberInput(attrs={'placeholder': 'Harga yang kamu bayar (Rp)'}),
-            'notes': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Catatan tambahan (opsional)'}),
         }
         labels = {
             'food_name': 'Nama Makanan',
-            'quantity': 'Jumlah',
+            'notes': 'Nama Toko / Tempat Penyelamatan',
+            'quantity': 'Jumlah (Porsi)',
             'original_price': 'Harga Normal (Rp)',
             'discounted_price': 'Harga Diskon (Rp)',
-            'notes': 'Catatan',
         }
