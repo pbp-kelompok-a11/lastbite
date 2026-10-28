@@ -3,130 +3,160 @@
   display: none;
 }
 
-.community  {
-  padding-top: calc(var(--navbar-height) + var(--space-2xl));
-  padding-bottom: var(--space-3xl);
+.community {
+  --color-primary: var(--lb-green);
+  --color-primary-dark: var(--lb-ink);
+  --color-primary-light: var(--lb-pill-bg);
+  --color-bg: var(--lb-cream);
+  --color-surface: #f6f5ee;
+  --color-text: #303d35;
+  --color-text-muted: #5e6e63;
+  --color-border: var(--lb-line);
+  --font-heading: var(--lb-serif);
+  --font-sans: var(--lb-sans);
+  max-width: 1280px;
+  padding: calc(var(--navbar-height) + 32px) 48px 64px;
+  font-family: var(--lb-sans);
+  color: var(--color-text);
+  font-size: .9375rem;
+  line-height: 1.7;
+  --community-peach: #f2bd98;
+  --community-peach-soft: #fff0e2;
+  --community-peach-ink: #814724;
+  --community-honey: #f5c451;
+  --community-honey-soft: #fff3ce;
+  --community-honey-ink: #80540d;
+  --community-star: #ac710c;
+  --community-star-empty: #938c78;
+  --community-sage: #edf4e7;
+  --community-line: #e5e8df;
 }
 
-.community-hero  {
-  padding: var(--space-3xl);
-  margin-bottom: var(--space-2xl);
-  background: var(--color-primary-light);
-  border-radius: var(--radius-xl);
+.community-hero {
+  padding: 32px 260px 32px 36px;
+  margin-bottom: 0;
+  background: var(--lb-ink);
+  border-radius: 24px;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  min-width: 0;
 }
 
-.community-eyebrow  {
-  color: var(--color-primary-dark);
-  font-size: .75rem;
-  font-weight: 700;
-  letter-spacing: .1em;
-  margin-bottom: var(--space-sm);
+.community-eyebrow {
+  color: var(--lb-green);
+  font-size: .6875rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  margin-bottom: 12px;
+  text-transform: uppercase;
 }
 
-.community h1, .community h2, .community h3  {
-  font-family: var(--font-heading);
+.community h1, .community h2, .community h3 {
+  font-family: var(--lb-serif);
+  font-weight: 400;
+  color: var(--lb-ink);
 }
 
-.community h1  {
-  font-size: clamp(1.75rem, 4vw, 2.75rem);
-  line-height: 1.25;
-  margin-bottom: var(--space-lg);
+.community h1 {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1.12;
+  margin-bottom: 16px;
+  letter-spacing: -.025em;
 }
 
-.community-hero > p:last-child  {
-  max-width: 620px;
-}
-
-.community-heading  {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
-}
-
-.community h2  {
-  font-size: 1.5rem;
-}
-
-.community-muted  {
-  color: var(--color-text-muted);
+.community-hero > p:last-child {
+  max-width: 54ch;
+  color: #e0ebdc;
   font-size: .875rem;
 }
 
-.community-feed  {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-lg);
+.community h2 {
+  font-size: 1.5rem;
+  line-height: 1.3;
 }
 
-.food-hack-card  {
+.community-muted {
+  color: var(--color-text-muted);
+  font-size: .8125rem;
+}
+
+.community-feed {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.food-hack-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  padding: var(--space-xl);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg);
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid var(--community-line);
+  border-radius: 20px;
+  background: #fff;
   overflow-wrap: anywhere;
+  min-height: 300px;
+  transition: border-color var(--transition), background var(--transition);
 }
 
-.food-hack-card__badge  {
+.food-hack-card__badge {
   display: inline-block;
-  padding: var(--space-xs) .75rem;
-  margin-bottom: var(--space-md);
+  padding: 5px 10px;
+  margin-bottom: 14px;
   border-radius: var(--radius-full);
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
-  font-size: .75rem;
-  font-weight: 600;
+  background: var(--community-peach-soft);
+  color: var(--community-peach-ink);
+  font-size: .6875rem;
+  font-weight: 700;
+  letter-spacing: .035em;
+  text-transform: uppercase;
 }
 
-.food-hack-card h3  {
-  font-size: 1.25rem;
-  line-height: 1.4;
+.food-hack-card h3 {
+  font-size: 1.625rem;
+  line-height: 1.25;
+  letter-spacing: -.015em;
 }
 
 .food-hack-card__badge--merchant {
   margin-left: var(--space-xs);
-  background: #fff0ce;
-  color: #775014;
+  background: var(--community-peach);
+  color: #58371f;
 }
 
-.food-hack-card__link::after  {
+.food-hack-card__link::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: var(--radius-lg);
 }
 
-.food-hack-card:focus-within  {
+.food-hack-card:focus-within {
   outline: 3px solid var(--color-primary);
   outline-offset: 4px;
 }
 
-.food-hack-card__link:hover  {
+.food-hack-card__link:hover {
   color: var(--color-primary);
 }
 
-.community-back  {
+.community-back {
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: .65rem 1rem;
-  margin-bottom: var(--space-xl);
+  padding: .6rem .85rem;
+  margin-bottom: 28px;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: var(--color-surface);
+  border-radius: 12px;
+  background: transparent;
   color: var(--color-primary-dark);
-  font-size: .875rem;
+  font-size: .75rem;
   font-weight: 600;
   transition: background var(--transition), border-color var(--transition);
 }
 
-.community-back__icon  {
+.community-back__icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
@@ -137,57 +167,70 @@
   stroke-linejoin: round;
 }
 
-.community-back:hover  {
+.community-back:hover {
   background: var(--color-primary-light);
   border-color: var(--color-primary);
 }
 
-.community-back:focus-visible  {
+.community-back:focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 4px;
 }
 
-.community-detail  {
-  max-width: 760px;
+.community-detail {
+  max-width: 800px;
   margin: 0 auto;
   overflow-wrap: anywhere;
+  padding: 36px;
+  border: 1px solid var(--lb-line);
+  border-radius: 24px;
+  background: #fff;
 }
 
-.community-detail__meta  {
+.community-detail__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-md);
-  padding-bottom: var(--space-lg);
+  gap: 16px;
+  padding-bottom: 20px;
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text-muted);
-  font-size: .875rem;
+  font-size: .8125rem;
 }
 
-.community-detail__content  {
-  margin-top: var(--space-xl);
+.community-detail__content {
+  margin-top: 28px;
+  line-height: 1.85;
+  font-size: 1rem;
 }
 
-.community-detail__content p  {
-  margin-bottom: var(--space-lg);
+.community-detail__content p {
+  margin-bottom: 20px;
 }
 
-.food-hack-card__excerpt  {
+.food-hack-card__excerpt {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
   color: var(--color-text-muted);
+  font-size: .9375rem;
+  line-height: 1.75;
 }
 
-.food-hack-card__meta  {
+.food-hack-card__meta {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--space-sm);
+  justify-content: flex-start;
+  gap: 8px 16px;
   margin-top: auto;
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--color-border);
-  font-size: .8125rem;
+  padding-top: 16px;
+  border-top: 0;
+  font-size: .75rem;
   color: var(--color-text-muted);
 }
 
-.community-empty  {
+.community-empty {
   grid-column: 1 / -1;
   padding: var(--space-3xl) var(--space-lg);
   border: 1px dashed var(--color-border);
@@ -195,120 +238,114 @@
   text-align: center;
 }
 
-.community-empty > span  {
+.community-empty > span {
   color: var(--color-primary);
   font-size: 3rem;
 }
 
-.community-empty p  {
+.community-empty p {
   max-width: 440px;
   margin: var(--space-sm) auto 0;
   color: var(--color-text-muted);
 }
 
-@media (max-width: 640px)  {
-  .community-feed  {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .community-hero  {
-    padding: var(--space-xl) var(--space-lg);
-  }
-
-  .food-hack-card  {
-    padding: var(--space-lg);
-  }
-
-}
-
-.community-editor  {
-  max-width: 720px;
+.community-editor {
+  max-width: 760px;
   margin: 0 auto;
+  padding: 36px;
+  border: 1px solid var(--lb-line);
+  border-radius: 24px;
+  background: #fff;
 }
 
-.community-form  {
+.community-form {
   display: grid;
-  gap: var(--space-lg);
-  margin-top: var(--space-xl);
+  gap: 24px;
+  margin-top: 28px;
 }
 
-.community-form__field label  {
+.community-form__field label {
   display: block;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: var(--space-sm);
+  font-size: .8125rem;
 }
 
-.community-form input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]), .community-form textarea, .community-form select  {
+.community-form input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]), .community-form textarea, .community-form select {
   width: 100%;
   padding: .85rem 1rem;
   font: inherit;
   color: var(--color-text);
-  background: var(--color-bg);
+  background: var(--lb-cream);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
+  font-size: .875rem;
+  min-height: 48px;
 }
 
-.community-form textarea  {
+.community-form textarea {
   resize: vertical;
   min-height: 200px;
 }
 
-.community-form input:focus-visible, .community-form textarea:focus-visible, .community-form select:focus-visible, .community-form button:focus-visible, .community-form a:focus-visible  {
+.community-form input:focus-visible, .community-form textarea:focus-visible, .community-form select:focus-visible, .community-form button:focus-visible, .community-form a:focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 3px;
 }
 
-.community-form .errorlist  {
+.community-form .errorlist {
   color: #a12b22;
   font-size: .875rem;
   margin-top: var(--space-sm);
 }
 
-.community-form [aria-invalid="true"]  {
+.community-form [aria-invalid="true"] {
   border-color: #a12b22;
 }
 
-.community-form__actions  {
+.community-form__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-md);
+  gap: 12px;
+  padding-top: 8px;
 }
 
-.community-post-actions  {
+.community-post-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-md);
+  gap: 12px;
   margin-top: var(--space-xl);
   padding-top: var(--space-lg);
   border-top: 1px solid var(--color-border);
 }
 
-.community-post-actions a:focus-visible  {
+.community-post-actions a:focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 4px;
 }
 
-.community .btn--danger  {
+.community .btn--danger {
   background: #a12b22;
   color: white;
-  border: 2px solid #a12b22;
+  border: 1px solid #a12b22;
 }
 
-.community .btn--danger:hover  {
+.community .btn--danger:hover {
   background: #7e211a;
   border-color: #7e211a;
 }
 
-.community .btn--danger-outline  {
+.community .btn--danger-outline {
   color: #a12b22;
-  border: 2px solid #a12b22;
+  border: 1px solid #e4bbb6;
+  background: #fff;
 }
 
-.community .btn--danger-outline:hover  {
+.community .btn--danger-outline:hover {
   background: #fcece9;
 }
 
-.community-delete-summary  {
+.community-delete-summary {
   margin-top: var(--space-xl);
   padding: var(--space-lg);
   background: var(--color-surface);
@@ -316,27 +353,29 @@
   overflow-wrap: anywhere;
 }
 
-.community-delete-summary p  {
+.community-delete-summary p {
   margin-top: var(--space-sm);
   color: var(--color-text-muted);
 }
 .community-toolbar {
   display: grid;
-  gap: var(--space-lg);
-  margin-bottom: var(--space-lg);
+  gap: 20px;
+  margin-bottom: 0;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--community-line);
 }
 
 .community-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
+  gap: 8px;
 }
 
 .community-feed-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 12px;
 }
 
 .community-sort {
@@ -358,17 +397,18 @@
 
 .community-sort select {
   appearance: none;
-  min-height: 44px;
+  min-height: 48px;
   max-width: 100%;
-  padding: .65rem 2.75rem .65rem 1rem;
+  padding: .75rem 2.75rem .75rem 1rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: var(--color-surface);
+  border-radius: 12px;
+  background: #fff;
   color: var(--color-primary-dark);
   font: inherit;
-  font-size: .875rem;
-  font-weight: 600;
+  font-size: .8125rem;
+  font-weight: 500;
   cursor: pointer;
+  width: 100%;
 }
 
 .community-visually-hidden {
@@ -384,12 +424,14 @@
 }
 
 .community-tab {
-  padding: .65rem 1rem;
-  border: 1px solid var(--color-border);
+  padding: 10px 20px;
+  border: 1px solid transparent;
   border-radius: var(--radius-full);
   color: var(--color-primary-dark);
-  font-weight: 600;
-  font-size: .875rem;
+  font-weight: 700;
+  font-size: .8125rem;
+  background: var(--color-surface);
+  min-height: 44px;
 }
 
 .community-tab:hover {
@@ -397,17 +439,17 @@
 }
 
 .community-tab--active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: white;
+  background: var(--lb-ink);
+  border-color: var(--lb-ink);
+  color: #fff;
 }
 
 .community-tab--active:hover {
-  background: var(--color-primary-dark);
+  background: var(--lb-green);
 }
 
 .community-search {
-  flex: 1 1 320px;
+  flex: 1 1 420px;
   min-width: 0;
 }
 
@@ -422,21 +464,21 @@
 .community-search__controls {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 8px;
 }
 
 .community-search input[type="search"] {
   flex: 1;
   min-width: 0;
   width: 100%;
-  height: 44px;
+  height: 48px;
   padding: 0 1rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: var(--color-bg);
+  border-radius: 12px;
+  background: #fff;
   color: var(--color-text);
   font: inherit;
-  font-size: .875rem;
+  font-size: .8125rem;
 }
 
 .community-search__controls button {
@@ -444,10 +486,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  height: 44px;
-  min-width: 80px;
+  height: 48px;
+  min-width: 72px;
   padding: 0 1.25rem;
-  font-size: .875rem;
+  font-size: .8125rem;
   line-height: 1;
   text-align: center;
 }
@@ -456,6 +498,7 @@
   margin-bottom: var(--space-lg);
   overflow-wrap: anywhere;
   color: var(--color-text-muted);
+  font-size: .8125rem;
 }
 
 .community-search-summary a {
@@ -479,11 +522,13 @@
   opacity: .65;
 }
 .community-pagination {
-  margin-top: var(--space-xl);
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--lb-line);
 }
 
 .community-pagination__summary {
-  margin-bottom: var(--space-md);
+  margin-bottom: 12px;
   color: var(--color-text-muted);
   font-size: .875rem;
 }
@@ -492,7 +537,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 8px;
 }
 
 .community-page,
@@ -503,37 +548,39 @@
   min-width: 44px;
   min-height: 44px;
   padding: .5rem .85rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-primary-dark);
-  font-weight: 600;
+  border: 1px solid var(--lb-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--lb-ink);
+  font-weight: 700;
   font-size: .875rem;
 }
 
 .community-page:hover {
-  background: var(--color-primary-light);
-  border-color: var(--color-primary);
+  background: var(--lb-pill-bg);
+  border-color: var(--lb-green);
 }
 
 .community-page--current {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--lb-ink);
+  border-color: var(--lb-ink);
   color: white;
 }
 
 .community-page--current:hover {
-  background: var(--color-primary);
+  background: var(--lb-ink);
+  border-color: var(--lb-ink);
 }
 
 .community-page--ellipsis {
   background: transparent;
+  border-color: transparent;
   color: var(--color-text-muted);
 }
 
 .community-page--ellipsis:hover {
   background: transparent;
-  border-color: var(--color-border);
+  border-color: transparent;
 }
 
 .community-pagination__label {
@@ -560,15 +607,15 @@
 .community-upvote__total {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 6px;
   min-height: 44px;
-  padding: .5rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: var(--color-surface);
+  padding: .25rem .5rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
   color: var(--color-primary-dark);
   font: inherit;
-  font-size: .875rem;
+  font-size: .75rem;
   font-weight: 600;
 }
 
@@ -586,8 +633,8 @@
 }
 
 .community-like-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   fill: none;
   stroke: currentColor;
@@ -621,11 +668,14 @@
 }
 
 .community-comments {
-  max-width: 760px;
-  margin: var(--space-2xl) auto 0;
+  max-width: 800px;
+  margin: 28px auto 0;
   padding-top: var(--space-xl);
-  border-top: 1px solid var(--color-border);
   scroll-margin-top: calc(var(--navbar-height) + var(--space-lg));
+  padding: 32px 36px;
+  border: 1px solid var(--lb-line);
+  border-radius: 24px;
+  background: #fff;
 }
 
 .community-comments__heading {
@@ -670,11 +720,11 @@
   min-height: 100px;
   padding: .85rem 1rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg);
+  border-radius: 12px;
+  background: var(--lb-cream);
   color: var(--color-text);
   font: inherit;
-  font-size: .9375rem;
+  font-size: .875rem;
   line-height: 1.6;
   resize: vertical;
 }
@@ -704,7 +754,7 @@
 }
 
 .community-comment {
-  padding: var(--space-lg) 0;
+  padding: 24px 0;
   border-bottom: 1px solid var(--color-border);
   overflow-wrap: anywhere;
   scroll-margin-top: calc(var(--navbar-height) + var(--space-lg));
@@ -787,8 +837,10 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: var(--space-md);
-  margin-top: var(--space-md);
+  gap: 12px;
+  margin-top: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--lb-line);
 }
 
 .community-post-reactions .community-upvote {
@@ -800,13 +852,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
+  gap: 6px;
   min-height: 44px;
-  padding: .5rem .75rem;
-  border-radius: var(--radius-full);
+  padding: .25rem .5rem;
+  border-radius: 8px;
   color: var(--color-text-muted);
   font: inherit;
-  font-size: .875rem;
+  font-size: .75rem;
 }
 
 .community-comment-link:hover {
@@ -815,8 +867,8 @@
 }
 
 .community-comment-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   fill: none;
   stroke: currentColor;
@@ -855,7 +907,7 @@
   gap: var(--space-sm);
   min-height: 44px;
   padding: .65rem .5rem;
-  border-radius: var(--radius-full);
+  border-radius: 8px;
   color: var(--color-text-muted);
   font: inherit;
   font-size: .8125rem;
@@ -909,7 +961,7 @@
   padding: var(--space-xs);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-bg);
+  background: #fff;
   box-shadow: var(--shadow-lg);
 }
 
@@ -928,18 +980,19 @@
   width: min(520px, calc(100% - 2rem));
   max-height: calc(100dvh - 2rem);
   margin: auto;
-  padding: var(--space-lg);
+  padding: 28px;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg);
+  border-radius: 24px;
+  background: #fff;
   color: var(--color-text);
-  box-shadow: var(--shadow-xl);
+  box-shadow: 0 24px 80px rgba(18, 63, 50, .18);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 
 .community-comment-dialog::backdrop {
-  background: rgba(26, 43, 30, .55);
+  background: rgba(18, 63, 50, .5);
+  backdrop-filter: none;
 }
 
 .community-comment-dialog__header {
@@ -951,7 +1004,7 @@
 }
 
 .community-comment-dialog__header h3 {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -963,7 +1016,7 @@
   flex-shrink: 0;
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-full);
+  border-radius: 12px;
   background: var(--color-surface);
   color: var(--color-text-muted);
   font-size: 1.5rem;
@@ -1060,10 +1113,10 @@
 
 .community-review-reply {
   margin-top: var(--space-xl);
-  padding: var(--space-lg);
-  border-left: 3px solid var(--color-primary);
+  padding: 24px;
+  border-left: 3px solid var(--lb-green);
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+  background: var(--lb-pill-bg);
   overflow-wrap: anywhere;
 }
 
@@ -1077,7 +1130,7 @@
 }
 
 .community-review-reply__heading h2 {
-  font-size: 1rem;
+  font-size: 1.25rem;
 }
 
 .community-review-reply__meta {
@@ -1090,17 +1143,23 @@
 }
 
 .community-review-rating__score {
-  color: #775014;
+  color: var(--community-honey-ink);
   font-weight: 700;
+  font-size: .875rem;
+  background: var(--community-honey-soft);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
 }
 
 .community-review-status {
-  padding: .3rem .65rem;
+  padding: 5px 10px;
   border-radius: var(--radius-full);
-  background: #fff0ce;
-  color: #775014;
-  font-size: .75rem;
+  background: #fff;
+  color: var(--lb-ink);
+  font-size: .6875rem;
   font-weight: 600;
+  border: 1px solid #d4e1cd;
 }
 
 .community-review-notice {
@@ -1111,10 +1170,11 @@
 
 .community-review-order {
   padding: var(--space-lg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: var(--community-sage);
   overflow-wrap: anywhere;
+  border-color: #dfe9d8;
 }
 
 .community-review-order .food-hack-card__badge {
@@ -1128,14 +1188,17 @@
 
 .community-review-stars {
   min-width: 0;
-  padding: var(--space-lg) 0;
+  padding: 24px 0;
   border: 0;
   text-align: center;
+  border-radius: 16px;
+  background: var(--community-honey-soft);
 }
 
 .community-review-stars legend {
   width: 100%;
   font-weight: 600;
+  font-size: .8125rem;
 }
 
 .community-review-stars__options {
@@ -1163,24 +1226,24 @@
 }
 
 .community-review-stars__icon {
-  color: var(--color-border);
+  color: var(--community-star-empty);
   font-size: clamp(2.5rem, 8vw, 3.5rem);
   line-height: 1;
 }
 
 .community-review-stars__option:has(input:checked) .community-review-stars__icon,
 .community-review-stars__option:has(~ label input:checked) .community-review-stars__icon {
-  color: #df9b13;
+  color: var(--community-star);
 }
 
 @media (hover: hover) {
   .community-review-stars__options:has(label:hover) .community-review-stars__icon {
-    color: var(--color-border);
+    color: var(--community-star-empty);
   }
 
   .community-review-stars__options label:hover .community-review-stars__icon,
   .community-review-stars__options label:has(~ label:hover) .community-review-stars__icon {
-    color: #df9b13;
+    color: var(--community-star);
   }
 }
 
@@ -1192,6 +1255,342 @@
 .community-review-stars__feedback {
   min-height: 1.5em;
   margin-top: var(--space-sm);
-  color: #775014;
+  color: var(--community-honey-ink);
   font-weight: 600;
+}
+
+body:has(.community) {
+  background: var(--lb-cream);
+}
+
+.community .btn {
+  justify-content: center;
+  min-height: 44px;
+  padding: 11px 18px;
+  border-width: 1px;
+  border-radius: 12px;
+  font-family: var(--lb-sans);
+  font-size: .8125rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.community .btn--primary {
+  box-shadow: none;
+}
+
+.community .btn--outline {
+  border-color: var(--lb-line);
+  color: var(--lb-ink);
+  background: #fff;
+}
+
+.community .btn--outline:hover {
+  border-color: var(--lb-green);
+  background: var(--lb-pill-bg);
+}
+
+.community .btn:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+  transform: none;
+  background: #e3e8df;
+  color: #5b665f;
+  border-color: #e3e8df;
+  box-shadow: none;
+}
+
+.community:has(> .community-hero) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 32px;
+  row-gap: 24px;
+}
+
+.community:has(> .community-hero) > section,
+.community-heading {
+  display: contents;
+}
+
+.community-heading > .btn,
+.community-heading > .community-muted {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: end;
+  margin: 0 32px 0 0;
+  z-index: 1;
+}
+
+.community-heading > div {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
+.community-heading .community-eyebrow {
+  margin-bottom: 6px;
+  font-size: .6875rem;
+  color: var(--community-peach-ink);
+}
+
+.community-heading h2 {
+  font-size: 1.5rem;
+}
+
+.community-toolbar {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--community-line);
+}
+
+#community-search-status,
+#community-results {
+  grid-column: 1 / -1;
+}
+
+.community-sort {
+  flex: 0 1 220px;
+  min-width: 0;
+}
+
+.community [hidden] {
+  display: none;
+}
+
+.food-hack-card:hover {
+  border-color: #c5d3c6;
+  box-shadow: none;
+}
+
+.food-hack-card:has(.community-review-rating) {
+  background: var(--community-sage);
+  border-color: #dfe9d8;
+}
+
+.food-hack-card:has(.community-review-rating) > .community-review-rating {
+  order: 4;
+  padding-top: 14px;
+  border-top: 1px solid var(--lb-line);
+}
+
+.food-hack-card:has(.community-review-rating) > .community-muted {
+  margin-top: -6px;
+  font-size: .75rem;
+}
+
+.food-hack-card .community-review-rating__score {
+  font-size: .8125rem;
+}
+
+.community-detail > .community-post-reactions {
+  margin-top: 24px;
+}
+
+.community-detail:has(> .community-review-rating) {
+  background: #fff;
+  border-color: var(--lb-line);
+}
+
+.community-detail:has(> .community-review-rating) .community-review-reply {
+  background: var(--community-sage);
+}
+
+.community-comment__author strong {
+  font-size: .8125rem;
+}
+
+.community-hero h1 {
+  color: #fffefa;
+  font-size: clamp(2.125rem, 4vw, 3.125rem);
+  line-height: 1.08;
+}
+
+.community-hero .community-eyebrow {
+  color: var(--community-honey);
+}
+
+.community-heading > .btn {
+  background: var(--community-peach);
+  color: var(--lb-ink);
+  border-color: var(--community-peach);
+  min-height: 48px;
+}
+
+.community-heading > .btn:hover {
+  background: #f7cca9;
+  border-color: #f7cca9;
+  box-shadow: none;
+}
+
+.community-heading > .community-muted {
+  max-width: 190px;
+  color: #e0ebdc;
+}
+
+.food-hack-card:has(.community-review-rating) .food-hack-card__badge {
+  background: #dcebd2;
+  color: var(--lb-ink);
+}
+
+.food-hack-card__meta > span {
+  color: var(--lb-ink);
+  font-weight: 600;
+}
+
+.community-detail > .community-review-rating .community-review-rating__score {
+  padding: 7px 12px;
+  font-size: 1.125rem;
+}
+
+.community-review-order .food-hack-card__badge {
+  background: #dcebd2;
+  color: var(--lb-ink);
+}
+
+.community .btn:active {
+  transform: translateY(1px);
+}
+
+.community-form input::placeholder,
+.community-form textarea::placeholder,
+.community-search input::placeholder,
+.community-comment-form textarea::placeholder {
+  color: #687368;
+  opacity: 1;
+}
+
+@media (max-width: 960px) {
+  .community {
+    padding: calc(var(--navbar-height) + 40px) 28px 56px;
+  }
+
+  .community-sort {
+    flex: 1 1 180px;
+  }
+
+  .community-search {
+    flex-basis: 100%;
+  }
+
+  .community-hero {
+    padding: 28px 28px 100px;
+  }
+
+  .community-heading > .btn,
+  .community-heading > .community-muted {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    justify-self: start;
+    align-self: end;
+    margin: 0 0 28px 28px;
+  }
+
+  .community-toolbar {
+    grid-row: 2;
+  }
+
+  .community-heading > div {
+    grid-row: 3;
+  }
+}
+
+@media (max-width: 640px) {
+  .community {
+    padding: calc(var(--navbar-height) + 28px) 16px 40px;
+  }
+
+  .community:has(> .community-hero) {
+    column-gap: 0;
+    row-gap: 20px;
+  }
+
+  .community h1 {
+    font-size: 2rem;
+  }
+
+  .community-hero {
+    padding: 22px 22px 88px;
+    border-radius: 20px;
+  }
+
+  .community-hero .community-eyebrow,
+  .community-heading .community-eyebrow {
+    display: none;
+  }
+
+  .community-hero h1 {
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+
+  .community-hero > p:last-child {
+    font-size: .8125rem;
+    line-height: 1.6;
+  }
+
+  .community-heading > .btn,
+  .community-heading > .community-muted {
+    margin: 0 0 24px 22px;
+  }
+
+  .community-tab {
+    padding: 9px 16px;
+  }
+
+  .community-feed {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .food-hack-card {
+    min-height: 0;
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .food-hack-card h3 {
+    font-size: 1.375rem;
+  }
+
+  .community-detail,
+  .community-editor,
+  .community-comments {
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+
+  .community-detail__content {
+    font-size: .875rem;
+  }
+
+  .community-form__actions > .btn {
+    flex: 1 1 auto;
+    white-space: normal;
+  }
+
+  .community-sort {
+    flex-basis: 140px;
+  }
+
+  .community-comment-dialog {
+    padding: 20px;
+  }
+
+  .community-comment__replies {
+    padding-left: 12px;
+  }
+
+  .community-review-reply {
+    padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .community .btn,
+  .community-back,
+  .food-hack-card {
+    transition: none;
+    transform: none;
+  }
 }
