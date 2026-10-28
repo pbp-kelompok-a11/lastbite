@@ -1,32 +1,24 @@
-<div class="order-grid">
+{% load static %}
+<div class="order-stack">
 {% for order in orders %}
-  <article class="order-card">
-    <div class="order-card__top"><span class="order-bag-icon" aria-hidden="true">{{ order.surprise_bag.emoji }}</span><span class="order-status order-status--{{ order.status }}">{{ order.get_status_display }}</span></div>
-    <h2>{{ order.food_name }}</h2>
-    <p class="order-muted">{{ order.surprise_bag.merchant_name }}</p>
-    {% if is_merchant %}<p>Customer: <strong>{{ order.customer.username }}</strong></p>{% endif %}
-    <dl class="order-meta">
-      <div><dt>Jumlah</dt><dd>{{ order.quantity }} paket</dd></div>
-      <div><dt>Total reservasi</dt><dd>Rp {{ order.total_price|floatformat:'0g' }}</dd></div>
-      <div><dt>Tanggal pickup</dt><dd>{{ order.pickup_date|date:'d M Y' }}</dd></div>
-      <div><dt>Jam pickup</dt><dd>{{ order.pickup_start|time:'H:i' }} sampai {{ order.pickup_end|time:'H:i' }}</dd></div>
-      <div><dt>Dibuat</dt><dd>{{ order.created_at|date:'d M Y, H:i' }}</dd></div>
-    </dl>
-    {% if is_customer %}
-      {% if order.status == 'completed' %}
-        {% if order.review_id %}<a class="btn btn--outline btn--md" href="{% url 'community:review_detail' order.review_id %}">Lihat Review</a>
-        {% else %}<a class="btn btn--primary btn--md" href="{% url 'community:review_create' %}?order={{ order.pk }}">Tulis Review</a>{% endif %}
-      {% endif %}
-      {% if order.status == 'pending' or order.status == 'ready_to_pickup' %}<div class="order-pickup"><span>Kode pickup kamu</span><strong>{{ order.pickup_code }}</strong><small>Tunjukkan kode ini saat serah terima di toko.</small></div>{% endif %}
-      {% if order.status == 'pending' %}<button type="button" class="btn btn--outline btn--md" data-order-action="cancel" data-order-url="{% url 'order:update_api' order.pk 'cancel' %}">Batalkan Pesanan</button>{% endif %}
-    {% elif is_merchant %}
-      {% if order.status == 'pending' %}<button type="button" class="btn btn--primary btn--md" data-order-action="ready" data-order-url="{% url 'order:update_api' order.pk 'ready' %}">Siap Diambil</button>
-      {% elif order.status == 'ready_to_pickup' %}<button type="button" class="btn btn--primary btn--md" data-order-action="complete" data-order-url="{% url 'order:update_api' order.pk 'complete' %}">Verifikasi Pickup</button>{% endif %}
-    {% endif %}
-    {% if order.status == 'completed' %}<p class="order-success">Pickup selesai. Terima kasih sudah menyelamatkan makanan!</p>{% elif order.status == 'cancelled' %}<p class="order-muted">Pesanan dibatalkan dan stok sudah dikembalikan.</p>{% endif %}
-    <small class="order-reference">ID {{ order.pk }}</small>
+  {% if order.status == 'pending' and not forloop.first %}
+  <details class="order-card order-card--compact" data-order-id="{{ order.pk }}" data-status="{{ order.status }}">
+    <summary class="order-compact">
+      <div><span class="order-status order-status--pending" aria-label="Status: Pending">Diproses</span><h2>{{ order.food_name }}</h2><p>{{ order.surprise_bag.merchant_name }} · Pickup {{ order.pickup_start|time:'H:i' }}</p></div>
+      <strong class="order-price">Rp{{ order.total_price|floatformat:'0g' }}</strong>
+    </summary>
+    <div class="order-card__expanded">{% include 'order/components/order_body.html' %}</div>
+  </details>
+  {% else %}
+  <article class="order-card" data-order-id="{{ order.pk }}" data-status="{{ order.status }}">
+    <div class="order-card__top">
+      <span class="order-status order-status--{{ order.status }}" aria-label="Status: {{ order.get_status_display }}">{% if order.status == 'pending' %}Diproses{% else %}{{ order.get_status_display }}{% endif %}</span>
+      <span class="order-reference" title="{{ order.pk }}">#LB-{{ order.pk|stringformat:'s'|slice:':8' }}</span>
+    </div>
+    {% include 'order/components/order_body.html' %}
   </article>
+  {% endif %}
 {% empty %}
-  <div class="order-empty"><h2>Belum ada pesanan</h2><p>Pesanan dengan status yang kamu pilih akan muncul di sini.</p><a href="{% url 'surprise_bag:catalog' %}" class="btn btn--primary btn--md">Jelajahi Surprise Bag</a></div>
+  <div class="order-empty"><h2>Belum ada pesanan{% if selected_tab == 'active' %} aktif{% endif %}</h2><p>{% if selected_status %}Belum ada pesanan dengan status yang kamu pilih.{% elif selected_tab == 'history' %}Pesanan selesai dan dibatalkan akan tersimpan di sini.{% else %}Saat kamu membuat reservasi, progres pickup akan muncul di sini.{% endif %}</p><a href="{% url 'surprise_bag:catalog' %}" class="lb-btn lb-btn--primary">Jelajahi Surprise Bag</a></div>
 {% endfor %}
 </div>
