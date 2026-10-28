@@ -1649,10 +1649,10 @@ class ReviewPageTests(TestCase):
     def test_order_cards_link_completed_orders_to_review_then_existing_review(self):
         pending = completed_order(self.customer, self.merchant, status='pending', completed_at=None)
         expected = self.url + '?order=' + str(self.completed.pk)
-        self.assertContains(self.client.get(reverse('order:list')), expected)
+        self.assertContains(self.client.get(reverse('order:list'), {'tab': 'history'}), expected)
         self.assertNotContains(self.client.get(reverse('order:list')), self.url + '?order=' + str(pending.pk))
         response = self.client.post(self.url, self.payload())
-        cards = self.client.get(reverse('order:orders_api')).json()['html']
+        cards = self.client.get(reverse('order:orders_api'), {'tab': 'history'}).json()['html']
         self.assertIn(response.url, cards)
         self.assertIn('Lihat Review', cards)
         self.assertNotIn(expected, cards)

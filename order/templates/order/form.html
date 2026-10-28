@@ -1,23 +1,31 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static l10n %}
 {% block title %}Reservasi Surprise Bag | LastBite{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'order/css/order.css' %}">{% endblock %}
 {% block content %}
-<section class="order-page section-container">
-  <a href="{% url 'surprise_bag:detail' bag.pk %}" class="order-back">← Kembali ke paket</a>
-  <div class="order-reservation">
-    <div><p class="order-eyebrow">SELAMATKAN MAKANAN HARI INI</p><h1>Reservasi Surprise Bag</h1><p>Pilih jumlah paket, lalu tunggu merchant menyiapkan pesananmu.</p>
-      <article class="order-card order-summary"><span class="order-bag-icon" aria-hidden="true">{{ bag.emoji }}</span><h2>{{ bag.name }}</h2><p>{{ bag.merchant_name }}</p><strong>Rp {{ bag.discounted_price|floatformat:'0g' }} / paket</strong><p>Stok tersedia: {{ bag.stock }} paket</p><p>Pickup hari ini: {{ bag.pickup_start|time:'H:i' }} sampai {{ bag.pickup_end|time:'H:i' }}</p></article>
+<section class="order-page order-page--reservation">
+  <div class="lb-container">
+    <a href="{% url 'surprise_bag:detail' bag.pk %}" class="order-back">← Kembali ke paket</a>
+    <header class="order-header"><span class="lb-eyebrow">SELAMATKAN MAKANAN HARI INI</span><h1 class="lb-section-title">Reservasi Surprise Bag</h1><p class="lb-section-sub">Pilih jumlah paket, lalu tunggu merchant menyiapkan pesananmu.</p></header>
+    <div class="order-reservation">
+      <article class="order-card order-summary">
+        <div class="order-product__image">{% if bag.image_url %}<img src="{{ bag.image_url }}" alt="{{ bag.name }}" class="order-product__photo"><span class="order-image-fallback" hidden aria-hidden="true">{{ bag.emoji }}</span>{% else %}<span class="order-image-fallback" aria-hidden="true">{{ bag.emoji }}</span>{% endif %}</div>
+        <div><span class="order-merchant">{{ bag.merchant_name }}</span><h2>{{ bag.name }}</h2><strong class="order-price">Rp{{ bag.discounted_price|floatformat:'0g' }} / paket</strong></div>
+        <div class="order-summary__meta"><span>Stok tersedia: {{ bag.stock }} paket</span><span>Pickup hari ini: {{ bag.pickup_start|time:'H:i' }} sampai {{ bag.pickup_end|time:'H:i' }}</span><span>{{ bag.description }}</span></div>
+      </article>
+      <form method="post" class="order-card order-form" id="reservation-form" data-unit-price="{{ bag.discounted_price|unlocalize }}">
+        {% csrf_token %}{{ form.reservation_key }}
+        <h2>Detail reservasi</h2>
+        {% if form.non_field_errors %}<div role="alert" class="order-error">{{ form.non_field_errors }}</div>{% endif %}
+        {{ form.reservation_key.errors }}
+        <label for="{{ form.quantity.id_for_label }}">{{ form.quantity.label }}</label>{{ form.quantity }}{{ form.quantity.errors }}
+        <div class="order-total"><span>Total reservasi</span><output id="reservation-total" for="{{ form.quantity.id_for_label }}">Rp{{ bag.discounted_price|floatformat:'0g' }}</output></div>
+        <p>Kamu dapat membatalkan selama status masih Pending. Setelah Ready to Pickup, pesanan sudah diproses merchant.</p>
+        <p>Harga dan total akhir tersimpan saat reservasi berhasil. Kode pickup dapat dilihat di My Order.</p>
+        <button type="submit" class="lb-btn lb-btn--primary"{% if not bag.is_available %} disabled{% endif %}>Buat Reservasi</button>
+      </form>
     </div>
-    <form method="post" class="order-card order-form">
-      {% csrf_token %}{{ form.reservation_key }}
-      {% if form.non_field_errors %}<div role="alert" class="order-error">{{ form.non_field_errors }}</div>{% endif %}
-      {{ form.reservation_key.errors }}
-      <h2>Detail reservasi</h2><label for="{{ form.quantity.id_for_label }}">{{ form.quantity.label }}</label>{{ form.quantity }}{{ form.quantity.errors }}
-      <p>Kamu dapat membatalkan selama status masih Pending. Setelah Ready to Pickup, pesanan sudah diproses merchant.</p>
-      <p>Harga dan total akhir tersimpan saat reservasi berhasil. Kode pickup dapat dilihat di Pesanan Saya.</p>
-      <button type="submit" class="btn btn--primary btn--md"{% if not bag.is_available %} disabled{% endif %}>Buat Reservasi</button>
-    </form>
   </div>
 </section>
 {% endblock %}
+{% block extra_js %}<script src="{% static 'order/js/order.js' %}" defer></script>{% endblock %}
