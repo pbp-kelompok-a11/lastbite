@@ -83,3 +83,41 @@ class StoreWishlist(models.Model):
 
     def __str__(self):
         return f'{self.customer.get_username()} ♥ {self.store.name}'
+
+class StoreRating(models.Model):
+    """Satu rating dari setiap customer untuk setiap toko."""
+
+    customer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='merchant_store_ratings',
+    )
+    store = models.ForeignKey(
+        MerchantStore,
+        on_delete=models.CASCADE,
+        related_name='direct_ratings',
+    )
+    rating = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5),
+        ],
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['customer', 'store'],
+                name='ms_one_customer_rating',
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f'{self.customer.get_username()} memberi '
+            f'{self.rating}/5 untuk {self.store.name}'
+        )
+

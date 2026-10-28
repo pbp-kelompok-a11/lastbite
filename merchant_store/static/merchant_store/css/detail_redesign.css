@@ -1,0 +1,717 @@
+
+/* =====================================================
+   LASTBITE — DETAIL TOKO
+   CSS khusus halaman detail saja
+   ===================================================== */
+
+.ms-store-detail-page {
+  width: 100% !important;
+  max-width: 1440px !important;
+  margin: 0 auto !important;
+  padding: 112px 28px 80px !important;
+  color: #193d32;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+
+/* Kembali ke direktori */
+
+.ms-store-detail-page .ms-profile-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  margin: 0 0 36px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 12px;
+  background: #20805b;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 8px 18px rgba(32, 128, 91, .28);
+  transition: background .2s ease, transform .2s ease;
+}
+
+.ms-store-detail-page .ms-profile-back:hover {
+  background: #176b4b;
+  transform: translateY(-1px);
+}
+
+.ms-store-detail-page .ms-profile-back svg {
+  display: block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+/* Kartu utama */
+
+.ms-store-detail-page .ms-profile-layout {
+  display: grid !important;
+  grid-template-columns: minmax(300px, 1fr) minmax(0, 2fr);
+  align-items: stretch;
+  min-height: 476px;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #e0e6de;
+  border-radius: 19px;
+  background: #fff;
+  box-shadow: none;
+}
+
+/* Panel kiri */
+
+.ms-store-detail-page .ms-profile-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 476px;
+  padding: 24px 20px 20px;
+  background: #fff;
+}
+
+/* Identitas toko */
+
+.ms-store-detail-page .ms-profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin: 0 0 22px;
+  padding-right: 43px;
+}
+
+.ms-store-detail-page .ms-profile-avatar {
+  display: block !important;
+  flex: 0 0 58px;
+  width: 58px !important;
+  height: 58px !important;
+  min-width: 58px;
+  min-height: 58px;
+  border-radius: 12px;
+  background: #c8c8c8;
+}
+
+.ms-store-detail-page .ms-profile-identity__text {
+  min-width: 0;
+}
+
+.ms-store-detail-page .ms-profile-titleline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ms-store-detail-page .ms-profile-title {
+  margin: 0 !important;
+  color: #193d32;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.ms-store-detail-page .ms-profile-rating-text {
+  margin: 3px 0 0;
+  color: #758179;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.ms-store-detail-page .ms-profile-rating-text span {
+  color: #758179;
+}
+
+/* Status toko */
+
+.ms-store-detail-page .ms-profile-status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 30px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.ms-store-detail-page .ms-profile-status--open {
+  background: #e8f2dd;
+  color: #638b4e;
+}
+
+.ms-store-detail-page .ms-profile-status--closed {
+  background: #fde8e6;
+  color: #ae3930;
+}
+
+.ms-store-detail-page .ms-profile-status--off {
+  background: #eceeeb;
+  color: #69736d;
+}
+
+/* Wishlist */
+
+.ms-store-detail-page .ms-profile-wishlist {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #ccd3cd;
+  border-radius: 10px;
+  background: #fff;
+  color: #e66553;
+  font-family: Arial, sans-serif;
+  font-size: 25px;
+  line-height: 1;
+  text-decoration: none;
+  transition: background .2s ease, transform .2s ease;
+}
+
+.ms-store-detail-page .ms-profile-wishlist:hover {
+  background: #fff3f1;
+  transform: scale(1.04);
+}
+
+.ms-store-detail-page .ms-profile-wishlist:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+/* Informasi toko */
+
+.ms-store-detail-page .ms-profile-facts {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  gap: 21px;
+  margin: 0;
+  padding: 0;
+}
+
+.ms-store-detail-page .ms-profile-fact {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.ms-store-detail-page .ms-profile-fact dt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #737b75;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.ms-store-detail-page .ms-profile-fact dt svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: #4b5b52;
+}
+
+.ms-store-detail-page .ms-profile-fact dd {
+  margin: 3px 0 0;
+  padding: 0 0 0 25px;
+  color: #617067;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.ms-store-detail-page .ms-profile-fact dd a {
+  color: #20805b;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+
+/* Deskripsi toko */
+
+.ms-store-detail-page .ms-profile-description {
+  margin-top: auto;
+  padding-top: 21px;
+}
+
+.ms-store-detail-page .ms-profile-description__label {
+  margin: 0 0 8px;
+  color: #758179;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.ms-store-detail-page .ms-profile-description__body {
+  min-height: 59px;
+  padding: 12px;
+  border: 1px solid #cbd0cb;
+  border-radius: 11px;
+  background: #fff;
+  color: #5e6c62;
+  font-size: 10px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.ms-store-detail-page .ms-profile-description__empty {
+  color: #89928a;
+}
+
+/* Tombol kelola toko */
+
+.ms-store-detail-page .ms-profile-manage {
+  display: inline-flex;
+  align-self: flex-start;
+  margin-top: 12px;
+  padding: 8px 13px;
+  border: 1px solid #20805b;
+  border-radius: 25px;
+  color: #20805b;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ms-store-detail-page .ms-profile-manage:hover {
+  background: #20805b;
+  color: #fff;
+}
+
+/* Panel kanan: peta */
+
+.ms-store-detail-page .ms-profile-map-panel {
+  position: relative;
+  z-index: 0;
+  min-width: 0;
+  min-height: 476px;
+  overflow: hidden;
+  background: #e9efe6;
+}
+
+.ms-store-detail-page .ms-profile-map-panel .ms-map--detail {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 476px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+/* Link peta */
+
+.ms-store-detail-page .ms-profile-map-link {
+  position: absolute;
+  z-index: 500;
+  right: 14px;
+  bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid #dfe5de;
+  border-radius: 30px;
+  background: rgba(255, 254, 250, .96);
+  color: #176b4b;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ms-store-detail-page .ms-profile-map-link:hover {
+  background: #fff;
+}
+
+/* Peta ilustrasi bila koordinat belum tersedia */
+
+.ms-store-detail-page .ms-map-illustration {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #e8eee6;
+}
+
+/* Jalan */
+
+.ms-store-detail-page .ms-illustration-road {
+  position: absolute;
+  pointer-events: none;
+}
+
+.ms-store-detail-page .ms-road-white {
+  height: 25px;
+  background: rgba(255, 255, 255, .95);
+  box-shadow: 0 0 3px rgba(255, 255, 255, .6);
+}
+
+.ms-store-detail-page .ms-road-one {
+  top: 38%;
+  left: -17%;
+  width: 140%;
+  transform: rotate(21deg);
+}
+
+.ms-store-detail-page .ms-road-two {
+  top: 16%;
+  left: 34%;
+  width: 125%;
+  height: 30px;
+  transform: rotate(-68deg);
+}
+
+.ms-store-detail-page .ms-road-blue {
+  top: 43%;
+  left: -12%;
+  width: 135%;
+  height: 58px;
+  background: #b9dce3;
+  transform: rotate(-13deg);
+}
+
+/* Label toko pada peta */
+
+.ms-store-detail-page .ms-map-callout {
+  position: absolute;
+  z-index: 3;
+  top: 17%;
+  left: 24%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: min(230px, 60%);
+  padding: 10px 13px;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 5px 13px rgba(25, 48, 35, .23);
+  color: #183d31;
+}
+
+.ms-store-detail-page .ms-map-callout strong {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.ms-store-detail-page .ms-map-callout small {
+  color: #859087;
+  font-size: 8px;
+  line-height: 1.35;
+}
+
+/* Pin toko */
+
+.ms-store-detail-page .ms-map-pin {
+  position: absolute;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 5px;
+  background: #20805b;
+  color: #fff;
+  box-shadow: 0 3px 7px rgba(22, 54, 39, .28);
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.ms-store-detail-page .ms-map-pin svg {
+  display: block;
+  width: 15px !important;
+  height: 15px !important;
+  max-width: none;
+  transform: rotate(45deg);
+}
+
+.ms-store-detail-page .ms-map-pin-one {
+  top: 35%;
+  left: 34%;
+}
+
+.ms-store-detail-page .ms-map-pin-two {
+  top: 52%;
+  left: 65%;
+}
+
+.ms-store-detail-page .ms-map-pin-three {
+  top: 75%;
+  left: 50%;
+}
+
+/* Rating di bawah kartu */
+
+.ms-store-detail-page .ms-profile-ratingbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  min-height: 36px;
+  margin-top: 8px;
+  padding-right: 0;
+}
+
+.ms-store-detail-page .ms-profile-star {
+  color: #a1a4a0;
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.ms-store-detail-page .ms-profile-star.is-filled {
+  color: #bd811c;
+}
+
+/* Aksesibilitas */
+
+.ms-store-detail-page :is(a, button):focus-visible {
+  outline: 3px solid #20805b;
+  outline-offset: 3px;
+}
+
+/* Tablet */
+
+@media (max-width: 900px) {
+  .ms-store-detail-page {
+    padding-top: 115px !important;
+    padding-right: 22px !important;
+    padding-left: 22px !important;
+  }
+
+  .ms-store-detail-page .ms-profile-layout {
+    grid-template-columns: minmax(250px, 1fr) minmax(0, 1.5fr);
+  }
+
+  .ms-store-detail-page .ms-profile-panel,
+  .ms-store-detail-page .ms-profile-map-panel {
+    min-height: 460px;
+  }
+
+  .ms-store-detail-page .ms-profile-map-panel .ms-map--detail {
+    min-height: 460px;
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 620px) {
+  .ms-store-detail-page {
+    padding: 105px 16px 45px !important;
+  }
+
+  .ms-store-detail-page .ms-profile-back {
+    margin-bottom: 18px;
+  }
+
+  .ms-store-detail-page .ms-profile-layout {
+    grid-template-columns: minmax(0, 1fr);
+    border-radius: 16px;
+  }
+
+  .ms-store-detail-page .ms-profile-panel {
+    min-height: 0;
+    padding: 20px 16px;
+  }
+
+  .ms-store-detail-page .ms-profile-identity {
+    margin-bottom: 23px;
+  }
+
+  .ms-store-detail-page .ms-profile-facts {
+    gap: 17px;
+  }
+
+  .ms-store-detail-page .ms-profile-description {
+    margin-top: 25px;
+    padding-top: 0;
+  }
+
+  .ms-store-detail-page .ms-profile-map-panel {
+    min-height: 330px;
+  }
+
+  .ms-store-detail-page .ms-profile-map-panel .ms-map--detail {
+    min-height: 330px;
+    height: 330px !important;
+  }
+
+  .ms-store-detail-page .ms-map-callout {
+    left: 18%;
+    top: 15%;
+  }
+
+  .ms-store-detail-page .ms-profile-star {
+    font-size: 26px;
+  }
+}
+
+
+/* =====================================================
+   RATING BINTANG INTERAKTIF
+   ===================================================== */
+
+.ms-store-detail-page .ms-profile-ratingbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  margin-top: 8px;
+  padding-right: 0;
+}
+
+.ms-store-detail-page .ms-profile-stars {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.ms-store-detail-page .ms-profile-star {
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #a1a4a0;
+  font-family: Arial, sans-serif;
+  font-size: 30px;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.ms-store-detail-page button.ms-profile-star {
+  cursor: pointer;
+  transition:
+    color .15s ease,
+    transform .15s ease;
+}
+
+.ms-store-detail-page button.ms-profile-star:hover:not(:disabled) {
+  color: #bd811c;
+  transform: scale(1.15);
+}
+
+.ms-store-detail-page .ms-profile-star.is-filled {
+  color: #bd811c;
+}
+
+.ms-store-detail-page button.ms-profile-star:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.ms-store-detail-page .ms-profile-rating-feedback {
+  min-height: 16px;
+  margin: 0;
+  color: #20805b;
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.ms-store-detail-page .ms-profile-rating-feedback.is-error {
+  color: #a12b22;
+}
+
+.ms-store-detail-page .ms-profile-rating-text {
+  overflow-wrap: anywhere;
+}
+
+
+/* Status pemuatan peta OpenStreetMap */
+
+.ms-store-detail-page .ms-map-status {
+  position: absolute;
+  z-index: 600;
+  left: 50%;
+  bottom: 16px;
+  max-width: calc(100% - 32px);
+  padding: 10px 14px;
+  border: 1px solid #dfe5de;
+  border-radius: 10px;
+  background: rgba(255, 254, 250, .97);
+  color: #193d32;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  box-shadow: 0 3px 12px rgba(25, 48, 35, .12);
+  transform: translateX(-50%);
+}
+
+.ms-store-detail-page .ms-map-status[hidden] {
+  display: none !important;
+}
+
+
+/* =====================================================
+   PETA ASLI DI ATAS ILUSTRASI + PIN & LABEL TOKO
+   ===================================================== */
+
+/* peta asli disembunyikan sampai siap, ilustrasi jadi cadangan */
+.ms-store-detail-page .ms-profile-map-panel .ms-map--detail {
+  background: #e9efe6;
+}
+
+/* pin hijau berbentuk tetesan */
+.ms-store-detail-page .ms-detail-pin-wrap {
+  background: none;
+  border: 0;
+}
+.ms-store-detail-page .ms-detail-pin {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: #20805b;
+  color: #fff;
+  box-shadow: 0 6px 12px rgba(22, 54, 39, .3);
+  transform: rotate(-45deg);
+}
+.ms-store-detail-page .ms-detail-pin svg {
+  width: 16px;
+  height: 16px;
+  transform: rotate(45deg);
+}
+
+/* label nama toko di atas pin */
+.ms-store-detail-page .ms-detail-callout.leaflet-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 230px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 11px;
+  background: #fff;
+  color: #183d31;
+  box-shadow: 0 5px 13px rgba(25, 48, 35, .23);
+  white-space: normal;
+}
+.ms-store-detail-page .ms-detail-callout.leaflet-tooltip::before {
+  display: none;
+}
+.ms-store-detail-page .ms-detail-callout strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.ms-store-detail-page .ms-detail-callout small {
+  display: block;
+  color: #859087;
+  font-size: 10px;
+  line-height: 1.35;
+}

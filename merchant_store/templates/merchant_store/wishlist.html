@@ -1,49 +1,116 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Wishlist Toko — LastBite{% endblock %}
+{% block title %}Wishlist — LastBite{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'merchant_store/css/merchant_store.css' %}">
+<link rel="stylesheet" href="{% static 'merchant_store/css/merchant_wishlist.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="ms-page section-container" data-csrf="{{ csrf_token }}">
-  <header class="ms-header">
-    <h1 class="ms-title">Toko Favorit</h1>
-    <p class="ms-subtitle">Toko yang kamu simpan ke wishlist.</p>
+<div class="mw-page" data-csrf="{{ csrf_token }}">
+
+  <header class="mw-header">
+    <p class="mw-eyebrow">Tersimpan untuk nanti</p>
+    <h1 class="mw-title">Wishlist Anda</h1>
+    <p class="mw-subtitle">Toko dan Surprise Bag favoritmu, semua dalam satu tempat.</p>
   </header>
 
-  <ul class="ms-results ms-results--grid" id="ms-wishlist-list">
-    {% for entry in entries %}
-    <li class="ms-card" data-wishlist-card>
-      <div class="ms-card__main">
-        <h3><a href="{% url 'merchant_store:detail' entry.store.id %}">{{ entry.store.name }}</a></h3>
-        {% if not entry.store.is_active %}<span class="ms-badge ms-badge--off">Nonaktif</span>
-        {% elif entry.store.is_open_now %}<span class="ms-badge ms-badge--open">Buka</span>
-        {% else %}<span class="ms-badge ms-badge--closed">Tutup</span>{% endif %}
-        <p class="ms-card__address">{{ entry.store.address }}</p>
-        <p class="ms-card__meta">
-          <span>🕐 {{ entry.store.hours_display }}</span>
-          <span>{% if entry.rating_average %}⭐ {{ entry.rating_average|floatformat:1 }} ({{ entry.rating_count }}){% else %}Belum ada rating{% endif %}</span>
-        </p>
-      </div>
-      <div class="ms-card__actions">
-        <button type="button" class="btn btn--outline btn--sm js-wishlist-toggle"
-                data-url="{% url 'merchant_store:wishlist_toggle' entry.store.id %}"
-                data-wishlisted="true" data-remove-on-unwish="true" aria-pressed="true">♥ Tersimpan</button>
-      </div>
-    </li>
-    {% endfor %}
-  </ul>
-
-  <div class="ms-empty" id="ms-wishlist-empty" {% if entries %}hidden{% endif %}>
-    <p>Wishlist kamu masih kosong.</p>
-    <a href="{% url 'merchant_store:list' %}" class="btn btn--primary btn--md">Jelajahi direktori toko</a>
+  <div class="mw-tabs" role="tablist" aria-label="Jenis wishlist">
+    <button type="button" class="mw-tab" role="tab" id="mw-tab-bags"
+            aria-controls="mw-panel-bags" aria-selected="false" data-tab="bags">
+      Surprise Bags <span class="mw-tab__count">0</span>
+    </button>
+    <button type="button" class="mw-tab" role="tab" id="mw-tab-merchants"
+            aria-controls="mw-panel-merchants" aria-selected="true" data-tab="merchants">
+      Merchant <span class="mw-tab__count" id="mw-merchant-count">{{ entries|length }}</span>
+    </button>
   </div>
+
+  <!-- Tab Surprise Bags -->
+  <section class="mw-panel" id="mw-panel-bags" role="tabpanel"
+            aria-labelledby="mw-tab-bags" data-panel="bags" hidden>
+    <div class="mw-empty">
+      <p>Wishlist Surprise Bag belum tersedia.</p>
+      <a href="{% url 'surprise_bag:catalog' %}" class="btn btn--primary btn--md">Jelajahi Surprise Bag</a>
+    </div>
+  </section>
+
+  <!-- Tab Merchant -->
+  <section class="mw-panel" id="mw-panel-merchants" role="tabpanel"
+            aria-labelledby="mw-tab-merchants" data-panel="merchants">
+    <ul class="mw-grid" id="ms-wishlist-list">
+      {% for entry in entries %}
+      {% cycle 'img/bento.png' 'img/croissant.png' as thumb silent %}
+      <li class="mw-card" data-wishlist-card>
+        <div class="mw-card__media">
+          <img src="{% static thumb %}" alt="">
+
+          {% if not entry.store.is_active %}<span class="mw-badge mw-badge--off">Nonaktif</span>
+          {% elif entry.store.is_open_now %}<span class="mw-badge">Buka</span>
+          {% else %}<span class="mw-badge mw-badge--closed">Tutup</span>{% endif %}
+
+          <button type="button" class="mw-heart js-wishlist-toggle" data-icon-only
+                  data-url="{% url 'merchant_store:wishlist_toggle' entry.store.id %}"
+                  data-wishlisted="true" data-remove-on-unwish="true"
+                  aria-pressed="true" aria-label="Hapus dari wishlist" title="Hapus dari wishlist">♥</button>
+        </div>
+
+        <div class="mw-card__body">
+          <div class="mw-card__top">
+            <span class="mw-card__label">Merchant</span>
+            <span class="mw-card__rating">
+              {% if entry.rating_average %}
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1L12 2Z"/></svg>
+              {{ entry.rating_average|floatformat:1 }}
+              {% else %}Belum ada rating{% endif %}
+            </span>
+          </div>
+
+          <h3 class="mw-card__name"><a href="{% url 'merchant_store:detail' entry.store.id %}">{{ entry.store.name }}</a></h3>
+          <p class="mw-card__address">{{ entry.store.address }}</p>
+
+          <ul class="mw-card__info">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              {{ entry.store.hours_display }}
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg>
+              {{ entry.store.phone }}
+            </li>
+          </ul>
+
+          <div class="mw-card__foot">
+            <span class="mw-card__reviews">{% if entry.rating_count %}{{ entry.rating_count }} ulasan{% else %}Belum ada ulasan{% endif %}</span>
+            <a href="{% url 'merchant_store:detail' entry.store.id %}" class="mw-card__link">Lihat toko</a>
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+
+    <div class="mw-empty" id="ms-wishlist-empty" {% if entries %}hidden{% endif %}>
+      <p>Wishlist kamu masih kosong.</p>
+      <a href="{% url 'merchant_store:list' %}" class="btn btn--primary btn--md">Jelajahi direktori toko</a>
+    </div>
+  </section>
+
+  <aside class="mw-reminder">
+    <div class="mw-reminder__text">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <div>
+        <p class="mw-reminder__title">Jangan sampai kehabisan</p>
+        <p class="mw-reminder__desc">Stok berubah cepat menjelang jam pickup.</p>
+      </div>
+    </div>
+    <button type="button" class="mw-reminder__btn">Aktifkan pengingat</button>
+  </aside>
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'merchant_store/js/wishlist.js' %}"></script>
+<script src="{% static 'merchant_store/js/wishlist_page.js' %}"></script>
 {% endblock %}

@@ -86,14 +86,8 @@
                 </svg>
               {% endif %}
             </a>
-
-          {% else %}
-            {% if user.profile %}
-              <span class="navbar__user">
-                {{ user.profile.get_role_display }}
-              </span>
-            {% endif %}
-
+            
+            {% else %}
             <button type="button"
                     class="btn btn--outline btn--sm"
                     id="logout-open"
