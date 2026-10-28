@@ -1,37 +1,50 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}{{ action }} Log — Eco Impact{% endblock %}
 
 {% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="{% static 'eco_impact/css/eco_impact.css' %}">
 {% endblock %}
 
 {% block content %}
-<section style="padding-top: calc(var(--navbar-height) + 2.5rem); padding-bottom: 5rem; min-height: 80vh;">
-  <div class="section-container" style="max-width: 550px; background: var(--color-surface); padding: 2.25rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);">
-    <h1 class="section-title" style="font-size: 1.75rem; margin-bottom: 0.4rem;">{{ action }} Impact Log</h1>
-    <p style="color: var(--color-text-muted); margin-bottom: 1.75rem; font-size: 0.95rem;">Catat penyelamatan makanan secara mandiri untuk menghitung penghematan dan reduksi emisi karbonmu.</p>
+<main class="eco-page" style="display: flex; align-items: center; justify-content: center; min-height: 80vh;">
+  <div class="eco-container" style="width: 100%;">
+    <!-- Wadah kartu form -->
+    <div class="eco-form-card">
+      <h1 class="eco-form-card__title">{{ action }} Impact Log</h1>
+      <p class="eco-form-card__subtitle">Catat penyelamatan makanan secara mandiri untuk menghitung penghematan dan reduksi emisi karbonmu.</p>
 
-    <form method="post" class="impact-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
-      {% csrf_token %}
-      {% for field in form %}
-      <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 0.4rem; color: var(--color-text); font-size: 0.9rem;">
-          {{ field.label }}
-        </label>
-        {{ field }}
-        {% if field.errors %}
-          <p style="color: #dc2626; font-size: 0.85rem; margin-top: 0.25rem;">{{ field.errors.0 }}</p>
-        {% endif %}
-      </div>
-      {% endfor %}
+      <form method="post">
+        <!-- Token CSRF wajib Django untuk proteksi keamanan POST request -->
+        {% csrf_token %}
+        
+        <!-- Render form fields dari forms.py -->
+        {% for field in form %}
+        <div class="eco-form-group">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <p style="color: #c0392b; font-size: 0.85rem; margin-top: 0.35rem;">{{ field.errors.0 }}</p>
+          {% endif %}
+        </div>
+        {% endfor %}
 
-      <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
-        <button type="submit" class="btn btn--primary btn--md">Simpan Log</button>
-        <a href="{% url 'eco_impact:dashboard' %}" class="btn btn--outline btn--md">Batal</a>
-      </div>
-    </form>
+        <!-- Tombol simpan dan batal -->
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="submit" class="eco-btn-add" style="border: none; cursor: pointer; padding: 0.85rem 2rem; font-size: 0.95rem;">
+            Simpan Log
+          </button>
+          <a href="{% url 'eco_impact:dashboard' %}" class="eco-toggle__btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; padding: 0.85rem 1.75rem; border: 1px solid var(--eco-border);">
+            Batal
+          </a>
+        </div>
+      </form>
+    </div>
   </div>
-</section>
+</main>
 {% endblock %}

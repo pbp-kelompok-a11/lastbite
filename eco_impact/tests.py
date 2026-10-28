@@ -125,7 +125,7 @@ class ImpactLogViewsTests(TestCase):
         response = self.client.post(reverse('eco_impact:edit_log', kwargs={'pk': log.pk}), data)
         self.assertRedirects(response, reverse('eco_impact:dashboard'))
         log.refresh_from_db()
-        self.assertEqual(log.food_name, 'Surprise Bag Roti')  # Nama tidak berubah
+        self.assertEqual(log.food_name, 'Surprise Bag Roti')
 
     def test_delete_manual_log(self):
         self.client.login(username='customer1', password='password123')
@@ -168,26 +168,33 @@ class ImpactLogAPITests(TestCase):
         self.customer = User.objects.create_user(username='customer1', password='password123')
         UserProfile.objects.create(user=self.customer, role='customer')
 
-        # Log 1: Penghematan 20.000, CO2 = 0.75 kg
+        # Log 1: Penghematan 20.000, CO2 = 0.75 kg, quantity = 1 (0.3 kg)
         ImpactLog.objects.create(
             user=self.customer, source='manual', food_name='Item 1',
-            quantity=1, original_price=Decimal('30000'), discounted_price=Decimal('10000')
+            quantity=1, original_price=Decimal('30000'), discounted_price=Decimal('10000'),
+            notes='Toko Roti A'
         )
-        # Log 2: Penghematan 20.000, CO2 = 1.50 kg
+        # Log 2: Penghematan 20.000, CO2 = 1.50 kg, quantity = 2 (0.6 kg)
         ImpactLog.objects.create(
             user=self.customer, source='manual', food_name='Item 2',
-            quantity=2, original_price=Decimal('25000'), discounted_price=Decimal('15000')
+            quantity=2, original_price=Decimal('25000'), discounted_price=Decimal('15000'),
+            notes='Warung B'
         )
         self.client = Client()
 
-    def test_summary_api_totals(self):
+    def test_summary_api_totals_and_structure(self):
         self.client.login(username='customer1', password='password123')
         response = self.client.get(reverse('eco_impact:summary_api') + '?period=all')
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data['total_money_saved'], 40000.0)
-        self.assertEqual(data['total_carbon_kg'], 2.25)
-        self.assertEqual(data['total_logs'], 2)
+        self.assertEqual(data['total_carbon_kg'], 2.2)  # round(2.25, 1) = 2.2
+        self.assertEqual(data['total_bags_count'], 3)
+        self.assertEqual(data['total_food_kg'], 0.9)  # 3 * 0.3
+        self.assertIn('equivalent_km', data)
+        self.assertIn('monthly_trend', data)
+        self.assertEqual(len(data['monthly_trend']), 6)
+        self.assertIn('level', data)
 
     def test_logs_api_returns_json_list(self):
         self.client.login(username='customer1', password='password123')
@@ -196,6 +203,8 @@ class ImpactLogAPITests(TestCase):
         data = response.json()
         self.assertIn('logs', data)
         self.assertEqual(len(data['logs']), 2)
+        # Verifikasi field store_name terpetakan dari notes atau default
+        self.assertEqual(data['logs'][0]['store_name'], 'Warung B')
 
 
 class ImpactLogFormTests(TestCase):
