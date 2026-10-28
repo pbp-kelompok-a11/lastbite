@@ -3,22 +3,41 @@
 {% block title %}Pesanan | LastBite{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'order/css/order.css' %}">{% endblock %}
 {% block content %}
-<section class="order-page section-container" id="order-page" data-list-url="{% url 'order:orders_api' %}">
-  <header class="order-header">
-    <div><p class="order-eyebrow">LASTBITE / PESANAN</p>
-      <h1>{% if is_merchant %}Pesanan Masuk{% else %}Pesanan Saya{% endif %}</h1>
-      <p>{% if is_merchant %}Siapkan paket dan verifikasi pickup customer di sini.{% else %}Pantau reservasi, cek kode pickup, dan lihat makanan yang sudah kamu selamatkan.{% endif %}</p>
+<section class="order-page" id="order-page" data-list-url="{% url 'order:orders_api' %}" data-tab="{{ selected_tab }}">
+  <div class="lb-container">
+    <header class="order-header lb-section-head">
+      <div>
+        <span class="lb-eyebrow">{% if is_merchant %}SIAPKAN KEBAIKAN HARI INI{% else %}PICKUP TANPA RIBET{% endif %}</span>
+        <h1 class="lb-section-title">{% if is_merchant %}Pesanan Masuk{% else %}My Order{% endif %}</h1>
+        <p class="lb-section-sub">{% if is_merchant %}Siapkan makanan, perbarui status, dan verifikasi serah terima.{% else %}Pantau status dan ambil makananmu tepat waktu.{% endif %}</p>
+      </div>
+    </header>
+    <div class="order-navigation">
+      <nav class="order-tabs" aria-label="Daftar pesanan">
+        <a href="{% url 'order:list' %}?tab=active" class="order-tab{% if selected_tab == 'active' %} is-active{% endif %}" data-order-tab="active"{% if selected_tab == 'active' %} aria-current="page"{% endif %}>Aktif <span class="order-tab__count" id="active-count">{{ active_count }}</span></a>
+        <a href="{% url 'order:list' %}?tab=history" class="order-tab{% if selected_tab == 'history' %} is-active{% endif %}" data-order-tab="history"{% if selected_tab == 'history' %} aria-current="page"{% endif %}>Riwayat <span class="sr-only" id="history-count">{{ history_count }}</span></a>
+      </nav>
+      <div class="order-tools">
+        <details class="order-filter">
+          <summary>Filter status</summary>
+          <form method="get" action="{% url 'order:list' %}" class="order-filter__panel">
+            <input type="hidden" name="tab" id="filter-tab" value="{{ selected_tab }}">
+            <label for="status-filter">Status pesanan</label>
+            <select name="status" id="status-filter">
+              <option value="">Semua status</option>
+              {% for value,label in statuses %}<option value="{{ value }}"{% if selected_status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+            <noscript><button class="lb-btn lb-btn--primary" type="submit">Terapkan</button></noscript>
+          </form>
+        </details>
+        <button type="button" id="orders-refresh" class="order-text-button">Perbarui</button>
+      </div>
     </div>
-    <a href="{% url 'surprise_bag:catalog' %}" class="btn btn--outline btn--md">Lihat Surprise Bag</a>
-  </header>
-  <div class="order-toolbar">
-    <label for="status-filter">Status pesanan</label>
-    <select id="status-filter"><option value="">Semua status</option>{% for value,label in statuses %}<option value="{{ value }}"{% if selected_status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
-    <button type="button" class="btn btn--outline btn--sm" id="orders-refresh">Perbarui</button>
+    <p id="order-notice" class="order-notice" role="status" aria-live="polite" hidden></p>
+    <div id="order-cards" aria-busy="false">{% include 'order/components/order_cards.html' %}</div>
   </div>
-  <p id="order-notice" role="status" aria-live="polite"></p>
-  <div id="order-cards">{% include 'order/components/order_cards.html' %}</div>
   <dialog id="order-dialog" class="order-dialog" aria-labelledby="order-dialog-title" aria-describedby="order-dialog-description">
+    <span class="lb-eyebrow">PESANAN LASTBITE</span>
     <h2 id="order-dialog-title">Konfirmasi pesanan</h2>
     <p id="order-dialog-description"></p>
     <form id="order-action-form" method="post">
@@ -28,10 +47,20 @@
         <input id="pickup-code" name="pickup_code" minlength="8" maxlength="8" pattern="[A-Fa-f0-9]{8}" autocomplete="off" aria-describedby="pickup-help">
         <p id="pickup-help">Minta customer menunjukkan kode dari halaman pesanannya.</p>
       </div>
-      <p id="order-dialog-error" role="alert" hidden></p>
-      <div class="order-actions"><button type="submit" class="btn btn--primary btn--md" id="order-confirm">Konfirmasi</button><button type="button" class="btn btn--outline btn--md" id="order-close">Kembali</button></div>
+      <p id="order-dialog-error" class="order-error" role="alert" hidden></p>
+      <div class="order-actions"><button type="submit" class="lb-btn lb-btn--primary" id="order-confirm">Konfirmasi</button><button type="button" class="lb-btn order-btn--outline" id="order-close">Kembali</button></div>
     </form>
   </dialog>
+  {% if is_customer %}
+  <dialog id="pickup-dialog" class="order-dialog order-code-dialog" aria-labelledby="pickup-dialog-title" aria-describedby="pickup-dialog-help">
+    <span class="lb-eyebrow">TINGGAL AMBIL, LALU NIKMATI</span>
+    <h2 id="pickup-dialog-title">Kode pickup kamu</h2>
+    <p id="pickup-dialog-name"></p>
+    <output id="pickup-display" class="order-code" aria-label="Kode pickup"></output>
+    <p id="pickup-dialog-help">Tunjukkan kode ini kepada Merchant saat serah terima makanan di toko.</p>
+    <button type="button" class="lb-btn lb-btn--primary" id="pickup-dialog-close">Tutup</button>
+  </dialog>
+  {% endif %}
 </section>
 {% endblock %}
 {% block extra_js %}<script src="{% static 'order/js/order.js' %}" defer></script>{% endblock %}

@@ -2,10 +2,11 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError
-from django.db.models import OuterRef, Subquery
+from django.db.models import Case, Count, IntegerField, OuterRef, Q, Subquery, When
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.decorators.cache import never_cache
 
@@ -20,7 +21,7 @@ from .services import reserve_bag, transition_order
 
 def _visible_orders(user):
     reviews = CommunityPost.objects.filter(related_order=OuterRef('pk'), post_type='review')
-    orders = Order.objects.select_related('customer', 'surprise_bag__merchant').annotate(
+    orders = Order.objects.select_related('customer', 'surprise_bag__merchant__merchant_store').annotate(
         review_id=Subquery(reviews.values('pk')[:1]),
     )
     if is_customer(user):
@@ -33,11 +34,32 @@ def _visible_orders(user):
 def _order_context(request):
     orders = _visible_orders(request.user)
     status = request.GET.get('status', '')
-    if status in Order.Status.values:
+    if status not in Order.Status.values:
+        status = ''
+    active_statuses = [Order.Status.PENDING, Order.Status.READY_TO_PICKUP]
+    history_statuses = [Order.Status.COMPLETED, Order.Status.CANCELLED]
+    default_tab = 'history' if status in history_statuses else 'active'
+    tab = request.GET.get('tab', default_tab)
+    if tab not in ('active', 'history'):
+        tab = default_tab
+    counts = orders.aggregate(
+        active_count=Count('pk', filter=Q(status__in=active_statuses)),
+        history_count=Count('pk', filter=Q(status__in=history_statuses)),
+    )
+    tab_statuses = active_statuses if tab == 'active' else history_statuses
+    orders = orders.filter(status__in=tab_statuses)
+    if status in tab_statuses:
         orders = orders.filter(status=status)
+    else:
+        status = ''
+    orders = orders.annotate(
+        pickup_priority=Case(When(status=Order.Status.READY_TO_PICKUP, then=0),
+                             default=1, output_field=IntegerField()),
+    ).order_by('pickup_priority', '-created_at', '-pk')
     return {'orders': orders, 'is_customer': is_customer(request.user),
-            'is_merchant': is_merchant(request.user), 'statuses': Order.Status.choices,
-            'selected_status': status}
+            'is_merchant': is_merchant(request.user),
+            'statuses': [(value, label) for value, label in Order.Status.choices if value in tab_statuses],
+            'selected_status': status, 'selected_tab': tab, 'today': timezone.localdate(), **counts}
 
 
 @login_required
@@ -51,8 +73,11 @@ def order_list(request):
 @never_cache
 @require_GET
 def orders_api(request):
-    html = render_to_string('order/components/order_cards.html', _order_context(request), request=request)
-    return JsonResponse({'html': html})
+    context = _order_context(request)
+    html = render_to_string('order/components/order_cards.html', context, request=request)
+    return JsonResponse({'html': html, 'active_count': context['active_count'],
+                         'history_count': context['history_count'], 'tab': context['selected_tab'],
+                         'statuses': context['statuses'], 'selected_status': context['selected_status']})
 
 
 @login_required

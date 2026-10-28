@@ -1,0 +1,38 @@
+{% load static %}
+<div class="order-product">
+  <div class="order-product__image">
+    {% if order.surprise_bag.image_url %}<img src="{{ order.surprise_bag.image_url }}" alt="{{ order.food_name }}" loading="lazy" class="order-product__photo"><span class="order-image-fallback" hidden aria-hidden="true">{{ order.surprise_bag.emoji }}</span>
+    {% else %}<span class="order-image-fallback" aria-hidden="true">{{ order.surprise_bag.emoji }}</span>{% endif %}
+  </div>
+  <div class="order-product__info">
+    <p class="order-merchant">{{ order.surprise_bag.merchant_name }}</p>
+    <h2>{{ order.food_name }}</h2>
+    <p class="order-product__line"><img src="{% static 'order/img/clock.svg' %}" alt="" width="20" height="20">{% if order.pickup_date == today %}Hari ini{% else %}{{ order.pickup_date|date:'d M Y' }}{% endif %}, {{ order.pickup_start|time:'H:i' }} sampai {{ order.pickup_end|time:'H:i' }}</p>
+    <p class="order-product__line"><img src="{% static 'order/img/location.svg' %}" alt="" width="20" height="20">{{ order.surprise_bag.merchant.merchant_store.address|default:'Alamat toko belum tersedia' }}</p>
+    {% if is_merchant %}<p class="order-customer">Customer: <strong>{{ order.customer.username }}</strong></p>{% endif %}
+  </div>
+  <strong class="order-price">Rp{{ order.total_price|floatformat:'0g' }}<span>{{ order.quantity }} paket</span></strong>
+</div>
+{% if order.status != 'cancelled' %}
+<ol class="order-progress" aria-label="Progres pesanan">
+  <li class="is-done"><span class="order-progress__dot"><img src="{% static 'order/img/check.svg' %}" alt="" width="14" height="14"></span><span>Pesanan dibuat</span></li>
+  <li{% if order.status == 'ready_to_pickup' or order.status == 'completed' %} class="is-done"{% endif %}><span class="order-progress__dot">{% if order.status == 'ready_to_pickup' or order.status == 'completed' %}<img src="{% static 'order/img/check.svg' %}" alt="" width="14" height="14">{% else %}2{% endif %}</span><span>Siap diambil</span></li>
+  <li{% if order.status == 'completed' %} class="is-done"{% endif %}><span class="order-progress__dot">{% if order.status == 'completed' %}<img src="{% static 'order/img/check.svg' %}" alt="" width="14" height="14">{% else %}3{% endif %}</span><span>Selesai</span></li>
+</ol>
+{% endif %}
+<div class="order-card__actions">
+  <p class="order-card__hint">{% if order.status == 'completed' %}Pickup selesai. Terima kasih sudah menyelamatkan makanan!{% elif order.status == 'cancelled' %}Pesanan dibatalkan dan stok sudah dikembalikan.{% elif is_merchant %}{% if order.status == 'pending' %}Siapkan paket sebelum menandainya siap diambil.{% else %}Cocokkan kode customer sebelum menyerahkan makanan.{% endif %}{% else %}Tunjukkan kode saat mengambil pesanan{% endif %}</p>
+  <div class="order-actions">
+    {% if is_customer %}
+      {% if order.status == 'completed' %}{% if order.review_id %}<a class="lb-btn order-btn--outline" href="{% url 'community:review_detail' order.review_id %}">Lihat Review</a>{% else %}<a class="lb-btn lb-btn--primary" href="{% url 'community:review_create' %}?order={{ order.pk }}">Tulis Review</a>{% endif %}
+      {% elif order.status == 'pending' or order.status == 'ready_to_pickup' %}<button type="button" class="lb-btn lb-btn--primary" data-pickup-code="{{ order.pickup_code }}" data-pickup-name="{{ order.food_name }}">Tampilkan kode pickup</button><noscript><p>Kode pickup: <strong>{{ order.pickup_code }}</strong></p></noscript>{% endif %}
+    {% elif is_merchant %}
+      {% if order.status == 'pending' %}<button type="button" class="lb-btn lb-btn--primary" data-order-action="ready" data-order-url="{% url 'order:update_api' order.pk 'ready' %}">Siap Diambil</button>{% elif order.status == 'ready_to_pickup' %}<button type="button" class="lb-btn lb-btn--primary" data-order-action="complete" data-order-url="{% url 'order:update_api' order.pk 'complete' %}">Verifikasi Pickup</button>{% endif %}
+    {% endif %}
+  </div>
+</div>
+<details class="order-details">
+  <summary>Detail pesanan</summary>
+  <dl class="order-meta"><div><dt>ID pesanan</dt><dd>{{ order.pk }}</dd></div><div><dt>Dibuat</dt><dd>{{ order.created_at|date:'d M Y, H:i' }}</dd></div><div><dt>Penghematan</dt><dd>Rp{{ order.money_saved|floatformat:'0g' }}</dd></div></dl>
+  {% if is_customer and order.status == 'pending' %}<button type="button" class="order-cancel" data-order-action="cancel" data-order-url="{% url 'order:update_api' order.pk 'cancel' %}">Batalkan Pesanan</button>{% endif %}
+</details>

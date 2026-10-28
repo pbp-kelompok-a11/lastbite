@@ -1,4 +1,5 @@
 import json
+import math
 from decimal import Decimal, InvalidOperation
 from functools import wraps
 from urllib.parse import urlencode
@@ -19,6 +20,7 @@ from .models import SurpriseBag
 
 CATALOG_PAGE_SIZE = 12  # 12 pas untuk grid 3 atau 4 kolom
 CATALOG_SORT_CHOICES = [
+    ('nearest', 'Terdekat'),
     ('newest', 'Terbaru'),
     ('price_asc', 'Harga termurah'),
     ('price_desc', 'Harga termahal'),
@@ -44,10 +46,30 @@ def _parse_price(value):
         return None
     return price if price.is_finite() else None
 
+def _parse_coordinate(value, limit):
+    # lat/lng dari browser, dibatasi ke rentang yang valid (lat ±90, lng ±180)
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) and -limit <= number <= limit else None
+
+def _distance_km(lat1, lng1, lat2, lng2):
+    """Jarak garis lurus dua titik di bumi (rumus haversine)."""
+    lat1, lng1, lat2, lng2 = map(math.radians, (lat1, lng1, lat2, lng2))
+    a = math.sin((lat2 - lat1) / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin((lng2 - lng1) / 2) ** 2
+    return 6371 * 2 * math.asin(math.sqrt(a))
+
+def _attach_distances(bags, lat, lng):
+    """Isi bag.distance_km dari koordinat toko (Modul Merchant Store) ke lokasi pengguna."""
+    for bag in bags:
+        store = getattr(bag.merchant, 'merchant_store', None)
+        if store is not None and store.has_coordinates:
+            bag.distance_km = _distance_km(lat, lng, store.latitude, store.longitude)
 
 def _get_visible_bag(request, pk):
     # bag nonaktif hanya boleh dilihat pemiliknya
-    bag = get_object_or_404(SurpriseBag.objects.select_related('merchant'), pk=pk)
+    bag = get_object_or_404(SurpriseBag.objects.select_related('merchant', 'merchant__merchant_store'), pk=pk)
     if not bag.is_active and bag.merchant != request.user:
         raise Http404
     return bag
@@ -58,6 +80,9 @@ def _catalog_filters(params):
     sort = params.get('sort', 'newest')
     min_price = _parse_price(params.get('min_price'))
     max_price = _parse_price(params.get('max_price'))
+    lat = _parse_coordinate(params.get('lat'), 90)
+    lng = _parse_coordinate(params.get('lng'), 180)
+    has_location = lat is not None and lng is not None
     return {
         'q': params.get('q', '').strip(),
         'category': category if category in dict(SurpriseBag.CATEGORY_CHOICES) else '',
@@ -65,12 +90,14 @@ def _catalog_filters(params):
         'max_price': '' if max_price is None else str(max_price),
         'sort': sort if sort in dict(CATALOG_SORT_CHOICES) else 'newest',
         'stock': 'all' if params.get('stock') == 'all' else 'available',
+        'lat': f'{lat:.5f}' if has_location else '',
+        'lng': f'{lng:.5f}' if has_location else '',
     }
 
 
 def _filter_bags(filters):
     """Terapkan filter katalog dan kembalikan list bag aktif yang sudah diurutkan."""
-    bags = SurpriseBag.objects.filter(is_active=True).select_related('merchant')
+    bags = SurpriseBag.objects.filter(is_active=True).select_related('merchant', 'merchant__merchant_store')
     if filters['category']:
         bags = bags.filter(category=filters['category'])
     if filters['min_price']:
@@ -85,6 +112,7 @@ def _filter_bags(filters):
     # urutan selalu diberi pembanding cadangan supaya isi tiap halaman stabil
     ordering = {
         'newest': ('-created_at', 'pk'),
+        'nearest': ('-created_at', 'pk'),  # cadangan kalau lokasi pengguna tidak ada
         'price_asc': ('discounted_price', '-created_at', 'pk'),
         'price_desc': ('-discounted_price', '-created_at', 'pk'),
         'discount': ('-created_at', 'pk'),
@@ -93,6 +121,12 @@ def _filter_bags(filters):
     if filters['sort'] == 'discount':
         # dihitung di Python karena pembagian Decimal di SQLite kurang akurat
         bags.sort(key=lambda bag: bag.discount_percent, reverse=True)
+
+    if filters['lat']:
+        _attach_distances(bags, float(filters['lat']), float(filters['lng']))
+        if filters['sort'] == 'nearest':
+            # toko yang belum punya koordinat ditaruh paling belakang
+            bags.sort(key=lambda bag: (bag.distance_km is None, bag.distance_km or 0))
     return bags
 
 

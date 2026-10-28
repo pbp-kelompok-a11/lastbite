@@ -90,40 +90,7 @@
 
     <div class="lb-bag-grid">
       {% for bag in featured_bags %}
-        <a href="{{ bag.get_absolute_url }}" class="lb-bag-card">
-          <div class="lb-bag-card__media">
-            {% if bag.image_url %}
-              <img src="{{ bag.image_url }}" alt="{{ bag.name }}" loading="lazy"
-                   onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
-              <span class="lb-bag-card__emoji" aria-hidden="true" hidden>{{ bag.emoji }}</span>
-            {% else %}
-              <span class="lb-bag-card__emoji" aria-hidden="true">{{ bag.emoji }}</span>
-            {% endif %}
-            <span class="lb-bag-card__badge">−{{ bag.discount_percent }}%</span>
-          </div>
-          <div class="lb-bag-card__body">
-            <span class="lb-bag-card__store">{{ bag.merchant_name }}</span>
-            <h3 class="lb-bag-card__name">{{ bag.name }}</h3>
-            <div class="lb-bag-card__prices">
-              <span class="lb-bag-card__price">Rp{{ bag.discounted_price|floatformat:"0g" }}</span>
-              <del class="lb-bag-card__price-orig">Rp{{ bag.original_price|floatformat:"0g" }}</del>
-            </div>
-            <div class="lb-bag-card__meta">
-              <span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                {{ bag.pickup_time }}
-              </span>
-              <span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>
-                {{ bag.get_category_display }}
-              </span>
-            </div>
-            <div class="lb-bag-card__footer">
-              <span class="lb-bag-card__stock">{{ bag.stock }} bag tersisa</span>
-              <span class="lb-bag-card__pickup">Ambil hari ini</span>
-            </div>
-          </div>
-        </a>
+        {% include 'surprise_bag/components/bag_card.html' %}
       {% empty %}
         <p class="lb-empty">Belum ada Surprise Bag yang tersedia hari ini. Cek lagi nanti, ya!</p>
       {% endfor %}
