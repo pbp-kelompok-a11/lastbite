@@ -245,8 +245,8 @@ function fetchLogs(period) {
         const actions = !isOrder
           ? `
             <div class="eco-row-actions">
-              <a href="/eco-impact/edit/${log.id}/" class="eco-action-icon" title="Edit">✏️</a>
-              <form method="post" action="/eco-impact/delete/${log.id}/" style="display:inline;" onsubmit="return confirm('Hapus catatan ini?');">
+              <a href="/eco-impact/logs/${log.id}/edit/" class="eco-action-icon" title="Edit">✏️</a>
+              <form method="post" action="/eco-impact/logs/${log.id}/delete/" style="display:inline;" onsubmit="return confirm('Hapus catatan ini?');">
                 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                 <button type="submit" class="eco-action-icon eco-action-icon--danger" title="Hapus">🗑️</button>
               </form>
