@@ -1,6 +1,7 @@
 /* ============================================================
-   LANDING PAGE — mengikuti frame "Landing Page" di Figma
-   ============================================================ */
+  LANDING PAGE — mengikuti frame "Landing Page" di Figma
+  ============================================================ */
+  
 .lb-home { background: var(--lb-cream); color: var(--lb-ink); font-family: var(--lb-sans); }
 .lb-container { max-width: 1264px; margin: 0 auto; padding: 0 28px; }
 
