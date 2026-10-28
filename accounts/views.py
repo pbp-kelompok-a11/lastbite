@@ -1,6 +1,11 @@
 from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.views import LoginView
+from django.core.exceptions import ValidationError
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
 
 from .forms import RegistrationForm
@@ -12,8 +17,18 @@ class AccountLoginView(LoginView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        messages.success(self.request, f'Selamat datang kembali, {form.get_user().get_username()}!')
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True, 'redirect': self.get_success_url()})
+        user = form.get_user()
+        name = user.first_name or user.get_username()
+        messages.success(self.request, f'Selamat datang kembali, {name}!')
         return response
+
+    def form_invalid(self, form):
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            errors = {field: [str(e) for e in errs] for field, errs in form.errors.items()}
+            return JsonResponse({'ok': False, 'errors': errors}, status=400)
+        return super().form_invalid(form)
 
 
 @require_http_methods(['GET', 'POST'])
@@ -26,6 +41,115 @@ def register(request):
     form = RegistrationForm(request.POST if request.method == 'POST' else None, initial={'role': role})
     if request.method == 'POST' and form.is_valid():
         form.save()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True, 'redirect': reverse_lazy('accounts:login')})
         messages.success(request, 'Akun berhasil dibuat. Silakan login.')
         return redirect('accounts:login')
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        errors = {field: [str(e) for e in errs] for field, errs in form.errors.items()}
+        return JsonResponse({'ok': False, 'errors': errors}, status=400)
     return render(request, 'accounts/register.html', {'form': form})
+
+
+@require_http_methods(['GET', 'POST'])
+def password_reset_request(request):
+    """
+    Step 2 & 3: Masukkan email dan username -> Django memvalidasi kecocokan di database.
+    """
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        username = request.POST.get('username', '').strip()
+
+        if not email or not username:
+            err = 'Email dan username wajib diisi.'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': err}, status=400)
+            return render(request, 'accounts/password_reset.html', {'error': err, 'email': email, 'username': username})
+
+        User = get_user_model()
+        # Find user by username
+        user = User.objects.filter(username__iexact=username).first()
+        if not user:
+            err = f'Pengguna dengan username "{username}" tidak ditemukan.'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': err}, status=404)
+            return render(request, 'accounts/password_reset.html', {'error': err, 'email': email, 'username': username})
+
+        # Validate that email matches user's email
+        if user.email and user.email.lower() != email.lower():
+            err = f'Email "{email}" tidak cocok dengan akun username "{username}".'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': err}, status=400)
+            return render(request, 'accounts/password_reset.html', {'error': err, 'email': email, 'username': username})
+        elif not user.email:
+            user.email = email
+            user.save(update_fields=['email'])
+
+        request.session['reset_user_id'] = user.pk
+        display_name = user.first_name or user.username
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True, 'username': user.username, 'display_name': display_name})
+        return redirect('accounts:password_reset_confirm')
+
+    return render(request, 'accounts/password_reset.html')
+
+
+@require_http_methods(['GET', 'POST'])
+def password_reset_confirm_direct(request):
+    """
+    Step 4 & 5: Form password baru -> Django menyimpan password baru menggunakan mekanisme password Django.
+    """
+    user_id = request.session.get('reset_user_id')
+    User = get_user_model()
+    user = User.objects.filter(pk=user_id).first() if user_id else None
+
+    if not user:
+        err = 'Sesi reset kata sandi telah kedaluwarsa. Silakan ulangi langkah pertama.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'ok': False, 'error': err}, status=400)
+        messages.error(request, err)
+        return redirect('accounts:password_reset')
+
+    if request.method == 'POST':
+        password = request.POST.get('password', '')
+        password_confirm = request.POST.get('password_confirm', '')
+
+        if not password or not password_confirm:
+            err = 'Semua kolom kata sandi wajib diisi.'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': err}, status=400)
+            return render(request, 'accounts/password_reset_confirm.html', {'error': err, 'user_target': user})
+
+        if len(password) < 8:
+            err = 'Kata sandi minimal harus 8 karakter.'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': err}, status=400)
+            return render(request, 'accounts/password_reset_confirm.html', {'error': err, 'user_target': user})
+
+        if password != password_confirm:
+            err = 'Kata sandi baru dan konfirmasi kata sandi tidak cocok.'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': err}, status=400)
+            return render(request, 'accounts/password_reset_confirm.html', {'error': err, 'user_target': user})
+
+        try:
+            validate_password(password, user)
+        except ValidationError as e:
+            err = ' '.join(e.messages)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': err}, status=400)
+            return render(request, 'accounts/password_reset_confirm.html', {'error': err, 'user_target': user})
+
+        # Save new password using Django's secure hashing mechanism
+        user.set_password(password)
+        user.save()
+        if 'reset_user_id' in request.session:
+            del request.session['reset_user_id']
+
+        msg = 'Kata sandi berhasil diubah! Silakan masuk dengan kata sandi baru.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True, 'message': msg, 'username': user.username})
+        messages.success(request, msg)
+        return redirect('accounts:login')
+
+    return render(request, 'accounts/password_reset_confirm.html', {'user_target': user})

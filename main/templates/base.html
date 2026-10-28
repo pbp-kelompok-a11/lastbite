@@ -14,6 +14,8 @@
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="stylesheet" href="{% static 'accounts/css/auth_ui.css' %}">
+  <link rel="stylesheet" href="{% static 'accounts/css/auth_modal.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 
   {% block extra_css %}{% endblock %}
 </head>
@@ -46,7 +48,7 @@
       <!-- Auth Buttons -->
       <div class="navbar__auth">
         {% if user.is_authenticated %}
-          <span class="navbar__user">Hi, {{ user.username }}!</span>
+          <span class="navbar__user">Hi, {{ user.first_name|default:user.username }}!</span>
           {% if user.profile %}<span class="navbar__user">{{ user.profile.get_role_display }}</span>{% endif %}
           <button type="button" class="btn btn--outline btn--sm" id="logout-open" aria-haspopup="dialog" aria-controls="logout-dialog">Logout</button>
         {% else %}
@@ -150,6 +152,10 @@
   <script src="{% static 'js/base.js' %}"></script>
   <script src="{% static 'accounts/js/notifications.js' %}"></script>
   <script src="{% static 'accounts/js/logout.js' %}"></script>
+  {% if not user.is_authenticated %}
+    {% include 'accounts/modal_overlay.html' %}
+    <script src="{% static 'accounts/js/auth_modal.js' %}"></script>
+  {% endif %}
   {% block extra_js %}{% endblock %}
 </body>
 </html>
