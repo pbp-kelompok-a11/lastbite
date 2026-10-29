@@ -1,5 +1,7 @@
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from copy import copy
+
+from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.views import LoginView
@@ -9,7 +11,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
 
-from .forms import RegistrationForm
+from .forms import ProfileForm, ProfilePasswordForm, RegistrationForm
 from .permissions import is_merchant
 
 
@@ -54,13 +56,35 @@ def register(request):
 
 
 @login_required
+@require_http_methods(['GET', 'POST'])
 def profile(request):
-    # Customer dan Merchant sama-sama bisa membuka profil
     user_profile = getattr(request.user, 'profile', None)
     if user_profile is None:
         return redirect('main:home')
-    if request.method == 'POST':
-        photo = request.FILES.get('photo')
+
+    editing_details = request.method == 'POST' and request.POST.get('action') == 'update_details'
+    changing_password = request.method == 'POST' and request.POST.get('action') == 'change_password'
+    form = ProfileForm(request.POST if editing_details else None, instance=copy(request.user))
+    password_form = ProfilePasswordForm(
+        request.user, request.POST if changing_password else None, prefix='password',
+    )
+    context = {'profile_form': form, 'password_form': password_form}
+    if editing_details:
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Data diri berhasil diperbarui.')
+            return redirect('accounts:profile')
+        context['open_dialog'] = 'profile-edit-dialog'
+        return render(request, 'accounts/profile.html', context)
+
+    if changing_password:
+        if password_form.is_valid():
+            user = password_form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Password berhasil diubah.')
+            return redirect('accounts:profile')
+        context['open_dialog'] = 'profile-password-dialog'
+        return render(request, 'accounts/profile.html', context)
 
     if request.method == 'POST':
         # Hapus foto profil
@@ -96,7 +120,7 @@ def profile(request):
         messages.success(request, 'Foto profil berhasil diperbarui.')
         return redirect('accounts:profile')
 
-    return render(request, 'accounts/profile.html')
+    return render(request, 'accounts/profile.html', context)
 
 
 @require_http_methods(['GET', 'POST'])

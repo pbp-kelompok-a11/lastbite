@@ -8,6 +8,99 @@ from .permissions import is_customer, is_merchant
 
 
 class AccountsTests(TestCase):
+    def test_profile_updates_only_current_users_personal_fields(self):
+        user = get_user_model().objects.create_user(username='profile_owner', password='LastBite-Test-937!')
+        UserProfile.objects.create(user=user, role='customer')
+        other = get_user_model().objects.create_user(username='profile_other')
+        self.client.force_login(user)
+        response = self.client.post(reverse('accounts:profile'), {
+            'action': 'update_details', 'username': 'updated_owner',
+            'full_name': 'Nadia Putri', 'email': 'nadia@example.com',
+            'current_password': 'LastBite-Test-937!',
+            'id': other.pk, 'role': 'merchant', 'is_staff': True,
+        })
+        self.assertRedirects(response, reverse('accounts:profile'))
+        user.refresh_from_db()
+        other.refresh_from_db()
+        self.assertEqual(user.username, 'updated_owner')
+        self.assertEqual(user.get_full_name(), 'Nadia Putri')
+        self.assertEqual(user.last_name, '')
+        self.assertEqual(user.email, 'nadia@example.com')
+        self.assertEqual(user.profile.role, 'customer')
+        self.assertFalse(user.is_staff)
+        self.assertTrue(user.check_password('LastBite-Test-937!'))
+        self.assertEqual(other.username, 'profile_other')
+
+    def test_invalid_profile_preserves_saved_details_and_shows_errors(self):
+        user = get_user_model().objects.create_user(
+            username='profile_owner', first_name='Nadia', password='LastBite-Test-937!',
+        )
+        UserProfile.objects.create(user=user, role='customer')
+        get_user_model().objects.create_user(username='profile_taken')
+        self.client.force_login(user)
+        response = self.client.post(reverse('accounts:profile'), {
+            'action': 'update_details', 'username': 'profile_taken',
+            'full_name': 'Changed', 'email': 'invalid-email',
+            'current_password': 'LastBite-Test-937!',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('username', response.context['profile_form'].errors)
+        self.assertIn('email', response.context['profile_form'].errors)
+        user.refresh_from_db()
+        self.assertEqual(user.username, 'profile_owner')
+        self.assertEqual(user.first_name, 'Nadia')
+
+    def test_profile_edit_requires_correct_password(self):
+        user = get_user_model().objects.create_user(username='protected_profile', password='LastBite-Test-937!')
+        UserProfile.objects.create(user=user, role='customer')
+        self.client.force_login(user)
+        for password in ('', 'wrong-password'):
+            response = self.client.post(reverse('accounts:profile'), {
+                'action': 'update_details', 'username': 'changed_profile',
+                'full_name': 'Changed', 'email': '', 'current_password': password,
+            })
+            self.assertIn('current_password', response.context['profile_form'].errors)
+            self.assertEqual(response.context['open_dialog'], 'profile-edit-dialog')
+            user.refresh_from_db()
+            self.assertEqual(user.username, 'protected_profile')
+            self.assertNotContains(response, 'value="wrong-password"')
+
+    def test_change_password_validates_and_keeps_current_session(self):
+        user = get_user_model().objects.create_user(username='password_owner', password='LastBite-Test-937!')
+        UserProfile.objects.create(user=user, role='customer')
+        self.client.force_login(user)
+        base = {
+            'action': 'change_password', 'password-old_password': 'LastBite-Test-937!',
+            'password-new_password1': 'Fresh-LastBite-8492!',
+            'password-new_password2': 'Fresh-LastBite-8492!',
+        }
+        for changes, field in (
+            ({'password-old_password': 'wrong'}, 'old_password'),
+            ({'password-new_password2': 'mismatch'}, 'new_password2'),
+            ({'password-new_password1': '123', 'password-new_password2': '123'}, 'new_password2'),
+        ):
+            response = self.client.post(reverse('accounts:profile'), {**base, **changes})
+            self.assertIn(field, response.context['password_form'].errors)
+            self.assertEqual(response.context['open_dialog'], 'profile-password-dialog')
+            user.refresh_from_db()
+            self.assertTrue(user.check_password('LastBite-Test-937!'))
+            self.assertNotContains(response, 'value="Fresh-LastBite-8492!"')
+        self.assertRedirects(self.client.post(reverse('accounts:profile'), base), reverse('accounts:profile'))
+        user.refresh_from_db()
+        self.assertTrue(user.check_password('Fresh-LastBite-8492!'))
+        self.assertFalse(user.check_password('LastBite-Test-937!'))
+        self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
+
+    def test_profile_requires_login_and_explains_merchant_setup(self):
+        url = reverse('accounts:profile')
+        self.assertRedirects(self.client.get(url), reverse('accounts:login') + '?next=' + url)
+        user = get_user_model().objects.create_user(username='profile_merchant')
+        UserProfile.objects.create(user=user, role='merchant')
+        self.client.force_login(user)
+        response = self.client.get(url)
+        self.assertContains(response, 'Lengkapi Profil Toko')
+        self.assertContains(response, reverse('merchant_store:create'))
+
     def registration_data(self, **changes):
         data = {'username': 'newuser', 'role': 'customer',
                 'password1': 'LastBite-Test-937!', 'password2': 'LastBite-Test-937!'}
@@ -50,7 +143,8 @@ class AccountsTests(TestCase):
         response = self.client.post(reverse('accounts:login'), {'username': 'customer', 'password': 'LastBite-Test-937!'})
         self.assertRedirects(response, reverse('main:home'))
         self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
-        self.assertContains(self.client.get(reverse('main:home')), 'Customer')
+        self.assertContains(self.client.get(reverse('main:home')), reverse('accounts:profile'))
+        self.assertEqual(user.profile.role, 'customer')
         self.assertEqual(self.client.get(reverse('accounts:logout')).status_code, 405)
         self.assertRedirects(self.client.post(reverse('accounts:logout')), reverse('main:home'))
         self.assertNotIn('_auth_user_id', self.client.session)

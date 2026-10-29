@@ -24,10 +24,16 @@
         Daftarkan tokomu
       </a>
     {% elif user.profile.role == 'merchant' %}
+      {% if user.merchant_store %}
+      <a href="{% url 'merchant_store:my_store' %}" class="md-cta">
+        Toko Saya
+      </a>
+      {% else %}
       <a href="{% url 'merchant_store:create' %}" class="md-cta">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         Daftarkan tokomu
       </a>
+      {% endif %}
     {% endif %}
   </header>
 

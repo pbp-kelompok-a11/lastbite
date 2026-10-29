@@ -1,50 +1,64 @@
-/* ===== Halaman Profil Merchant ===== */
-
 .merchant-profile {
-  max-width: 900px;
+  --color-primary: var(--lb-green);
+  --color-primary-dark: var(--lb-ink);
+  --color-primary-light: var(--lb-pill-bg);
+  max-width: 960px;
+  box-sizing: border-box;
+  font-family: var(--lb-sans);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--lb-ink);
   margin: 0 auto;
-  padding: calc(var(--navbar-height) + 40px) 20px 40px;
+  padding: calc(var(--navbar-height) + 40px) 28px 64px;
 }
 
 .merchant-profile__heading {
-  margin-bottom: 8px;
+  margin: 0 0 12px;
+  font-family: var(--lb-serif);
+  font-weight: 400;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
 }
 
 .merchant-profile__description {
   margin-bottom: 28px;
-  color: #64748b;
+  color: var(--lb-link);
 }
 
 .merchant-profile__card {
   margin-bottom: 20px;
   padding: 28px;
-  border: 1px solid #dce5dc;
-  border-radius: 16px;
-  background: #fffdf8;
+  border: 1px solid var(--lb-line);
+  border-radius: 20px;
+  background: #fff;
 }
 
 .merchant-profile__card h2 {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
+  font-family: var(--lb-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.25;
+  color: var(--lb-ink);
 }
 
 .merchant-profile__card p {
   margin-bottom: 20px;
-  color: #64748b;
+  color: var(--lb-link);
 }
-
-/* ===== Foto Profil ===== */
 
 .merchant-profile__avatar {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100px;
-  height: 100px;
+  width: 88px;
+  height: 88px;
   margin-bottom: 18px;
   overflow: hidden;
   border-radius: 50%;
-  background: #dce8dc;
-  color: #28664f;
+  background: var(--lb-pill-bg);
+  color: var(--lb-ink);
   font-size: 36px;
   font-weight: 700;
 }
@@ -55,8 +69,6 @@
   object-fit: cover;
 }
 
-/* ===== Form Upload Foto ===== */
-
 .merchant-profile__form {
   display: flex;
   flex-direction: column;
@@ -66,21 +78,19 @@
 
 .merchant-profile__form input[type="file"] {
   max-width: 100%;
-  padding: 10px;
-  border: 1px solid #dce5dc;
-  border-radius: 8px;
+  padding: 8px;
+  font: inherit;
+  color: var(--lb-link);
+  border: 1px solid var(--lb-line);
+  border-radius: 12px;
   background: #fff;
 }
-
-/* ===== Tombol Logout di Profil ===== */
 
 .merchant-profile__logout {
   display: flex;
   justify-content: flex-start;
   margin-top: 24px;
 }
-
-/* ===== Tombol Hapus Foto ===== */
 
 .merchant-profile__actions {
   display: flex;
@@ -89,13 +99,186 @@
   gap: 12px;
 }
 
-.merchant-profile__delete-btn {
-  border-color: #e3b5aa;
-  color: #b3402a;
+.merchant-profile .btn {
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-family: var(--lb-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.5;
+  box-shadow: none;
 }
 
-.merchant-profile__delete-btn:hover {
-  border-color: #b3402a;
+.merchant-profile .btn--primary {
+  background: var(--lb-green);
+  color: #fff;
+}
+
+.merchant-profile .btn--primary:hover {
+  background: #1a6b4c;
+}
+
+.merchant-profile .btn--outline {
+  border-color: var(--lb-line);
+  background: #fff;
+  color: var(--lb-ink);
+}
+
+.merchant-profile .btn--outline:hover {
+  border-color: var(--lb-green);
+  background: var(--lb-pill-bg);
+}
+
+.merchant-profile .btn:focus-visible {
+  outline: 2px solid var(--lb-green);
+  outline-offset: 3px;
+}
+
+.merchant-profile .merchant-profile__delete-btn {
+  border-color: #e3b5aa;
+  color: #a32c23;
+}
+
+.merchant-profile .merchant-profile__delete-btn:hover {
+  border-color: #a32c23;
   background: #fdf0ec;
-  color: #8f2f1d;
+  color: #a32c23;
+}
+
+.merchant-profile__form input::file-selector-button {
+  min-height: 36px;
+  margin-right: 12px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--lb-pill-bg);
+  color: var(--lb-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.merchant-profile__details {
+  display: grid;
+  gap: 20px;
+}
+
+.merchant-profile__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.merchant-profile__field label {
+  font-weight: 600;
+  color: var(--lb-ink);
+}
+
+.merchant-profile__field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--lb-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--lb-ink);
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.merchant-profile__field input:focus-visible {
+  outline: 2px solid var(--lb-green);
+  outline-offset: 2px;
+}
+
+.profile-field-help {
+  color: var(--lb-link);
+  font-size: 0.875rem;
+}
+
+.merchant-profile__details .errorlist {
+  margin: 0;
+  padding-left: 20px;
+  color: #a32c23;
+}
+
+.merchant-profile__details > .merchant-profile__actions {
+  grid-column: 1 / -1;
+}
+
+.merchant-profile__summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 24px 0 28px;
+}
+
+.merchant-profile__summary dt {
+  margin-bottom: 6px;
+  font-size: 0.8125rem;
+  color: var(--lb-link);
+}
+
+.merchant-profile__summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+  color: var(--lb-ink);
+}
+
+.profile-dialog {
+  width: min(520px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 28px;
+  font-family: var(--lb-sans);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  box-sizing: border-box;
+  overflow-y: auto;
+  border: 1px solid var(--lb-line);
+  border-radius: 20px;
+  background: var(--lb-cream);
+  color: var(--lb-ink);
+}
+
+.profile-dialog::backdrop {
+  background: rgb(18 63 50 / 45%);
+}
+
+.profile-dialog h2 {
+  margin: 0 0 10px;
+  font-family: var(--lb-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.25;
+  color: var(--lb-ink);
+}
+
+.profile-dialog > p {
+  margin: 0 0 24px;
+  color: var(--lb-link);
+}
+
+.profile-field-help ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+@media (max-width: 600px) {
+  .merchant-profile {
+    padding: calc(var(--navbar-height) + 24px) 16px 40px;
+  }
+
+  .merchant-profile__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .merchant-profile__card,
+  .profile-dialog {
+    padding: 20px;
+  }
 }

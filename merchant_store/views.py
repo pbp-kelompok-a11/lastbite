@@ -549,12 +549,6 @@ def my_store(request):
 @require_http_methods(['GET', 'POST'])
 def store_create(request):
     if _own_store(request.user):
-        messages.info(
-            request,
-            'Kamu sudah memiliki profil toko. '
-            'Silakan edit dari halaman Toko Saya.',
-        )
-
         return redirect('merchant_store:my_store')
 
     form = MerchantStoreForm(request.POST or None)
