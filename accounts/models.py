@@ -11,6 +11,12 @@ class UserProfile(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile',
     )
     role = models.CharField(max_length=10, choices=Role.choices)
+    
+    photo = models.ImageField(
+        upload_to='profile_photos/',
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         constraints = [

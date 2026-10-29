@@ -1,13 +1,29 @@
-{% extends 'accounts/base.html' %}
-{% block title %}Login — LastBite{% endblock %}
-{% block accounts_content %}
-<h1 id="accounts-title">Selamat datang kembali</h1>
-<p>Masuk untuk melanjutkan perjalanan food rescue-mu.</p>
-<form method="post" class="accounts-form">
-  {% csrf_token %}
-  {% include 'accounts/components/form_fields.html' %}
-  <input type="hidden" name="next" value="{{ next }}">
-  <button class="btn btn--primary btn--md" type="submit">Login</button>
-</form>
-<p class="accounts-switch">Belum punya akun? <a href="{% url 'accounts:register' %}">Register</a></p>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Masuk — LastBite{% endblock %}
+
+{% block content %}
+<div class="section-container" style="min-height: 60vh; padding: 5rem 1rem; text-align: center;">
+  <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Masuk ke LastBite</h1>
+  <p style="color: var(--color-text-muted);">Silakan gunakan formulir masuk di atas.</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (typeof openAuthModal === 'function') {
+      openAuthModal('login');
+      {% if form and form.errors %}
+        const errEl = document.getElementById('auth-login-errors');
+        if (errEl) {
+          errEl.hidden = false;
+          errEl.innerHTML = '{{ form.errors|escapejs }}';
+        }
+      {% endif %}
+    }
+  });
+</script>
 {% endblock %}

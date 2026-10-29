@@ -1,0 +1,90 @@
+/* Token warna & font dari desain Figma LastBite (dipakai navbar, footer, dan landing page) */
+:root {
+  --navbar-height: 76px;
+  --lb-green: #20805b;
+  --lb-ink: #123f32;
+  --lb-link: #606b65;
+  --lb-muted: #718079;
+  --lb-pill-bg: #e8f2dd;
+  --lb-lime: #dff078;
+  --lb-line: #e2e7df;
+  --lb-cream: #fffefa;
+  --lb-sans: 'Plus Jakarta Sans', var(--font-sans);
+  --lb-serif: 'DM Serif Display', Georgia, serif;
+}
+
+.navbar {
+  background: rgba(255, 254, 250, 0.94);
+  border-bottom: 1px solid var(--lb-line);
+  backdrop-filter: blur(16px);
+}
+.navbar__container { max-width: 1320px; padding: 0 28px; gap: 28px; }
+
+/* ---- Logo ---- */
+.lb-logo { gap: 8px; font-family: var(--lb-sans); }
+.lb-logo__mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px 18px 18px 12px; /* bentuk daun: sudut kiri bawah lebih tajam */
+  background: var(--lb-green);
+  color: #fff;
+}
+.lb-logo__mark svg { width: 20px; height: 20px; }
+.lb-logo .navbar__logo-text { font-size: 20px; font-weight: 600; letter-spacing: -1px; color: var(--lb-ink); }
+.lb-logo__accent { font-weight: 900; color: var(--lb-green); }
+
+/* ---- Link navigasi ---- */
+.navbar__links { flex: 1; justify-content: center; align-self: stretch; align-items: stretch; gap: 4px; }
+.navbar__links > li { display: flex; align-items: stretch; }
+.navbar__link {
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  font-family: var(--lb-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lb-link);
+}
+.navbar__link:hover { color: var(--lb-ink); }
+.navbar__link::after { left: 15px; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--lb-green); }
+.navbar__link:hover::after,
+.navbar__link.is-active::after { width: calc(100% - 30px); }
+.navbar__link.is-active { color: var(--lb-ink); }
+
+/* ---- Tombol kanan ---- */
+.navbar__auth { gap: 5px; }
+.lb-nav-search {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  color: var(--lb-ink);
+  transition: background var(--transition);
+}
+.lb-nav-search:hover { background: var(--lb-pill-bg); }
+.lb-login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 17px;
+  border-radius: 12px;
+  background: var(--lb-pill-bg);
+  color: var(--lb-ink);
+  font-family: var(--lb-sans);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 19.5px;
+  transition: background var(--transition), transform var(--transition);
+}
+.lb-login-btn svg { width: 20px; height: 20px; }
+.lb-login-btn:hover { background: #d9ead0; transform: translateY(-1px); }
+
+@media (max-width: 768px) {
+  .navbar__container { padding: 0 16px; }
+  .navbar__links > li { align-items: center; }
+  .navbar__link { padding: 0; }
+  .navbar__link::after { display: none; }
+}

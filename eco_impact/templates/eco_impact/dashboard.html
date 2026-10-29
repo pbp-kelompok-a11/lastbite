@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Eco Impact — LastBite{% endblock %}
+
+{% block extra_css %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{% static 'eco_impact/css/eco_impact.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="eco-page">
+  <div class="eco-container">
+
+    <!-- Header & Filter Periode -->
+    <header class="eco-header">
+      <div class="eco-header__left">
+        <span class="eco-header__kicker">JEJAK BAIKMU</span>
+        <h1 class="eco-header__title">Eco Impact</h1>
+        <p class="eco-header__desc">
+          Setiap bag adalah langkah kecil menuju sistem pangan yang lebih baik.
+        </p>
+      </div>
+      <div class="eco-header__right">
+        <!-- Switch filter Bulan / Minggu  -->
+        <div class="eco-toggle" role="group" aria-label="Filter Periode">
+          <button type="button" class="eco-toggle__btn active" data-period="monthly">Bulan</button>
+          <button type="button" class="eco-toggle__btn" data-period="weekly">Minggu</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 3 Kartu Metrik Utama -->
+    <section class="eco-metrics" aria-label="Ringkasan Metrik Dampak">
+      <!-- Kartu 1: Makanan Diselamatkan -->
+      <article class="eco-metric-card">
+        <div class="eco-metric-card__icon eco-metric-card__icon--green" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2E7D5B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+        </div>
+        <div class="eco-metric-card__info">
+          <div class="eco-metric-card__label">MAKANAN DISELAMATKAN</div>
+          <div class="eco-metric-card__value">
+            <span id="metric-food-kg">0,0</span>
+            <span class="eco-metric-card__unit">kg</span>
+          </div>
+          <div class="eco-metric-card__sub eco-metric-card__sub--positive" id="metric-food-sub">
+            + 0% dari bulan lalu
+          </div>
+        </div>
+      </article>
+
+      <!-- Kartu 2: CO2 Dicegah -->
+      <article class="eco-metric-card">
+        <div class="eco-metric-card__icon eco-metric-card__icon--yellow" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C59B27" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+        </div>
+        <div class="eco-metric-card__info">
+          <div class="eco-metric-card__label">CO₂ DICEGAH</div>
+          <div class="eco-metric-card__value">
+            <span id="metric-carbon-kg">0,0</span>
+            <span class="eco-metric-card__unit">kg</span>
+          </div>
+          <div class="eco-metric-card__sub" id="metric-carbon-sub">
+            Setara 0 km berkendara
+          </div>
+        </div>
+      </article>
+
+      <!-- Kartu 3: Uang Dihemat -->
+      <article class="eco-metric-card">
+        <div class="eco-metric-card__icon eco-metric-card__icon--peach" aria-hidden="true">
+          <span class="eco-metric-card__icon-text">Rp</span>
+        </div>
+        <div class="eco-metric-card__info">
+          <div class="eco-metric-card__label">UANG DIHEMAT</div>
+          <div class="eco-metric-card__value">
+            <span id="metric-money-saved">0</span>
+          </div>
+          <div class="eco-metric-card__sub" id="metric-money-sub">
+            0 surprise bag dibeli
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Grid Tengah: Grafik Perjalanan Dampak & Waste Warrior Level -->
+    <div class="eco-mid-grid">
+      <!-- Grafik Perjalanan Dampakmu (6 Bulan Terakhir) -->
+      <section class="eco-panel eco-panel--chart">
+        <div class="eco-panel__header">
+          <h2 class="eco-panel__title">Perjalanan dampakmu</h2>
+          <span class="eco-panel__tag">6 bulan terakhir</span>
+        </div>
+
+        <div class="eco-barchart">
+          <div class="eco-barchart__bars" id="barchart-container">
+            <!-- Diisi secara dinamis dari API backend -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Kartu Hijau Tua Level Waste Warrior -->
+      <section class="eco-warrior-card">
+        <!-- Lingkaran avatar lime dengan daun di pojok kiri atas -->
+        <div class="eco-warrior-card__badge-avatar" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22543D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+        </div>
+
+        <!-- Konten level yang berada di tengah -->
+        <div class="eco-warrior-card__content">
+          <span class="eco-warrior-card__level-kicker" id="warrior-level-kicker">LEVEL 3</span>
+          <h2 class="eco-warrior-card__title" id="warrior-title">Waste Warrior</h2>
+          <p class="eco-warrior-card__desc" id="warrior-desc">
+            Kamu sudah menyelamatkan 0 bag. Sedikit lagi menuju level berikutnya!
+          </p>
+
+          <!-- Progress bar tipis lime -->
+          <div class="eco-warrior-progress">
+            <div class="eco-warrior-progress__track">
+              <div class="eco-warrior-progress__fill" id="warrior-progress-fill" style="width: 0%;"></div>
+            </div>
+            <span class="eco-warrior-progress__label" id="warrior-progress-label">0 / 20 bag</span>
+          </div>
+
+          <!-- Tombol Bagikan Pencapaian -->
+          <button type="button" class="eco-btn-share" onclick="handleShare()">
+            Bagikan pencapaian
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Riwayat Dampak -->
+    <section class="eco-panel eco-history-card" aria-label="Riwayat Dampak">
+      <div class="eco-history-card__header">
+        <h2 class="eco-history-card__title">Riwayat dampak</h2>
+        <a href="{% url 'eco_impact:create_log' %}" class="eco-btn-add-manual">
+          + Catat Manual
+        </a>
+      </div>
+
+      <!-- Container list riwayat dinamis -->
+      <div id="logs-container" class="eco-history-list" aria-live="polite">
+        <div class="eco-loading">Memuat riwayat dampak...</div>
+      </div>
+    </section>
+
+  </div><!-- /.eco-container -->
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Format angka desimal menggunakan koma sesuai bahasa Indonesia
+function formatKoma(num) {
+  return Number(num || 0).toFixed(1).replace('.', ',');
+}
+
+// Format mata uang ringkas
+function formatMoney(num) {
+  return new Intl.NumberFormat('id-ID').format(Math.round(num || 0));
+}
+
+// Fetch ringkasan metrik dari API backend
+function fetchSummary(period) {
+  fetch(`{% url 'eco_impact:summary_api' %}?period=${period}`)
+    .then(res => res.json())
+    .then(data => {
+      // 1. Kartu Makanan Diselamatkan
+      document.getElementById('metric-food-kg').textContent = formatKoma(data.total_food_kg);
+      const foodSub = data.total_food_kg > 0 ? `+ ${formatKoma(data.total_food_kg)} kg terkumpul` : '+ 0% dari bulan lalu';
+      document.getElementById('metric-food-sub').textContent = foodSub;
+
+      // 2. Kartu CO2 Dicegah
+      document.getElementById('metric-carbon-kg').textContent = formatKoma(data.total_carbon_kg);
+      document.getElementById('metric-carbon-sub').textContent = `Setara ${data.equivalent_km || 0} km berkendara`;
+
+      // 3. Kartu Uang Dihemat
+      document.getElementById('metric-money-saved').textContent = data.money_saved_display || '0';
+      document.getElementById('metric-money-sub').textContent = `${data.total_bags_count || 0} surprise bag dibeli`;
+
+      // 4. Render Bar Chart 6 Bulan Terakhir
+      const barContainer = document.getElementById('barchart-container');
+      if (data.monthly_trend && data.monthly_trend.length > 0) {
+        let barsHtml = '';
+        data.monthly_trend.forEach(m => {
+          const heightPct = Math.max(m.percent || 0, 4);
+          barsHtml += `
+            <div class="eco-bar-col">
+              <div class="eco-bar-col__track">
+                <div class="eco-bar-col__fill" style="height: ${heightPct}%;"></div>
+              </div>
+              <span class="eco-bar-col__label">${m.label}</span>
+            </div>
+          `;
+        });
+        barContainer.innerHTML = barsHtml;
+      }
+
+      // 5. Render Kartu Level Waste Warrior
+      if (data.level) {
+        document.getElementById('warrior-level-kicker').textContent = `LEVEL ${data.level.number}`;
+        document.getElementById('warrior-title').textContent = data.level.name;
+        document.getElementById('warrior-desc').textContent = data.level.description;
+        document.getElementById('warrior-progress-fill').style.width = `${data.level.progress_pct}%`;
+        document.getElementById('warrior-progress-label').textContent = `${data.level.current_bags} / ${data.level.target_bags} bag`;
+      }
+    })
+    .catch(err => console.error('Gagal memuat ringkasan dampak:', err));
+}
+
+// Fetch riwayat log dari API backend
+function fetchLogs(period) {
+  const container = document.getElementById('logs-container');
+  fetch(`{% url 'eco_impact:logs_api' %}?period=${period}`)
+    .then(res => res.json())
+    .then(data => {
+      if (!data.logs || data.logs.length === 0) {
+        container.innerHTML = `
+          <div class="eco-empty-state">
+            <span class="eco-empty-state__icon">🌱</span>
+            <p class="eco-empty-state__text">Belum ada riwayat dampak untuk periode ini.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '<div class="eco-history-rows">';
+      data.logs.forEach(log => {
+        const isOrder = log.source === 'order';
+        const carbonStr = log.carbon_prevented_kg !== null
+          ? `+${formatKoma(log.carbon_prevented_kg)} kg CO2`
+          : '-';
+
+        const actions = !isOrder
+          ? `
+            <div class="eco-row-actions">
+              <a href="/eco-impact/logs/${log.id}/edit/" class="eco-action-icon" title="Edit">✏️</a>
+              <form method="post" action="/eco-impact/logs/${log.id}/delete/" style="display:inline;" onsubmit="return confirm('Hapus catatan ini?');">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                <button type="submit" class="eco-action-icon eco-action-icon--danger" title="Hapus">🗑️</button>
+              </form>
+            </div>
+          `
+          : '';
+
+        html += `
+          <div class="eco-history-row">
+            <div class="eco-history-row__left">
+              <div class="eco-history-row__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E7D5B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+                </svg>
+              </div>
+              <div class="eco-history-row__text">
+                <h3 class="eco-history-row__title">${log.food_name}</h3>
+                <p class="eco-history-row__meta">${log.store_name} · ${log.formatted_date}</p>
+              </div>
+            </div>
+            <div class="eco-history-row__right">
+              <span class="eco-history-row__carbon">${carbonStr}</span>
+              ${actions}
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    })
+    .catch(err => {
+      console.error('Gagal memuat log:', err);
+      container.innerHTML = '<div class="eco-empty-state"><p class="eco-empty-state__text">Gagal memuat data log.</p></div>';
+    });
+}
+
+function loadData(period) {
+  fetchSummary(period);
+  fetchLogs(period);
+  document.querySelectorAll('.eco-toggle__btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.period === period);
+  });
+}
+
+document.querySelectorAll('.eco-toggle__btn').forEach(btn => {
+  btn.addEventListener('click', () => loadData(btn.dataset.period));
+});
+
+function handleShare() {
+  if (navigator.share) {
+    navigator.share({
+      title: 'Eco Impact LastBite',
+      text: 'Saya sudah menyelamatkan makanan dan mengurangi jejak karbon bersama LastBite!',
+      url: window.location.href,
+    }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(window.location.href);
+    alert('Link Eco Impact berhasil disalin ke clipboard!');
+  }
+}
+
+// Inisialisasi awal saat halaman dibuka
+loadData('monthly');
+</script>
+{% endblock %}

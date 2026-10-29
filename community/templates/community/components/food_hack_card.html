@@ -1,0 +1,21 @@
+<article class="food-hack-card">
+  <header>
+    <span class="food-hack-card__badge">{{ post.get_post_type_display }}</span>
+    {% if post.author.profile.role == 'merchant' %}
+      <span class="food-hack-card__badge food-hack-card__badge--merchant">Merchant</span>
+    {% endif %}
+    <h3>
+      <a class="food-hack-card__link" href="{% url 'community:post_detail' post.pk %}?{{ detail_query }}">{{ post.title }}</a>
+    </h3>
+  </header>
+
+  <!-- Kartu menampilkan ringkasan; isi lengkap tersedia di halaman detail. -->
+  <p class="food-hack-card__excerpt">{{ post.content|truncatewords:45 }}</p>
+
+  <footer class="food-hack-card__meta">
+    <span>{{ post.author.get_username }}</span>
+    <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:'j M Y' }}</time>
+  </footer>
+
+  {% include 'community/components/food_hack_reactions.html' %}
+</article>

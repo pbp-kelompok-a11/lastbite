@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Community — LastBite{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'community/css/community.css' %}?v=community-filters-3">
+{% endblock %}
+
+{% block content %}
+  <div class="community section-container">
+
+    <!-- Pengantar halaman Community. -->
+    <header class="community-hero">
+      <p class="community-eyebrow">LASTBITE COMMUNITY</p>
+      <h1>Ide kecil untuk<br>kesempatan kedua.</h1>
+      <p>Temukan cara menyimpan, mengolah, dan menikmati makanan surplus. Belajar bersama dari tips komunitas LastBite.</p>
+    </header>
+
+    <section aria-labelledby="food-hacks-title">
+
+      <!-- Judul daftar mengikuti kategori dan filter aktif dari view. -->
+      <div class="community-heading">
+        <div>
+          <p class="community-eyebrow">DARI KOMUNITAS, UNTUK KOMUNITAS</p>
+          <h2 id="food-hacks-title">{{ feed_heading }}</h2>
+        </div>
+
+        <!-- Tombol berbagi mengikuti izin user; tamu diminta login terlebih dahulu. -->
+        {% if can_create_food_hack %}
+          <a class="btn btn--primary btn--md" href="{% url 'community:food_hack_create' %}">Bagikan Food Hack</a>
+        {% elif not user.is_authenticated %}
+          <a class="btn btn--primary btn--md" href="{% url 'community:food_hack_create' %}">Login untuk berbagi</a>
+        {% else %}
+          <p class="community-muted">Food Hack dapat dibagikan oleh akun Customer dan Merchant.</p>
+        {% endif %}
+      </div>
+      <div class="community-toolbar">
+
+        <!-- Tab aktif ditandai berdasarkan selected_post_type. -->
+        <nav class="community-tabs" aria-label="Kategori postingan">
+          <a class="community-tab{% if selected_post_type == 'all' %} community-tab--active{% endif %}" href="{% url 'community:home' %}?{{ all_posts_query }}"{% if selected_post_type == 'all' %} aria-current="page"{% endif %}>All Posts</a>
+          <a class="community-tab{% if selected_post_type == 'food_hack' %} community-tab--active{% endif %}" href="{% url 'community:home' %}?{{ food_hacks_query }}"{% if selected_post_type == 'food_hack' %} aria-current="page"{% endif %}>Food Hacks</a>
+          <a class="community-tab{% if selected_post_type == 'review' %} community-tab--active{% endif %}" href="{% url 'community:home' %}?{{ reviews_query }}"{% if selected_post_type == 'review' %} aria-current="page"{% endif %}>Reviews</a>
+        </nav>
+        <div class="community-feed-controls">
+
+          <!-- GET menyimpan kata kunci dan kategori pencarian di URL. -->
+          <form id="community-search-form" method="get" action="{% url 'community:home' %}" class="community-search" role="search">
+            <input type="hidden" name="post_type" value="{{ selected_post_type }}">
+            <label class="community-visually-hidden" for="community-query">{{ search_label }}</label>
+            <div class="community-search__controls">
+              <input type="search" id="community-query" name="q" value="{{ query }}" placeholder="{{ search_placeholder }}">
+              <button class="btn btn--primary btn--md" type="submit">Cari</button>
+            </div>
+          </form>
+
+          <!-- Filter penulis hanya tersedia setelah login dan tampil pada All Posts. -->
+          {% if user.is_authenticated %}
+            <div class="community-sort community-mine-filter"{% if selected_post_type != 'all' %} hidden{% endif %}>
+              <label class="community-visually-hidden" for="community-mine">Filter penulis</label>
+              <select id="community-mine" name="mine" form="community-search-form">
+                <option value="0"{% if not mine_only %} selected{% endif %}>Semua penulis</option>
+                <option value="1"{% if mine_only %} selected{% endif %}>Milikku</option>
+              </select>
+            </div>
+          {% endif %}
+
+          <!-- Filter postingan disukai hanya berlaku untuk Food Hacks. -->
+          <div class="community-sort community-food-hack-filter"{% if selected_post_type != 'food_hack' %} hidden{% endif %}>
+            <label class="community-visually-hidden" for="community-liked">Filter Food Hacks</label>
+            <select id="community-liked" name="liked" form="community-search-form">
+              <option value="0"{% if not liked_only %} selected{% endif %}>All Food Hacks</option>
+              <option value="1"{% if liked_only %} selected{% endif %}>Liked by Me</option>
+            </select>
+          </div>
+
+          <!-- Filter rating hanya berlaku untuk Reviews. -->
+          <div class="community-sort community-rating-filter"{% if selected_post_type != 'review' %} hidden{% endif %}>
+            <label class="community-visually-hidden" for="community-rating">Filter rating</label>
+            <select id="community-rating" name="rating" form="community-search-form">
+              <option value="all"{% if selected_rating == 'all' %} selected{% endif %}>All Ratings</option>
+              {% for value in rating_options %}
+                <option value="{{ value }}"{% if selected_rating == value %} selected{% endif %}>{{ value }} {% if value == '1' %}Star{% else %}Stars{% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Pilihan urutan disiapkan view sesuai tab yang aktif. -->
+          <div class="community-sort">
+            <label class="community-visually-hidden" for="community-sort">Urutkan postingan</label>
+            <select id="community-sort" name="sort" form="community-search-form">
+              {% include 'community/components/sort_options.html' %}
+            </select>
+          </div>
+        </div>
+      </div>
+      <p id="community-search-status" class="community-search-status" role="status" hidden></p>
+
+      <!-- Daftar hasil dan pagination ditampilkan melalui komponen ini. -->
+      {% include 'community/components/feed_results.html' %}
+    </section>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'community/js/feed.js' %}?v=community-mine-2"></script>
+  <script src="{% static 'community/js/like.js' %}"></script>
+{% endblock %}

@@ -1,8 +1,3 @@
-/* ============================================================
-   LastBite — Base CSS
-   Design System synced with Figma: LastBite Foundations
-   ============================================================ */
-
 /* ---- CSS Variables (from Figma Design System) ---- */
 :root {
   /* === COLOR PALETTE === */
@@ -103,9 +98,7 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   margin-top: var(--space-3xl);
 }
 
-/* ============================================================
-   BUTTONS
-   ============================================================ */
+/*BUTTONS*/
 .btn {
   display: inline-flex;
   align-items: center;
@@ -173,9 +166,7 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   border-color: #fff;
 }
 
-/* ============================================================
-   NAVBAR
-   ============================================================ */
+/* Navbar */
 .navbar {
   position: fixed;
   top: 0;
@@ -266,9 +257,7 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   transition: all var(--transition);
 }
 
-/* ============================================================
-   HERO SECTION
-   ============================================================ */
+/* HERO SECTION */
 .hero {
   padding-top: calc(var(--navbar-height) + var(--space-4xl));
   padding-bottom: var(--space-4xl);
@@ -410,9 +399,7 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   white-space: nowrap;
 }
 
-/* ============================================================
-   HOW IT WORKS
-   ============================================================ */
+/* HOW IT WORKS */
 .how-it-works {
   padding: var(--space-4xl) 0;
   background: var(--color-bg);
@@ -476,9 +463,7 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   font-weight: 700;
 }
 
-/* ============================================================
-   FEATURED BAGS
-   ============================================================ */
+/* FEATURED BAGS */
 .featured-bags {
   padding: var(--space-4xl) 0;
   background: var(--color-surface);
@@ -539,9 +524,7 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   color: var(--color-accent);
 }
 
-/* ============================================================
-   ECO IMPACT SECTION
-   ============================================================ */
+/* ECO IMPACT SECTION */
 .eco-impact {
   padding: var(--space-4xl) 0;
   background: var(--color-bg);
@@ -585,9 +568,7 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
 .eco-stat__value { font-size: 1.5rem; font-weight: 800; color: var(--color-primary); }
 .eco-stat__label { font-size: 0.875rem; color: var(--color-text-muted); font-weight: 500; }
 
-/* ============================================================
-   CTA SECTION
-   ============================================================ */
+/* CTA SECTION */
 .cta-section {
   padding: var(--space-4xl) 0;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
@@ -613,9 +594,7 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
 }
 .cta-section__buttons { display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center; }
 
-/* ============================================================
-   FOOTER
-   ============================================================ */
+/* FOOTER */
 .footer {
   background: var(--color-bg-dark);
   color: rgba(247,244,236,0.8);
@@ -666,9 +645,7 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
 .footer .navbar__logo-text { color: rgba(255,255,255,0.9); }
 .footer .navbar__logo-accent { color: var(--color-primary-light); }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
+/* RESPONSIVE */
 @media (max-width: 1024px) {
   .hero__container { grid-template-columns: 1fr; text-align: center; }
   .hero__content { align-items: center; }
@@ -717,3 +694,39 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   .bags-grid { grid-template-columns: 1fr; }
   .cta-section__buttons { flex-direction: column; align-items: center; }
 }
+
+
+/* ===== Ikon Profil Merchant di Navbar ===== */
+
+.navbar__profile-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.navbar__profile-link:hover {
+  background: var(--color-primary-light);
+}
+
+.navbar__profile-icon {
+  width: 23px;
+  height: 23px;
+}
+
+.navbar__profile-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+

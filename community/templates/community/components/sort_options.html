@@ -1,0 +1,4 @@
+<!-- value dikirim ke view sebagai sort; label menjadi teks pilihan. -->
+{% for value, label in sort_options %}
+<option value="{{ value }}"{% if selected_sort == value %} selected{% endif %}>{{ label }}</option>
+{% endfor %}

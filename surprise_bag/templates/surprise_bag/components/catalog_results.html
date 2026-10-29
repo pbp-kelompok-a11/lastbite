@@ -1,0 +1,14 @@
+<div id="catalog-results" data-page="{{ page_obj.number }}">
+  <!-- teks jumlah hasil ikut dikirim saat AJAX, lalu disalin JS ke baris info (pola yang sama dengan sort-options di Community) -->
+  <template id="catalog-count-template">{% include 'surprise_bag/components/catalog_count.html' %}</template>
+  <div class="sb-bag-grid">
+    {% for bag in bags %}
+      {% include 'surprise_bag/components/bag_card.html' %}
+    {% empty %}
+      <p class="lb-empty">Tidak ada Surprise Bag yang cocok dengan filter.</p>
+    {% endfor %}
+  </div>
+  {% if page_obj.paginator.num_pages > 1 %}
+    {% include 'surprise_bag/components/pagination.html' %}
+  {% endif %}
+</div>

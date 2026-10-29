@@ -13,12 +13,12 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ===========================================================
 # SECURITY
-# ===========================================================
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-f4b0()y0xii)mw_3f-!i0p4v(m=ptv1u7wq14%(lsj%1a#a!08')
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 
 ALLOWED_HOSTS = [
     'fathir-atha-lastbite-pbp-kelompok-a11.pws.cs.ui.ac.id',
@@ -26,9 +26,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
 ]
 
-# ===========================================================
+
 # APPLICATIONS
-# ===========================================================
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -41,14 +40,13 @@ INSTALLED_APPS = [
     'main',
     'surprise_bag',
     'order',
-    # 'merchant_store',  # TODO: uncomment setelah branch merchant_store di-merge
+    'merchant_store',
     'community',
     'eco_impact',
 ]
 
-# ===========================================================
+
 # MIDDLEWARE
-# ===========================================================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Serve static files in production
@@ -62,9 +60,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'lastbite.urls'
 
-# ===========================================================
+
 # TEMPLATES
-# ===========================================================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -76,6 +73,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'accounts.context_processors.auth_modal_forms',
             ],
         },
     },
@@ -83,26 +81,31 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'lastbite.wsgi.application'
 
-# ===========================================================
 # DATABASE
-# ===========================================================
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fathir.atha',
-        'USER': 'fathir.atha',
-        'PASSWORD': 'Q00U2X1ruoFjnw4Nz7C6lxRuRuOvocRY',
-        'HOST': '10.119.106.139',
-        'PORT': '5432',
-        'OPTIONS': {
-            'options': '-c search_path=lastbite,public'
-        },
+if os.environ.get('PRODUCTION', 'False') == 'True':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ['DB_NAME'],
+            'USER': os.environ['DB_USER'],
+            'PASSWORD': os.environ['DB_PASSWORD'],
+            'HOST': os.environ['DB_HOST'],
+            'PORT': os.environ.get('DB_PORT', '5432'),
+            'OPTIONS': {
+                'options': f"-c search_path={os.environ.get('SCHEMA', 'lastbite')},public"
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'local.sqlite3',
+        }
+    }
 
-# ===========================================================
+
 # PASSWORD VALIDATION
-# ===========================================================
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -110,17 +113,15 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# ===========================================================
+
 # INTERNATIONALIZATION
-# ===========================================================
 LANGUAGE_CODE = 'id'
 TIME_ZONE = 'Asia/Jakarta'
 USE_I18N = True
 USE_TZ = True
 
-# ===========================================================
+
 # STATIC FILES
-# ===========================================================
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
@@ -129,29 +130,31 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# MEDIA
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 # WhiteNoise storage for production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# ===========================================================
+
 # DEFAULT PRIMARY KEY
-# ===========================================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'main:home'
 LOGOUT_REDIRECT_URL = 'main:home'
 
-# ===========================================================
+
 # CSRF TRUSTED ORIGINS (for PWS deployment)
-# ===========================================================
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     'CSRF_TRUSTED_ORIGINS',
     'http://localhost http://127.0.0.1'
 ).split()
 
-# ===========================================================
+
 # SECURITY SETTINGS (production only)
-# ===========================================================
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True

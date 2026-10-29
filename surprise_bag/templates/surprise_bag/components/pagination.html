@@ -1,0 +1,26 @@
+<nav class="sb-pagination" aria-label="Halaman katalog">
+  <p class="sb-pagination__summary">Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }} &middot; {{ page_obj.paginator.count }} Surprise Bag</p>
+  <ul class="sb-pagination__list">
+    {% if page_obj.has_previous %}
+    <li>
+      <a class="sb-page-link" href="?{{ page_query_prefix }}page={{ page_obj.previous_page_number }}" data-page-link="{{ page_obj.previous_page_number }}" aria-label="Halaman sebelumnya">&laquo; Sebelumnya</a>
+    </li>
+    {% endif %}
+    {% for number in page_numbers %}
+    <li>
+      {% if number == page_obj.paginator.ELLIPSIS %}
+      <span class="sb-page-link sb-page-link--ellipsis">{{ number }}</span>
+      {% elif number == page_obj.number %}
+      <span class="sb-page-link sb-page-link--current" aria-current="page" aria-label="Halaman {{ number }}" tabindex="-1">{{ number }}</span>
+      {% else %}
+      <a class="sb-page-link" href="?{{ page_query_prefix }}page={{ number }}" data-page-link="{{ number }}" aria-label="Halaman {{ number }}">{{ number }}</a>
+      {% endif %}
+    </li>
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <li>
+      <a class="sb-page-link" href="?{{ page_query_prefix }}page={{ page_obj.next_page_number }}" data-page-link="{{ page_obj.next_page_number }}" aria-label="Halaman berikutnya">Berikutnya &raquo;</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>

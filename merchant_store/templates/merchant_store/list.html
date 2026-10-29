@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static l10n %}
+
+{% block title %}Merchants — LastBite{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="{% static 'merchant_store/css/merchant_directory.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="md-page">
+
+  <header class="md-header">
+    <div>
+      <p class="md-eyebrow">Jelajahi sekitarmu</p>
+      <h1 class="md-title">Rekomendasi Toko</h1>
+      <p class="md-subtitle">Temukan merchant berkelanjutan dalam radius pilihanmu.</p>
+    </div>
+
+    {% if not user.is_authenticated %}
+      <a href="{% url 'accounts:register' %}?role=merchant" class="md-cta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Daftarkan tokomu
+      </a>
+    {% elif user.profile.role == 'merchant' %}
+      <a href="{% url 'merchant_store:create' %}" class="md-cta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Daftarkan tokomu
+      </a>
+    {% endif %}
+  </header>
+
+      <div id="store-directory" class="md-shell"
+        data-csrf="{{ csrf_token }}"
+        data-search-url="{% url 'merchant_store:api_search' %}"
+        data-geocode-url="{% url 'merchant_store:api_geocode' %}"
+        data-default-lat="{{ default_center.lat|unlocalize }}"
+        data-default-lng="{{ default_center.lng|unlocalize }}"
+        data-thumbs="{% static 'img/bento.png' %}|{% static 'img/croissant.png' %}">
+
+    <aside class="md-panel" aria-label="Pencarian toko">
+      <form id="md-search-form" class="md-search" role="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" id="md-q" class="md-search__input" placeholder="Cari nama toko atau alamat..." aria-label="Cari nama toko atau alamat" autocomplete="off">
+      </form>
+
+      <form id="md-location-form" class="md-location">
+        <label for="md-location" class="md-label">Lokasimu</label>
+        <div class="md-location__row">
+          <input type="text" id="md-location" class="md-input" placeholder="mis. Margonda, Depok" autocomplete="off">
+          <button type="submit" class="md-btn md-btn--solid">Cari</button>
+        </div>
+        <div class="md-location__row md-location__row--wrap">
+          <button type="button" id="md-use-location" class="md-btn md-btn--outline">📍 Gunakan lokasi saya</button>
+          <button type="button" id="md-clear-location" class="md-btn md-btn--ghost" hidden>Hapus lokasi</button>
+        </div>
+      </form>
+
+      <div class="md-radius">
+        <p class="md-label" id="md-radius-label">Radius jarak</p>
+        <div class="md-chips" role="group" aria-labelledby="md-radius-label">
+          {% for km in radius_choices %}
+          <button type="button" class="md-chip" data-radius="{{ km }}" aria-pressed="false">{{ km }} km</button>
+          {% endfor %}
+        </div>
+        <p class="md-hint">Pilih 1 km, 3 km, atau 5 km untuk menampilkan toko dalam jarak tersebut dari lokasimu. Klik lagi untuk menampilkan semua toko.</p>
+      </div>
+
+      <p id="md-status" class="md-status" role="status" aria-live="polite" hidden></p>
+      <ul id="md-list" class="md-list"></ul>
+    </aside>
+
+    <div class="md-mapbox">
+      <div id="md-map" class="md-map" role="region" aria-label="Peta lokasi toko"></div>
+      <div class="md-count" aria-live="polite">
+        <span id="md-count-num" class="md-count__num">0 merchant</span>
+        <span id="md-count-area" class="md-count__area">di semua area</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'merchant_store/js/wishlist.js' %}"></script>
+<script src="{% static 'merchant_store/js/directory.js' %}"></script>
+{% endblock %}

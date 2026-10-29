@@ -1,0 +1,229 @@
+<article id="comment-{{ comment.pk }}" class="community-comment" tabindex="-1">
+  <header class="community-comment__meta">
+    <div class="community-comment__author">
+      <strong>{{ comment.author.get_username }}</strong>
+      {% if comment.author.profile.role == 'merchant' %}
+        <span class="food-hack-card__badge food-hack-card__badge--merchant">Merchant</span>
+      {% endif %}
+      {% if comment.author_id == post.author_id %}
+        <span class="community-comment__owner">Penulis post</span>
+      {% endif %}
+    </div>
+    <time datetime="{{ comment.created_at|date:'c' }}">{{ comment.created_at|date:'j M Y, H:i' }}</time>
+  </header>
+
+  <!-- Balasan menampilkan nama penulis komentar induknya. -->
+  {% if comment.parent_id %}
+    <p class="community-comment__reply-to">Membalas @{{ comment.parent.author.get_username }}</p>
+  {% endif %}
+  <div class="community-comment__content">{{ comment.content|linebreaks }}</div>
+  <div class="community-comment__actions">
+    <!-- User yang diizinkan dapat memberi like dan membalas komentar. -->
+    {% if can_comment %}
+      <form method="post" action="{% url 'community:comment_like' post.pk comment.pk %}" data-comment-form="like" data-comment-id="{{ comment.pk }}">
+        {% csrf_token %}
+        <input type="hidden" name="feed" value="{{ comment_feed_query }}">
+        <button
+          type="submit"
+          class="community-comment-like{% if comment.has_liked %} community-comment-like--active{% endif %}"
+          aria-pressed="{{ comment.has_liked|yesno:'true,false' }}"
+          aria-label="Like komentar {{ comment.author.get_username }}"
+        >
+          {% include 'community/components/like_icon.html' %}
+          <span>{{ comment.like_count }}</span>
+        </button>
+      </form>
+
+      <button
+        type="button"
+        class="community-comment-action"
+        data-comment-dialog-open="reply-comment-{{ comment.pk }}"
+        aria-haspopup="dialog"
+        aria-controls="reply-comment-{{ comment.pk }}"
+      >{% include 'community/components/comment_icon.html' %} Balas</button>
+
+      <dialog
+        id="reply-comment-{{ comment.pk }}"
+        class="community-comment-dialog"
+        aria-labelledby="reply-title-{{ comment.pk }}"
+        data-comment-dialog
+        {% if replying_to_id == comment.pk %}
+          data-open-on-load="true"
+        {% endif %}
+      >
+        <header class="community-comment-dialog__header">
+          <h3 id="reply-title-{{ comment.pk }}">Balas @{{ comment.author.get_username }}</h3>
+          <button type="button" class="community-comment-dialog__close" data-comment-dialog-close aria-label="Tutup popup balasan">&times;</button>
+        </header>
+
+        <p class="community-comment-dialog__preview">{{ comment.content|truncatechars:160 }}</p>
+        <p class="community-comment-dialog__error" data-comment-dialog-status role="alert" hidden></p>
+
+        <form
+          method="post"
+          action="{% url 'community:comment_reply' post.pk comment.pk %}"
+          class="community-comment-form"
+          data-comment-form="reply"
+          data-comment-id="{{ comment.pk }}"
+        >
+          {% csrf_token %}
+          <input type="hidden" name="feed" value="{{ comment_feed_query }}">
+
+          <!-- Jika validasi gagal, gunakan form server beserta input dan pesan errornya. -->
+          {% if replying_to_id == comment.pk %}
+            {{ reply_form.non_field_errors }}
+            {{ reply_form.content.label_tag }}
+            {{ reply_form.content }}
+            {{ reply_form.content.errors }}
+          {% else %}
+            <label for="id_reply-{{ comment.pk }}-content">Balas @{{ comment.author.get_username }}</label>
+            <textarea
+              id="id_reply-{{ comment.pk }}-content"
+              name="reply-{{ comment.pk }}-content"
+              rows="2"
+              maxlength="2000"
+              required
+              placeholder="Tulis balasanmu di sini."
+            ></textarea>
+          {% endif %}
+          <div class="community-comment-dialog__actions">
+            <button type="button" class="btn btn--outline btn--sm" data-comment-dialog-close>Batal</button>
+            <button type="submit" class="btn btn--primary btn--sm">Kirim balasan</button>
+          </div>
+        </form>
+      </dialog>
+    {% elif not user.is_authenticated %}
+      <a class="community-comment-like" href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}%23comment-{{ comment.pk }}" aria-label="Login untuk like komentar {{ comment.author.get_username }}">
+        {% include 'community/components/like_icon.html' %}<span>{{ comment.like_count }}</span>
+      </a>
+      <a class="community-comment-link" href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}%23comment-{{ comment.pk }}">{% include 'community/components/comment_icon.html' %} Balas</a>
+    {% else %}
+      <span class="community-comment-like">{% include 'community/components/like_icon.html' %} {{ comment.like_count }}</span>
+    {% endif %}
+
+    <!-- Menu edit dan hapus hanya ditampilkan untuk penulis komentar. -->
+    {% if can_comment and user == comment.author %}
+      <div class="community-comment-menu">
+        <button
+          id="comment-menu-toggle-{{ comment.pk }}"
+          type="button"
+          class="community-comment-menu__toggle"
+          data-comment-menu-toggle
+          aria-expanded="false"
+          aria-controls="comment-menu-{{ comment.pk }}"
+          aria-label="Pilihan komentar"
+        >&#8943;</button>
+        <div id="comment-menu-{{ comment.pk }}" class="community-comment-menu__panel" data-comment-menu hidden>
+          <button
+            type="button"
+            class="community-comment-action"
+            data-comment-dialog-open="edit-comment-{{ comment.pk }}"
+            aria-haspopup="dialog"
+            aria-controls="edit-comment-{{ comment.pk }}"
+          >Edit komentar</button>
+          <button
+            type="button"
+            class="community-comment-action community-comment-action--danger"
+            data-comment-dialog-open="delete-comment-{{ comment.pk }}"
+            aria-haspopup="dialog"
+            aria-controls="delete-comment-{{ comment.pk }}"
+          >Hapus komentar</button>
+        </div>
+      </div>
+
+      <dialog
+        id="edit-comment-{{ comment.pk }}"
+        class="community-comment-dialog"
+        aria-labelledby="edit-title-{{ comment.pk }}"
+        data-comment-dialog
+        {% if editing_comment_id == comment.pk %}
+          data-open-on-load="true"
+        {% endif %}
+      >
+        <header class="community-comment-dialog__header">
+          <h3 id="edit-title-{{ comment.pk }}">Edit komentar</h3>
+          <button type="button" class="community-comment-dialog__close" data-comment-dialog-close aria-label="Tutup popup edit">&times;</button>
+        </header>
+
+        <p class="community-comment-dialog__error" data-comment-dialog-status role="alert" hidden></p>
+
+        <form
+          method="post"
+          action="{% url 'community:comment_edit' post.pk comment.pk %}"
+          class="community-comment-form"
+          data-comment-form="edit"
+          data-comment-id="{{ comment.pk }}"
+        >
+          {% csrf_token %}
+          <input type="hidden" name="feed" value="{{ comment_feed_query }}">
+
+          <!-- Saat edit gagal, pertahankan input dan tampilkan error dari form. -->
+          {% if editing_comment_id == comment.pk %}
+            {{ editing_form.non_field_errors }}
+            {{ editing_form.content.label_tag }}
+            {{ editing_form.content }}
+            {{ editing_form.content.errors }}
+          {% else %}
+            <label for="id_edit-{{ comment.pk }}-content">Edit komentar</label>
+            <textarea
+              id="id_edit-{{ comment.pk }}-content"
+              name="edit-{{ comment.pk }}-content"
+              rows="3"
+              maxlength="2000"
+              required
+            >{{ comment.content }}</textarea>
+          {% endif %}
+          <div class="community-comment-dialog__actions">
+            <button type="button" class="btn btn--outline btn--sm" data-comment-dialog-close>Batal</button>
+            <button type="submit" class="btn btn--primary btn--sm">Simpan komentar</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog
+        id="delete-comment-{{ comment.pk }}"
+        class="community-comment-dialog"
+        aria-labelledby="delete-title-{{ comment.pk }}"
+        data-comment-dialog
+      >
+        <header class="community-comment-dialog__header">
+          <h3 id="delete-title-{{ comment.pk }}">Hapus komentar?</h3>
+          <button type="button" class="community-comment-dialog__close" data-comment-dialog-close aria-label="Tutup popup hapus">&times;</button>
+        </header>
+
+        <p class="community-comment-dialog__preview">{{ comment.content|truncatechars:160 }}</p>
+        <p class="community-comment-dialog__error" data-comment-dialog-status role="alert" hidden></p>
+
+        <form
+          method="post"
+          action="{% url 'community:comment_delete' post.pk comment.pk %}"
+          data-comment-form="delete"
+          data-comment-id="{{ comment.pk }}"
+        >
+          {% csrf_token %}
+          <input type="hidden" name="feed" value="{{ comment_feed_query }}">
+          <p>Yakin ingin menghapus komentar ini? Balasan pengguna lain tetap tersimpan.</p>
+          <div class="community-comment-dialog__actions">
+            <button type="button" class="btn btn--outline btn--sm" data-comment-dialog-close>Batal</button>
+            <button type="submit" class="btn btn--danger-outline btn--sm">Ya, hapus komentar</button>
+          </div>
+        </form>
+      </dialog>
+    {% endif %}
+  </div>
+
+  <!-- Balasan memakai template ini lagi agar setiap tingkat memiliki tampilan yang sama. -->
+  {% if comment.children_for_display %}
+    <details id="comment-thread-{{ comment.pk }}" class="community-comment__replies" data-comment-thread>
+      <summary class="community-comment-thread-toggle">
+        <span class="community-comment-thread-toggle__closed">Lihat {{ comment.children_for_display|length }} balasan</span>
+        <span class="community-comment-thread-toggle__open">Sembunyikan balasan</span>
+      </summary>
+      <div>
+        {% for child in comment.children_for_display %}
+          {% include 'community/components/comment.html' with comment=child %}
+        {% endfor %}
+      </div>
+    </details>
+  {% endif %}
+</article>

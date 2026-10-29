@@ -1,0 +1,224 @@
+{% load static %}
+<div id="auth-overlay" class="auth-overlay" hidden aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="auth-overlay__backdrop" id="auth-overlay-backdrop"></div>
+
+  <div class="auth-modal">
+    <!-- ===== LEFT PANEL: Form Side ===== -->
+    <div class="auth-modal__left">
+      <button type="button" class="auth-modal__close" id="auth-modal-close" aria-label="Tutup modal">✕</button>
+
+      <div class="auth-modal__logo">
+        <span class="auth-modal__logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+        </span>
+        <span class="auth-modal__logo-text">LastBite</span>
+      </div>
+
+      <!-- ========== 1. LOGIN PANEL ========== -->
+      <div class="auth-panel is-active" id="auth-panel-login">
+        <p class="auth-modal__eyebrow">SELAMAT DATANG KEMBALI</p>
+        <h2 class="auth-modal__heading">Masuk ke LastBite</h2>
+        <p class="auth-modal__sub">Lanjutkan perjalanan baikmu hari ini.</p>
+
+        <div class="auth-errors" id="auth-login-errors" hidden></div>
+
+        <form method="post" action="{% url 'accounts:login' %}" class="auth-fields" id="auth-login-form">
+          {% csrf_token %}
+          <div class="auth-field">
+            <label class="auth-field__label" for="modal-login-username">Username</label>
+            <input class="auth-field__input" type="text" name="username" id="modal-login-username" placeholder="Masukkan username" required autocomplete="username">
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-field__label" for="modal-login-password">Kata sandi</label>
+            <input class="auth-field__input" type="password" name="password" id="modal-login-password" placeholder="Minimal 8 karakter" required autocomplete="current-password">
+          </div>
+
+          <div class="auth-checkbox-row">
+            <label class="auth-checkbox-label">
+              <input type="checkbox" name="remember" id="modal-login-remember"> Ingat saya
+            </label>
+            <button type="button" class="auth-forgot" id="auth-to-forgot-btn">Lupa kata sandi?</button>
+          </div>
+
+          <button type="submit" class="auth-submit" id="modal-login-submit">Masuk</button>
+        </form>
+
+        <p class="auth-switch">
+          Belum punya akun? <button type="button" id="auth-to-register-btn">Daftar gratis</button>
+        </p>
+      </div>
+
+      <!-- ========== 2. REGISTER PANEL ========== -->
+      <div class="auth-panel" id="auth-panel-register">
+        <p class="auth-modal__eyebrow">MULAI BERDAMPAK</p>
+        <h2 class="auth-modal__heading">Buat akun baru</h2>
+        <p class="auth-modal__sub">Pilih peranmu dan bergabung dengan gerakan penyelamatan makanan.</p>
+
+        <!-- Customer & Merchant Role Buttons -->
+        <div class="auth-role-tabs" role="group" aria-label="Pilih peran">
+          <button type="button" class="auth-role-tab is-active" id="modal-tab-customer" data-role="customer" aria-pressed="true">
+            <span class="auth-role-tab__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7"/>
+              </svg>
+            </span>
+            <span>
+              <span class="auth-role-tab__label">Customer</span>
+              <span class="auth-role-tab__sub">Temukan &amp; pesan makanan</span>
+            </span>
+          </button>
+          <button type="button" class="auth-role-tab" id="modal-tab-merchant" data-role="merchant" aria-pressed="false">
+            <span class="auth-role-tab__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </span>
+            <span>
+              <span class="auth-role-tab__label">Merchant</span>
+              <span class="auth-role-tab__sub">Jual makanan surplus</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="auth-errors" id="auth-register-errors" hidden></div>
+
+        <form method="post" action="{% url 'accounts:register' %}" class="auth-fields" id="auth-register-form">
+          {% csrf_token %}
+          <input type="hidden" name="role" id="modal-register-role" value="customer">
+
+          <div class="auth-field">
+            <label class="auth-field__label" for="modal-register-fullname">Nama lengkap</label>
+            <input class="auth-field__input" type="text" name="nama_lengkap" id="modal-register-fullname" placeholder="[Nama Lengkap]" required autocomplete="name">
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-field__label" for="modal-register-username">Username</label>
+            <input class="auth-field__input" type="text" name="username" id="modal-register-username" placeholder="Username" required autocomplete="username">
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-field__label" for="modal-register-email">Email</label>
+            <input class="auth-field__input" type="email" name="email" id="modal-register-email" placeholder="nama@email.com" required autocomplete="email">
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-field__label" for="modal-register-password1">Kata sandi</label>
+            <input class="auth-field__input" type="password" name="password1" id="modal-register-password1" placeholder="Minimal 8 karakter" required autocomplete="new-password">
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-field__label" for="modal-register-password2">Konfirmasi kata sandi</label>
+            <input class="auth-field__input" type="password" name="password2" id="modal-register-password2" placeholder="Ulangi kata sandi" required autocomplete="new-password">
+          </div>
+
+          <button type="submit" class="auth-submit" id="modal-register-submit">Daftar sebagai Customer</button>
+        </form>
+
+        <p class="auth-switch">
+          Sudah punya akun? <button type="button" id="auth-to-login-btn">Masuk</button>
+        </p>
+      </div>
+
+      <!-- ========== 3. FORGOT PASSWORD: STEP 1 (EMAIL + USER) ========== -->
+      <div class="auth-panel" id="auth-panel-forgot">
+        <div class="auth-reset-steps">
+          <span class="auth-reset-step auth-reset-step--active">1. Verifikasi Akun</span>
+          <span class="auth-reset-step-arrow">→</span>
+          <span class="auth-reset-step">2. Password Baru</span>
+        </div>
+
+        <p class="auth-modal__eyebrow">LUPA KATA SANDI</p>
+        <h2 class="auth-modal__heading">Reset kata sandi</h2>
+        <p class="auth-modal__sub">Masukkan email dan username akun LastBite kamu untuk verifikasi identitas.</p>
+
+        <div class="auth-errors" id="auth-forgot-errors" hidden></div>
+
+        <form method="post" action="{% url 'accounts:password_reset' %}" class="auth-fields" id="auth-forgot-form">
+          {% csrf_token %}
+          <div class="auth-field">
+            <label class="auth-field__label" for="modal-forgot-email">Email terdaftar</label>
+            <input class="auth-field__input" type="email" name="email" id="modal-forgot-email" placeholder="nama@email.com" required autocomplete="email">
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-field__label" for="modal-forgot-user">Username</label>
+            <input class="auth-field__input" type="text" name="username" id="modal-forgot-user" placeholder="Username akun kamu" required autocomplete="username">
+          </div>
+
+          <button type="submit" class="auth-submit" id="modal-forgot-submit">Verifikasi &amp; Lanjut</button>
+        </form>
+
+        <p class="auth-switch">
+          Ingat kata sandimu? <button type="button" id="auth-forgot-back-btn">Kembali masuk</button>
+        </p>
+      </div>
+
+      <!-- ========== 4. FORGOT PASSWORD: STEP 2 (FORM PASSWORD BARU + SYARAT) ========== -->
+      <div class="auth-panel" id="auth-panel-newpass">
+        <div class="auth-reset-steps">
+          <span class="auth-reset-step" style="color: #2d6a4f;">✓ Akun Terverifikasi</span>
+          <span class="auth-reset-step-arrow">→</span>
+          <span class="auth-reset-step auth-reset-step--active">2. Password Baru</span>
+        </div>
+
+        <p class="auth-modal__eyebrow">ATUR ULANG KATA SANDI</p>
+        <h2 class="auth-modal__heading">Buat kata sandi baru</h2>
+        <p class="auth-modal__sub">
+          Atur kata sandi baru untuk akun <strong id="reset-verified-user" style="color: #111827;"></strong>.
+        </p>
+
+        <!-- Kotak Syarat Password -->
+        <div class="auth-password-requirements">
+          <p class="auth-password-requirements__title">Syarat Kata Sandi:</p>
+          <ul class="auth-password-requirements__list">
+            <li>Minimal 8 karakter</li>
+            <li>Tidak boleh mirip dengan username atau email</li>
+            <li>Tidak boleh menggunakan kata sandi umum (misal: password123)</li>
+            <li>Tidak boleh seluruhnya berupa angka</li>
+          </ul>
+        </div>
+
+        <div class="auth-errors" id="auth-newpass-errors" hidden></div>
+
+        <form method="post" action="{% url 'accounts:password_reset_confirm' %}" class="auth-fields" id="auth-newpass-form">
+          {% csrf_token %}
+          <div class="auth-field">
+            <label class="auth-field__label" for="modal-newpass-input">Kata sandi baru</label>
+            <input class="auth-field__input" type="password" name="password" id="modal-newpass-input" placeholder="Minimal 8 karakter" required autocomplete="new-password">
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-field__label" for="modal-newpass-confirm">Konfirmasi kata sandi baru</label>
+            <input class="auth-field__input" type="password" name="password_confirm" id="modal-newpass-confirm" placeholder="Ulangi kata sandi baru" required autocomplete="new-password">
+          </div>
+
+          <button type="submit" class="auth-submit" id="modal-newpass-submit">Simpan Kata Sandi Baru</button>
+        </form>
+
+        <p class="auth-switch">
+          <button type="button" id="auth-newpass-back-btn">Batal &amp; kembali ke masuk</button>
+        </p>
+      </div>
+
+    </div>
+
+    <!-- ===== RIGHT PANEL: Brand Side ===== -->
+    <div class="auth-modal__right">
+      <span class="auth-modal__badge">🌿 SMALL ACTION, BIG IMPACT</span>
+      <h3 class="auth-modal__quote">One less meal wasted today.</h3>
+      <p class="auth-modal__quote-desc">
+        Setiap Surprise Bag yang kamu selamatkan membantu bumi bernapas sedikit lebih lega.
+      </p>
+      <div class="auth-modal__divider"></div>
+      <span class="auth-modal__stat-value">12.430+</span>
+      <span class="auth-modal__stat-label">makanan telah diselamatkan komunitas LastBite</span>
+    </div>
+  </div>
+</div>

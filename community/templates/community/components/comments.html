@@ -1,0 +1,54 @@
+<section
+  id="comments"
+  class="community-comments"
+  aria-labelledby="comments-title"
+  data-post-id="{{ post.pk }}"
+  data-comment-count="{{ comments|length }}"
+  data-latest-comment="{{ latest_comment_id }}"
+>
+  <div class="community-comments__heading">
+    <h2 id="comments-title" tabindex="-1">Komentar <span class="community-comments__count">{{ comments|length }}</span></h2>
+    <p>Berbagi pengalaman, saling memberi ide.</p>
+  </div>
+
+  <!-- Form hanya tersedia untuk user yang diizinkan berkomentar. -->
+  {% if can_comment %}
+    <form
+      id="comment-form"
+      method="post"
+      action="{% url 'community:comment_create' post.pk %}"
+      class="community-comment-form"
+      data-comment-form="create"
+    >
+      {% csrf_token %}
+      <input type="hidden" name="feed" value="{{ comment_feed_query }}">
+      {{ comment_form.non_field_errors }}
+      {{ comment_form.content.label_tag }}
+      {{ comment_form.content }}
+      {{ comment_form.content.errors }}
+      <div class="community-comment-form__footer">
+        <span>Maksimal 2.000 karakter.</span>
+        <button type="submit" class="btn btn--primary btn--md">Kirim komentar</button>
+      </div>
+    </form>
+
+  {% elif not user.is_authenticated %}
+    <!-- Tamu mendapat tautan login; akun tanpa izin mendapat pemberitahuan. -->
+    <p id="comment-form" class="community-comments__notice" tabindex="-1"><a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}%23comments">Login</a> untuk ikut berkomentar.</p>
+  {% else %}
+    <p id="comment-form" class="community-comments__notice" tabindex="-1">Komentar tersedia untuk akun Customer dan Merchant.</p>
+  {% endif %}
+
+  <p class="community-comment-status" data-comment-status role="status" hidden></p>
+
+  <div class="community-comments__list">
+    <!-- Mulai dari komentar utama; balasannya ditampilkan oleh comment.html. -->
+    {% for comment in root_comments %}
+      {% include 'community/components/comment.html' with comment=comment %}
+
+    {% empty %}
+      <!-- Pesan ini tampil jika belum ada komentar. -->
+      <p class="community-comments__empty">Belum ada komentar. Jadilah yang pertama berbagi pendapat.</p>
+    {% endfor %}
+  </div>
+</section>

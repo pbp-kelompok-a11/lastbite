@@ -1,0 +1,31 @@
+<nav class="community-pagination" aria-label="Halaman postingan">
+  <p class="community-pagination__summary">Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }} &middot; {{ page_obj.paginator.count }} postingan</p>
+  <ul class="community-pagination__list">
+    <li><span class="community-pagination__label">Pages</span></li>
+
+    <!-- Tautan halaman tetap membawa filter aktif lewat filter_query. -->
+    {% if page_obj.has_previous %}
+      <li>
+        <a class="community-page" href="?{{ filter_query }}&amp;page={{ page_obj.previous_page_number }}" data-page-link="{{ page_obj.previous_page_number }}" aria-label="Halaman sebelumnya">&laquo; Sebelumnya</a>
+      </li>
+    {% endif %}
+
+    <!-- Daftar nomor dari view bisa berisi elipsis, halaman aktif, atau tautan halaman lain. -->
+    {% for number in page_numbers %}
+      <li>
+        {% if number == page_obj.paginator.ELLIPSIS %}
+          <span class="community-page community-page--ellipsis">{{ number }}</span>
+        {% elif number == page_obj.number %}
+          <span class="community-page community-page--current" aria-current="page" aria-label="Halaman {{ number }}" tabindex="-1">{{ number }}</span>
+        {% else %}
+          <a class="community-page" href="?{{ filter_query }}&amp;page={{ number }}" data-page-link="{{ number }}" aria-label="Halaman {{ number }}">{{ number }}</a>
+        {% endif %}
+      </li>
+    {% endfor %}
+    {% if page_obj.has_next %}
+      <li>
+        <a class="community-page" href="?{{ filter_query }}&amp;page={{ page_obj.next_page_number }}" data-page-link="{{ page_obj.next_page_number }}" aria-label="Halaman berikutnya">Berikutnya &raquo;</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>

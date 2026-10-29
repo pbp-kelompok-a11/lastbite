@@ -33,3 +33,9 @@ build/
 
 # Media files (user uploads)
 media/
+.test-deps/
+.local-qa/
+
+# Panduan
+panduan_tk.txt
+rubrik_tk.txt
