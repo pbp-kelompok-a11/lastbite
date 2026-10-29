@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="lb-home">
+<div class="lb-home" data-csrf="{{ csrf_token }}">
 
   <!-- ========== HERO ========== -->
   <section class="lb-hero">
@@ -169,4 +169,8 @@
   </section>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'merchant_store/js/wishlist.js' %}"></script>
 {% endblock %}

@@ -4,8 +4,9 @@ from django.db.models import DecimalField, F, Sum
 from django.shortcuts import render
 from django.utils import timezone
 
+from accounts.permissions import is_customer
 from eco_impact.models import ImpactLog
-from surprise_bag.models import SurpriseBag
+from surprise_bag.models import BagWishlist, SurpriseBag
 
 # asumsi yang sama dengan ImpactLog.carbon_prevented_kg di modul Eco Impact
 AVG_FOOD_WEIGHT_KG = Decimal('0.3')
@@ -37,7 +38,7 @@ def home(request):
     # 3 surprise bag aktif dengan stok paling sedikit -> bagian "Hampir habis"
     featured_bags = (
         SurpriseBag.objects.filter(is_active=True, stock__gt=0)
-        .select_related('merchant')
+        .select_related('merchant', 'merchant__merchant_store')
         .order_by('stock', '-created_at')[:3]
     )
     context = {
@@ -45,5 +46,7 @@ def home(request):
         'impact': _community_impact(),
         # total porsi yang pernah diselamatkan, untuk kartu kecil di foto hero
         'total_portions': ImpactLog.objects.aggregate(total=Sum('quantity'))['total'] or 0,
+        'can_wishlist': is_customer(request.user),
+        'wishlisted_ids': BagWishlist.bag_ids_for(request.user),
     }
     return render(request, 'main/home.html', context)

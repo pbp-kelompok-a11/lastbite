@@ -71,7 +71,12 @@
   box-shadow: 0 8px 30px rgba(28, 68, 51, 0.05);
   transition: transform var(--transition), box-shadow var(--transition);
 }
-.lb-bag-card:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(28, 68, 51, 0.1); }
+
+.lb-bag-card-wrap { position: relative; display: flex; transition: transform var(--transition); }
+.lb-bag-card-wrap > .lb-bag-card { flex: 1; }
+.lb-bag-card-wrap:hover { transform: translateY(-3px); }
+.lb-bag-card-wrap:hover > .lb-bag-card { box-shadow: 0 14px 34px rgba(28, 68, 51, 0.1); }
+
 .lb-bag-card--soldout { opacity: 0.6; }
 .lb-bag-card__media { position: relative; height: 190px; overflow: hidden; background: var(--lb-pill-bg); }
 .lb-bag-card__media img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -131,6 +136,29 @@
 }
 .lb-bag-card__stock { color: #ce6646; }
 .lb-bag-card__pickup { color: var(--lb-green); }
+
+/* Tombol wishlist di kartu (konsepnya sama dengan wishlist toko) */
+.lb-bag-card__heart {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--lb-ink);
+  box-shadow: 0 4px 10px rgba(18, 57, 45, 0.15);
+  transition: transform var(--transition);
+}
+.lb-bag-card__heart:hover { transform: scale(1.08); }
+.lb-bag-card__heart[data-wishlisted="true"] { color: #e0623f; }
+.lb-bag-card__heart:disabled { opacity: 0.6; cursor: wait; }
+.lb-bag-card__heart:focus-visible { outline: 3px solid var(--lb-green); outline-offset: 2px; }
+
 
 @media (max-width: 640px) {
   .lb-container { padding: 0 16px; }

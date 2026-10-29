@@ -135,3 +135,27 @@ class SurpriseBag(models.Model):
             'is_available': self.is_available,
             'detail_url': self.get_absolute_url(),
         }
+
+
+class BagWishlist(models.Model):
+    """Relasi Surprise Bag favorit (wishlist) milik seorang Customer — konsepnya sama dengan StoreWishlist."""
+
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bag_wishlist_items')
+    bag = models.ForeignKey(SurpriseBag, on_delete=models.CASCADE, related_name='wishlisted_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['customer', 'bag'], name='surprise_bag_unique_wishlist'),
+        ]
+
+    def __str__(self):
+        return f'{self.customer.get_username()} ♥ {self.bag.name}'
+
+    @classmethod
+    def bag_ids_for(cls, user):
+        """ID Surprise Bag yang ada di wishlist user (kosong untuk guest)."""
+        if not user.is_authenticated:
+            return set()
+        return set(cls.objects.filter(customer=user).values_list('bag_id', flat=True))

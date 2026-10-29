@@ -16,4 +16,5 @@ urlpatterns = [
     path('api/<uuid:pk>/', views.bag_api, name='bag_api'),
     path('api/<uuid:pk>/stock/', views.update_stock_api, name='update_stock_api'),
     path('api/<uuid:pk>/toggle/', views.toggle_active_api, name='toggle_active_api'),
+    path('<uuid:pk>/wishlist/toggle/', views.wishlist_toggle, name='wishlist_toggle'),
 ]
