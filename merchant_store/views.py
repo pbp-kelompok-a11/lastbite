@@ -22,6 +22,7 @@ from .services import (
     geocode_address,
     haversine_km,
 )
+from surprise_bag.models import BagWishlist
 
 
 # Titik awal peta: kampus UI Depok
@@ -712,10 +713,23 @@ def wishlist_list(request):
             }
         )
 
+    # wishlist Surprise Bag (modul Surprise Bag) — hanya paket yang masih aktif
+    bags = [
+        item.bag
+        for item in BagWishlist.objects
+        .filter(customer=request.user, bag__is_active=True)
+        .select_related('bag__merchant__merchant_store')
+    ]
+
     return render(
         request,
         'merchant_store/wishlist.html',
-        {'entries': stores},
+        {
+            'entries': stores,
+            'bags': bags,
+            'can_wishlist': True,
+            'wishlisted_ids': {bag.pk for bag in bags},
+        },
     )
 
 
