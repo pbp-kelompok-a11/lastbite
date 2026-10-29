@@ -55,13 +55,25 @@ def register(request):
 
 @login_required
 def profile(request):
-    # Merchant Membuka profil Merchant
-    if not is_merchant(request.user):
+    # Customer dan Merchant sama-sama bisa membuka profil
+    user_profile = getattr(request.user, 'profile', None)
+    if user_profile is None:
         return redirect('main:home')
-
-    user_profile = request.user.profile
+    if request.method == 'POST':
+        photo = request.FILES.get('photo')
 
     if request.method == 'POST':
+        # Hapus foto profil
+        if request.POST.get('action') == 'delete_photo':
+            if user_profile.photo:
+                user_profile.photo.delete(save=False)  # hapus file dari penyimpanan
+                user_profile.photo = None
+                user_profile.save(update_fields=['photo'])
+                messages.success(request, 'Foto profil berhasil dihapus.')
+            else:
+                messages.info(request, 'Kamu belum memiliki foto profil.')
+            return redirect('accounts:profile')
+
         photo = request.FILES.get('photo')
 
         if not photo:

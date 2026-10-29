@@ -2,8 +2,8 @@
 
 .merchant-profile {
   max-width: 900px;
-  margin: 40px auto;
-  padding: 0 20px 40px;
+  margin: 0 auto;
+  padding: calc(var(--navbar-height) + 40px) 20px 40px;
 }
 
 .merchant-profile__heading {
@@ -78,4 +78,24 @@
   display: flex;
   justify-content: flex-start;
   margin-top: 24px;
+}
+
+/* ===== Tombol Hapus Foto ===== */
+
+.merchant-profile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.merchant-profile__delete-btn {
+  border-color: #e3b5aa;
+  color: #b3402a;
+}
+
+.merchant-profile__delete-btn:hover {
+  border-color: #b3402a;
+  background: #fdf0ec;
+  color: #8f2f1d;
 }
