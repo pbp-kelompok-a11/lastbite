@@ -13,9 +13,9 @@
 
   <p class="merchant-profile__description">
     {% if user.profile.role == 'merchant' %}
-      Kelola foto profil dan toko mitra LastBite kamu.
+      Kelola data diri, foto profil, dan toko mitra LastBite kamu.
     {% else %}
-      Kelola foto profil akun LastBite kamu.
+      Kelola data diri dan foto profil akun LastBite kamu.
     {% endif %}
   </p>
 
@@ -29,7 +29,7 @@
       {% endif %}
     </div>
 
-    <h2>{{ user.username }}</h2>
+    <h2>{{ user.get_full_name|default:user.username }}</h2>
     <p>{{ user.profile.get_role_display }} LastBite</p>
 
     <form method="post"
@@ -63,19 +63,67 @@
     </form>
   </div>
 
+  <div class="merchant-profile__card">
+    <h2>Data Diri</h2>
+    <p>Informasi akun pribadi kamu. Username digunakan untuk masuk ke LastBite.</p>
+
+    <dl class="merchant-profile__summary">
+      <div><dt>Nama lengkap</dt><dd>{{ user.get_full_name|default:'Belum diisi' }}</dd></div>
+      <div><dt>Username</dt><dd>{{ user.username }}</dd></div>
+      <div><dt>Email</dt><dd>{{ user.email|default:'Belum diisi' }}</dd></div>
+    </dl>
+    <div class="merchant-profile__actions">
+      <button type="button" class="btn btn--primary btn--md" data-profile-open="profile-edit-dialog" aria-haspopup="dialog">Edit</button>
+      <button type="button" class="btn btn--outline btn--md" data-profile-open="profile-password-dialog" aria-haspopup="dialog">Ubah Password</button>
+    </div>
+  </div>
+
+  <dialog id="profile-edit-dialog" class="profile-dialog" aria-labelledby="profile-edit-title"{% if open_dialog == 'profile-edit-dialog' %} data-reopen{% endif %}>
+    <h2 id="profile-edit-title">Edit Data Diri</h2>
+    <p>Masukkan password saat ini untuk menyimpan perubahan.</p>
+    <form method="post" class="merchant-profile__details">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_details">
+      {% include 'accounts/profile_fields.html' with form=profile_form %}
+      <div class="merchant-profile__actions">
+        <button type="button" class="btn btn--outline btn--md" data-profile-close>Batal</button>
+        <button type="submit" class="btn btn--primary btn--md">Simpan Perubahan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="profile-password-dialog" class="profile-dialog" aria-labelledby="profile-password-title"{% if open_dialog == 'profile-password-dialog' %} data-reopen{% endif %}>
+    <h2 id="profile-password-title">Ubah Password</h2>
+    <p>Konfirmasi password lama, lalu masukkan password baru yang kuat.</p>
+    <form method="post" class="merchant-profile__details">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="change_password">
+      {% include 'accounts/profile_fields.html' with form=password_form %}
+      <div class="merchant-profile__actions">
+        <button type="button" class="btn btn--outline btn--md" data-profile-close>Batal</button>
+        <button type="submit" class="btn btn--primary btn--md">Ubah Password</button>
+      </div>
+    </form>
+  </dialog>
+
   {% if user.profile.role == 'merchant' %}
   <div class="merchant-profile__card">
     <h2>Toko Saya</h2>
 
-    <p>
-      Kelola informasi toko, alamat, nomor telepon,
-      jam operasional, dan status toko kamu.
-    </p>
-
+    {% if user.merchant_store %}
+    <h3>{{ user.merchant_store.name }}</h3>
+    <p>{{ user.merchant_store.address }}</p>
     <a href="{% url 'merchant_store:my_store' %}"
       class="btn btn--primary btn--md">
-      Buka Toko Saya
+      Kelola Toko
     </a>
+    {% else %}
+    <p>Akun merchant kamu sudah aktif. Lengkapi profil toko agar pelanggan bisa mengenal usahamu. Satu akun merchant terhubung ke satu toko.</p>
+    <a href="{% url 'merchant_store:create' %}"
+      class="btn btn--primary btn--md">
+      Lengkapi Profil Toko
+    </a>
+    {% endif %}
   </div>
   {% endif %}
 
@@ -89,4 +137,8 @@
     </button>
   </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'accounts/js/profile.js' %}"></script>
 {% endblock %}
