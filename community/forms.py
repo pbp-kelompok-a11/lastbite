@@ -13,50 +13,74 @@ class FoodHackForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'Contoh: Cara menyimpan roti surplus'}),
             'content': forms.Textarea(attrs={
-                'rows': 8, 'placeholder': 'Ceritakan tips dan langkah-langkahnya di sini.',
+                'rows': 8,
+                'placeholder': 'Ceritakan tips dan langkah-langkahnya di sini.',
             }),
         }
 
 
 class ReviewForm(forms.ModelForm):
+    # Ubah nilai rating dari teks menjadi angka.
     rating = forms.TypedChoiceField(
         choices=[(number, f'{number} bintang') for number in range(1, 6)],
-        coerce=int, widget=forms.RadioSelect, label='Bagaimana pengalamanmu?',
+        coerce=int,
+        widget=forms.RadioSelect,
+        label='Bagaimana pengalamanmu?',
         error_messages={'required': 'Pilih rating bintang terlebih dahulu.'},
     )
 
     class Meta:
         model = CommunityPost
         fields = ['related_order', 'rating', 'content']
-        labels = {'related_order': 'Pesanan yang diulas', 'content': 'Ceritakan pengalamanmu'}
+        labels = {
+            'related_order': 'Pesanan yang diulas',
+            'content': 'Ceritakan pengalamanmu',
+        }
         widgets = {
             'content': forms.Textarea(attrs={
-                'rows': 6, 'placeholder': 'Bagaimana rasa, porsi, dan kondisi makanan yang kamu terima?',
+                'rows': 6,
+                'placeholder': 'Bagaimana rasa, porsi, dan kondisi makanan yang kamu terima?',
             }),
         }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['related_order'].required = True
-        orders = Order.objects.none()
-        if user is not None:
-            orders = Order.objects.filter(
-                customer=user, status=Order.Status.COMPLETED,
-            ).exclude(
-                community_posts__post_type=CommunityPost.PostType.REVIEW,
-            ).select_related('surprise_bag__merchant')
-        self.fields['related_order'].queryset = orders
-        self.fields['related_order'].label_from_instance = lambda order: (
+
+        # Batasi pilihan pesanan berdasarkan user yang membuka form.
+        order_field = self.fields['related_order']
+        order_field.required = True
+        order_field.queryset = self.get_reviewable_orders(user)
+        order_field.label_from_instance = self.format_order_label
+
+    @staticmethod
+    def get_reviewable_orders(user):
+        if user is None:
+            return Order.objects.none()
+
+        # Ambil pesanan selesai yang belum diulas.
+        return (
+            Order.objects.filter(customer=user, status=Order.Status.COMPLETED)
+            .exclude(community_posts__post_type=CommunityPost.PostType.REVIEW)
+            .select_related('surprise_bag__merchant')
+        )
+
+    @staticmethod
+    def format_order_label(order):
+        # Tanggal dan ID membedakan pesanan dengan makanan yang sama.
+        return (
             f'{order.food_name} | {order.surprise_bag.merchant_name} | '
             f'{order.pickup_date:%d/%m/%Y} | {str(order.pk)[:8]}'
         )
 
     def clean(self):
-        cleaned = super().clean()
-        order = cleaned.get('related_order')
+        cleaned_data = super().clean()
+        order = cleaned_data.get('related_order')
+
+        # Buat judul otomatis dari nama makanan.
         if order:
             self.instance.title = f'Review {order.food_name}'
-        return cleaned
+
+        return cleaned_data
 
 
 class ReviewReplyForm(forms.ModelForm):
@@ -66,7 +90,8 @@ class ReviewReplyForm(forms.ModelForm):
         labels = {'content': 'Balasan Merchant'}
         widgets = {
             'content': forms.Textarea(attrs={
-                'rows': 4, 'maxlength': 2000,
+                'rows': 4,
+                'maxlength': 2000,
                 'placeholder': 'Tanggapi pengalaman Customer dengan ramah.',
             }),
         }
@@ -79,7 +104,8 @@ class CommunityCommentForm(forms.ModelForm):
         labels = {'content': 'Komentar'}
         widgets = {
             'content': forms.Textarea(attrs={
-                'rows': 3, 'maxlength': 2000,
+                'rows': 3,
+                'maxlength': 2000,
                 'placeholder': 'Bagikan pendapat atau pengalamanmu tentang tips ini.',
             }),
         }

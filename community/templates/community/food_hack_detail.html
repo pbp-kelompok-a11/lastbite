@@ -2,44 +2,52 @@
 {% load static %}
 
 {% block title %}{{ post.title }} — LastBite Community{% endblock %}
+
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'community/css/community.css' %}">
+  <link rel="stylesheet" href="{% static 'community/css/community.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="community section-container">
-  <a class="community-back" href="{{ back_url }}">
-    <svg class="community-back__icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m12 19-7-7 7-7M5 12h14" />
-    </svg>
-    <span>Kembali ke Community</span>
-  </a>
-  <article class="community-detail">
-    <header>
-      <span class="food-hack-card__badge">{{ post.get_post_type_display }}</span>
-      {% if post.author.profile.role == 'merchant' %}
-      <span class="food-hack-card__badge food-hack-card__badge--merchant">Merchant</span>
+  <div class="community section-container">
+    <a class="community-back" href="{{ back_url }}">
+      <svg class="community-back__icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m12 19-7-7 7-7M5 12h14" />
+      </svg>
+      <span>Kembali ke Community</span>
+    </a>
+    <article class="community-detail">
+      <header>
+        <span class="food-hack-card__badge">{{ post.get_post_type_display }}</span>
+
+        <!-- Badge Merchant mengikuti peran penulis postingan. -->
+        {% if post.author.profile.role == 'merchant' %}
+          <span class="food-hack-card__badge food-hack-card__badge--merchant">Merchant</span>
+        {% endif %}
+        <h1>{{ post.title }}</h1>
+        <div class="community-detail__meta">
+          <span>Oleh {{ post.author.get_username }}</span>
+          <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:'j M Y' }}</time>
+        </div>
+      </header>
+
+      <div class="community-detail__content">{{ post.content|linebreaks }}</div>
+      {% include 'community/components/food_hack_reactions.html' %}
+
+      <!-- Tombol edit dan hapus hanya tampil jika user berhak mengelola postingan. -->
+      {% if can_manage_post %}
+        <nav class="community-post-actions" aria-label="Kelola Food Hack">
+          <a class="btn btn--outline btn--md" href="{% url 'community:post_edit' post.pk %}">Edit Food Hack</a>
+          <a class="btn btn--danger-outline btn--md" href="{% url 'community:post_delete' post.pk %}">Hapus Food Hack</a>
+        </nav>
       {% endif %}
-      <h1>{{ post.title }}</h1>
-      <div class="community-detail__meta">
-        <span>Oleh {{ post.author.get_username }}</span>
-        <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:'j M Y' }}</time>
-      </div>
-    </header>
-    <div class="community-detail__content">{{ post.content|linebreaks }}</div>
-    {% include 'community/components/food_hack_reactions.html' %}
-    {% if can_manage_post %}
-    <nav class="community-post-actions" aria-label="Kelola Food Hack">
-      <a class="btn btn--outline btn--md" href="{% url 'community:post_edit' post.pk %}">Edit Food Hack</a>
-      <a class="btn btn--danger-outline btn--md" href="{% url 'community:post_delete' post.pk %}">Hapus Food Hack</a>
-    </nav>
-    {% endif %}
-  </article>
-  {% include 'community/components/comments.html' %}
-</div>
+    </article>
+
+    <!-- Bagian komentar memuat form dan daftar balasan. -->
+    {% include 'community/components/comments.html' %}
+  </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'community/js/like.js' %}"></script>
-<script src="{% static 'community/js/comments.js' %}"></script>
+  <script src="{% static 'community/js/like.js' %}"></script>
+  <script src="{% static 'community/js/comments.js' %}"></script>
 {% endblock %}
