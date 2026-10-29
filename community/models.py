@@ -36,6 +36,7 @@ class CommunityPost(models.Model):
 
     class Meta:
         ordering = ['-created_at', '-pk']
+        # Satu pesanan hanya boleh diulas sekali.
         constraints = [
             models.UniqueConstraint(
                 fields=['related_order'], condition=models.Q(post_type='review'),
@@ -48,34 +49,52 @@ class CommunityPost(models.Model):
 
     @property
     def is_verified_purchase(self):
-        return bool(
-            self.post_type == self.PostType.REVIEW and self.related_order_id
-            and self.related_order.status == 'completed'
-            and self.related_order.customer_id == self.author_id
-        )
+        # Pesanan harus selesai dan milik penulis review.
+        if self.post_type != self.PostType.REVIEW:
+            return False
+        if not self.related_order_id:
+            return False
+
+        order = self.related_order
+        return order.status == 'completed' and order.customer_id == self.author_id
 
     def clean(self):
         super().clean()
         errors = {}
-        for field in ('title', 'content'):
-            value = getattr(self, field)
-            if not value or not value.strip():
-                errors[field] = 'Field ini tidak boleh kosong.'
+
+        # Tolak judul atau isi yang hanya berupa spasi.
+        if not self.title or not self.title.strip():
+            errors['title'] = 'Field ini tidak boleh kosong.'
+        if not self.content or not self.content.strip():
+            errors['content'] = 'Field ini tidak boleh kosong.'
+
+        # Rating wajib untuk Review, tidak berlaku untuk Food Hack.
         if self.post_type == self.PostType.FOOD_HACK and self.rating is not None:
             errors['rating'] = 'Food Hack tidak boleh memiliki rating.'
         elif self.post_type == self.PostType.REVIEW and self.rating is None:
             errors['rating'] = 'Review wajib memiliki rating.'
+
+        # Periksa hubungan review dengan pesanan.
         if self.post_type == self.PostType.REVIEW and not self.is_verified_purchase:
             errors['related_order'] = 'Review harus memakai pesanan Completed milik penulis.'
         elif self.post_type != self.PostType.REVIEW and self.related_order_id:
             errors['related_order'] = 'Food Hack tidak boleh dihubungkan ke pesanan.'
+
         if errors:
             raise ValidationError(errors)
 
 
 class MerchantReviewReply(models.Model):
-    review = models.OneToOneField(CommunityPost, on_delete=models.CASCADE, related_name='merchant_reply')
-    merchant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='review_replies')
+    review = models.OneToOneField(
+        CommunityPost,
+        on_delete=models.CASCADE,
+        related_name='merchant_reply',
+    )
+    merchant = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='review_replies',
+    )
     content = models.TextField(max_length=2000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -85,17 +104,26 @@ class MerchantReviewReply(models.Model):
         errors = {}
         if not self.content or not self.content.strip():
             errors['content'] = 'Balasan tidak boleh kosong.'
+
+        # Hanya Merchant pemilik pesanan yang boleh membalas.
         if self.review_id and (
             not self.review.is_verified_purchase
             or self.review.related_order.surprise_bag.merchant_id != self.merchant_id
         ):
             errors['review'] = 'Balasan hanya untuk Review terverifikasi dari pesanan Merchant ini.'
+
         if errors:
             raise ValidationError(errors)
 
 
 class CommunityComment(models.Model):
-    post = models.ForeignKey(CommunityPost, on_delete=models.CASCADE, related_name='comments')
+    post = models.ForeignKey(
+        CommunityPost,
+        on_delete=models.CASCADE,
+        related_name='comments',
+    )
+    # parent kosong untuk komentar utama.
+    # Balasan tetap ada jika komentar induknya dihapus.
     parent = models.ForeignKey(
         'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='replies',
     )
@@ -120,12 +148,17 @@ class CommunityComment(models.Model):
         errors = {}
         if not self.content or not self.content.strip():
             errors['content'] = 'Komentar tidak boleh kosong.'
+
+        # Komentar hanya tersedia untuk Food Hack.
         if self.post_id and self.post.post_type != CommunityPost.PostType.FOOD_HACK:
             errors['post'] = 'Komentar hanya tersedia untuk Food Hack.'
+
+        # Induk harus berada di postingan yang sama dan bukan dirinya sendiri.
         if self.parent_id:
             if self.parent.post_id != self.post_id:
                 errors['parent'] = 'Balasan harus berada di postingan yang sama.'
             elif self.parent_id == self.pk:
                 errors['parent'] = 'Komentar tidak dapat membalas dirinya sendiri.'
+
         if errors:
             raise ValidationError(errors)

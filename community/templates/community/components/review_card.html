@@ -1,11 +1,16 @@
 <article class="food-hack-card">
   <header>
     <span class="food-hack-card__badge">Review</span>
-    <h3><a class="food-hack-card__link" href="{% url 'community:review_detail' post.pk %}?{{ detail_query }}">{{ post.title }}</a></h3>
+    <h3>
+      <a class="food-hack-card__link" href="{% url 'community:review_detail' post.pk %}?{{ detail_query }}">{{ post.title }}</a>
+    </h3>
   </header>
+
+  <!-- Review menampilkan rating dan toko dari pesanan terkait. -->
   {% include 'community/components/review_rating.html' %}
   <p class="community-muted">{{ post.related_order.surprise_bag.merchant_name }}</p>
   <p class="food-hack-card__excerpt">{{ post.content|truncatewords:45 }}</p>
+
   <footer class="food-hack-card__meta">
     <span>{{ post.author.get_username }}</span>
     <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:'j M Y' }}</time>

@@ -1,33 +1,48 @@
 <div id="community-results" data-page="{{ page_obj.number }}" data-sort="{{ selected_sort }}" data-liked="{{ liked_only|yesno:'1,0' }}" data-mine="{{ mine_only|yesno:'1,0' }}" data-heading="{{ feed_heading }}" data-rating="{{ selected_rating }}" data-search-label="{{ search_label }}" data-search-placeholder="{{ search_placeholder }}">
   <template id="community-sort-options">{% include 'community/components/sort_options.html' %}</template>
+
+  <!-- Tampilkan kata kunci dan tautan untuk menghapus pencarian. -->
   {% if query %}
-  <p class="community-search-summary">Pencarian: <strong>{{ query }}</strong>. <a data-clear-search href="{% url 'community:home' %}?{{ clear_query }}">Hapus pencarian</a></p>
+    <p class="community-search-summary">Pencarian: <strong>{{ query }}</strong>. <a data-clear-search href="{% url 'community:home' %}?{{ clear_query }}">Hapus pencarian</a></p>
   {% endif %}
   <div class="community-feed">
+    <!-- posts berisi hasil filter dan sorting pada halaman yang sedang dibuka. -->
     {% for post in posts %}
+      <!-- Jenis postingan menentukan kartu yang digunakan. -->
       {% if post.post_type == 'review' %}
         {% include 'community/components/review_card.html' %}
       {% else %}
         {% include 'community/components/food_hack_card.html' %}
       {% endif %}
+
     {% empty %}
+      <!-- Jika hasil kosong, pesan menyesuaikan pencarian atau filter yang aktif. -->
       <div class="community-empty">
         <span aria-hidden="true">&#10047;</span>
         {% if query %}
-        <h3>Tidak ada hasil yang cocok</h3>
-        <p>Coba kata kunci lain atau hapus pencarian untuk melihat postingan yang tersedia.</p>
+          <h3>Tidak ada hasil yang cocok</h3>
+          <p>Coba kata kunci lain atau hapus pencarian untuk melihat postingan yang tersedia.</p>
         {% elif mine_only %}
-        <h3>Belum ada postingan milikmu yang cocok</h3>
-        <p>Coba ubah filter, atau pilih Semua penulis untuk melihat postingan komunitas.</p>
+          <h3>Belum ada postingan milikmu yang cocok</h3>
+          <p>Coba ubah filter, atau pilih Semua penulis untuk melihat postingan komunitas.</p>
         {% elif liked_only %}
-        <h3>Belum ada postingan yang disukai</h3>
-        <p>Tekan hati pada postingan yang kamu suka, lalu temukan kembali di sini.</p>
+          <h3>Belum ada postingan yang disukai</h3>
+          <p>Tekan hati pada postingan yang kamu suka, lalu temukan kembali di sini.</p>
         {% else %}
-        <h3>{% if selected_post_type == 'review' %}Belum ada Review{% elif selected_post_type == 'food_hack' %}Belum ada Food Hack{% else %}Belum ada postingan{% endif %}</h3>
-        <p>Tips dari komunitas akan tampil di sini. Setiap ide kecil bisa membantu makanan dinikmati lebih lama.</p>
+          <h3>
+            {% if selected_post_type == 'review' %}
+              Belum ada Review
+            {% elif selected_post_type == 'food_hack' %}
+              Belum ada Food Hack
+            {% else %}
+              Belum ada postingan
+            {% endif %}
+          </h3>
+          <p>Tips dari komunitas akan tampil di sini. Setiap ide kecil bisa membantu makanan dinikmati lebih lama.</p>
         {% endif %}
       </div>
     {% endfor %}
   </div>
+
   {% include 'community/components/pagination.html' %}
 </div>
