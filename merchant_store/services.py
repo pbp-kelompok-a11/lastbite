@@ -10,6 +10,7 @@ import json
 import logging
 import math
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -71,18 +72,57 @@ def _request_nominatim(query):
         raise GeocodingError('Format respons Nominatim tidak dikenali') from exc
 
 
+def _clean_parts(address):
+    """Pecah alamat per koma; buang kode pos, 'Indonesia', dan bagian yang berulang."""
+    seen = set()
+    parts = []
+    for raw in address.split(','):
+        part = ' '.join(re.sub(r'\b\d{5}\b', '', raw).split())
+        if not part or part.lower() == 'indonesia':
+            continue
+        key = part.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        parts.append(part)
+    return parts
+
+
 def _candidate_queries(address):
     """Alamat lengkap dulu; jika tidak ketemu, coba versi yang lebih ringkas.
 
     Contoh: "Jl. Margonda Raya No. 12, Pondok Cina, Depok" -> coba juga
     "Pondok Cina, Depok", karena Nominatim sering gagal pada nomor bangunan.
+
+    Untuk alamat panjang (hasil salin dari peta) dicoba juga:
+    "Nama Tempat, Kecamatan, Kabupaten/Kota" lalu "Kecamatan, Kabupaten/Kota".
     """
-    parts = [p.strip() for p in address.split(',') if p.strip()]
-    candidates = [', '.join(parts)] if parts else []
-    for start in (1, 2):
-        if len(parts) - start >= 2:
-            candidates.append(', '.join(parts[start:]))
-    return candidates[:3]
+    raw_parts = [p.strip() for p in address.split(',') if p.strip()]
+    candidates = [', '.join(raw_parts)] if raw_parts else []
+
+    if len(raw_parts) <= 4:
+        for start in (1, 2):
+            if len(raw_parts) - start >= 2:
+                candidates.append(', '.join(raw_parts[start:]))
+        return candidates[:3]
+
+    parts = _clean_parts(address)
+    kec = next((p for p in parts if re.match(r'^kec(amatan)?\.?\s', p, re.I)), '')
+    kab = next((p for p in parts if re.match(r'^(kabupaten|kab\.|kota)\s', p, re.I)), '')
+    kec_name = re.sub(r'^kec(amatan)?\.?\s+', '', kec, flags=re.I) if kec else ''
+
+    if kec_name and kab:
+        candidates.append(f'{parts[0]}, {kec_name}, {kab}')
+        candidates.append(f'{kec_name}, {kab}')
+    else:
+        candidates.append(', '.join(parts[:3]))
+    candidates.append(', '.join(parts[-2:]))
+
+    unique = []
+    for query in candidates:
+        if query and query not in unique:
+            unique.append(query)
+    return unique[:4]
 
 
 def geocode_address(address):

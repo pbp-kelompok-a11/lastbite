@@ -1,6 +1,7 @@
 import math
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
@@ -411,6 +412,7 @@ def geocode_api(request):
 
 
 
+@login_required
 @require_GET
 def store_detail(request, pk):
     store = get_object_or_404(MerchantStore, pk=pk)

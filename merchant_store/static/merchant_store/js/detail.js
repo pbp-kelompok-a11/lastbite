@@ -220,13 +220,7 @@
         const foundLng = Number(result.lng);
         if (!validCoordinates(foundLat, foundLng)) continue;
 
-        if (i === 0) {
-          placeStore(foundLat, foundLng, 16);
-        } else {
-          placeStore(foundLat, foundLng, 15);
-          showStatus('Lokasi perkiraan berdasarkan area alamat toko.');
-          setTimeout(hideStatus, 6000);
-        }
+        placeStore(foundLat, foundLng, 16);
         return;
       }
 
