@@ -169,7 +169,7 @@
 
     // tombol aksi: lihat di peta + wishlist (khusus customer)
     const actions = el("div", "md-item__actions");
-    if (hasMap && store.latitude !== null && store.longitude !== null) {
+    if (hasMap) {
       const focusBtn = el("button", "md-icon-btn");
       focusBtn.type = "button";
       focusBtn.title = "Lihat di peta";
@@ -177,7 +177,11 @@
       focusBtn.innerHTML = PIN_BTN_SVG;
       focusBtn.addEventListener("click", () => {
         const marker = markerById.get(store.id);
-        if (!marker) return;
+        if (!marker) {
+          // toko belum punya koordinat: buka halaman detail yang menampilkan petanya
+          window.location.href = store.detail_url;
+          return;
+        }
         map.flyTo(marker.getLatLng(), 17);
         marker.openPopup();
         document

@@ -1,5 +1,5 @@
 /* ============================================================
-   SURPRISE BAG MODULE
+    SURPRISE BAG MODULE
    ============================================================ */
 .sb-page {
   padding: calc(var(--navbar-height) + var(--space-2xl)) 0 var(--space-4xl);

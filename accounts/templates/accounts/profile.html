@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Profil Merchant — LastBite{% endblock %}
+{% block title %}Profil {{ user.profile.get_role_display }} — LastBite{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/profile.css' %}">
@@ -12,21 +12,25 @@
   <h1 class="merchant-profile__heading">Profil Saya</h1>
 
   <p class="merchant-profile__description">
-    Kelola foto profil dan toko mitra LastBite kamu.
+    {% if user.profile.role == 'merchant' %}
+      Kelola foto profil dan toko mitra LastBite kamu.
+    {% else %}
+      Kelola foto profil akun LastBite kamu.
+    {% endif %}
   </p>
 
   <div class="merchant-profile__card">
     <div class="merchant-profile__avatar">
       {% if user.profile.photo %}
         <img src="{{ user.profile.photo.url }}"
-              alt="Foto profil merchant">
+              alt="Foto profil">
       {% else %}
         <span>{{ user.username|first|upper }}</span>
       {% endif %}
     </div>
 
     <h2>{{ user.username }}</h2>
-    <p>Merchant LastBite</p>
+    <p>{{ user.profile.get_role_display }} LastBite</p>
 
     <form method="post"
           enctype="multipart/form-data"
@@ -41,12 +45,25 @@
               accept="image/*"
               required>
 
-      <button type="submit" class="btn btn--primary btn--md">
-        Simpan Foto
-      </button>
+      <div class="merchant-profile__actions">
+        <button type="submit" class="btn btn--primary btn--md">
+          Simpan Foto
+        </button>
+
+        {% if user.profile.photo %}
+        <button type="submit"
+                name="action"
+                value="delete_photo"
+                formnovalidate
+                class="btn btn--outline btn--md merchant-profile__delete-btn">
+          Hapus Foto
+        </button>
+        {% endif %}
+      </div>
     </form>
   </div>
 
+  {% if user.profile.role == 'merchant' %}
   <div class="merchant-profile__card">
     <h2>Toko Saya</h2>
 
@@ -60,6 +77,7 @@
       Buka Toko Saya
     </a>
   </div>
+  {% endif %}
 
   <div class="merchant-profile__logout">
     <button type="button"

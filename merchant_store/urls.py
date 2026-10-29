@@ -21,6 +21,10 @@ urlpatterns = [
     path('wishlist/', views.wishlist_list, name='wishlist'),
     path('<int:pk>/wishlist/toggle/', views.wishlist_toggle, name='wishlist_toggle'),
 
+    # Rating toko (khusus Customer)
+    path('<int:pk>/rate/', views.store_rate, name='rate'),
+
     # Detail toko (publik)
     path('<int:pk>/', views.store_detail, name='detail'),
+
 ]

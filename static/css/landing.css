@@ -1,7 +1,3 @@
-/* ============================================================
-   LANDING PAGE — mengikuti frame "Landing Page" di Figma
-   (tombol, judul section, dan kartu bag ada di lb_shared.css)
-   ============================================================ */
 .lb-home { background: var(--lb-cream); color: var(--lb-ink); font-family: var(--lb-sans); }
 
 /* ---- Hero ---- */
