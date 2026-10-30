@@ -217,6 +217,30 @@ Sistem dibagi menjadi lima modul utama, masing-masing berpusat pada satu entitas
     * Autentikasi: Hak kelola data profil toko hanya milik Merchant bersangkutan; Guest dan Customer hanya memiliki hak baca.
     * Fitur Pendukung: Pengelolaan relasi daftar toko favorit (*Wishlist*) oleh Customer.
 
+    ## AI Disclosure
+    Dalam pengerjaan Proyek LastBite pada Merchant Store : Direktori Toko & Integrasi Public API
+    saya Fathir atha rizki tasril menggunakan AI sebagai menyusun antarmuka peta dan pencarian asinkron, memperbaiki pencarian koordinat dari alamat,menambahkan fitur foto toko,menyelaraskan hak akses dan pengujian dan penulisan rangkaian unit test.
+
+     **Tools yang Digunakan:** Claude
+
+     **Bagian yang Dibantu AI:**
+     1. Menyusun antarmuka peta interaktif dengan Leaflet dan tile OpenStreetMap: pin toko, pencarian nama atau alamat secara asinkron dengan `fetch`,
+     2. pencarian lokasi lewat endpoint geocode, serta tombol lokasi per toko.
+     3. Menampilkan lokasi toko pada halaman detail: peta OpenStreetMap dengan pin dan label nama toko, serta pencarian koordinat dari alamat melalui Nominatim
+     4. Merapikan indentasi penulisan dan format berkas CSS modul (`merchant_directory.css`, `merchant_store.css`, `merchant_wishlist.css`).
+     5. Memberikan langkah" dalam menyusun halaman Wishlist dengan tab Merchant dan Surprise Bags, kartu toko.
+
+
+    #### Analisis Kritis Keterbatasan AI & Penyesuaian Implementasi
+    1. **Akurasi Geocoding dan Batas Nominatim:** Alamat panjang atau hasil salin dari peta sering gagal dicari. Kueri cadangan (nama tempat + kecamatan + kabupaten/kota, lalu kecamatan + kabupaten/kota) bersifat heuristik berdasarkan pola penulisan alamat Indonesia, sehingga pin dapat berada di pusat area, bukan di titik persis toko.
+    2. **Ketergantungan pada Layanan Publik:** Peta bergantung pada tile OpenStreetMap dan Nominatim yang dapat lambat, membatasi akses, atau tidak tersedia.Antarmuka menampilkan peta umum dan pesan status saat pencarian lokasi gagal, tetapi ketersediaan layanan dari server PWS belum dibuktikan oleh pengujian otomatis. Penggunaan tile publik juga tidak ditujukan untuk lalu lintas besar.
+    3. **Perubahan Cakupan Hak Akses:** Requirement menyebut Guest dan Customer dapat membaca direktori dan detail toko. Atas keputusan kelompok, halaman detail kini mewajibkan login; daftar toko dan API pencarian tetap terbuka untuk Guest. Perubahan ini membuat beberapa pengujian lama gagal, lalu pengujian disesuaikan menjadi tamu diarahkan ke login dan pengguna yang login dapat membuka detail. Perubahan ini disengaja dan perlu dipertimbangkan terhadap bunyi requirement.
+    4. **Keterbatasan Membaca Desain Figma:** ukuran font, jarak, dan warna diperkirakan dari gambar berskala dan perlu disetel berulang. sehingga perlu di stel manual
+    5. **Perubahan Lintas Modul:** Penyesuaian navbar dan halaman profil menyentuh modul akun milik anggota lain. Perubahan tersebut dibatasi seminimal mungkin dan digabung melalui Git dengan branch `dev`. Merge yang saya lakukan berjalan tanpa konflik, tetapi hal itu tidak membuktikan semua fitur anggota lain tetap berfungsi tanpa diuji ulang.
+    6. **Instruksi AI Tidak Selalu Sesuai Kondisi Berkas Sebenarnya:**
+    banyak sekali yang saya temukan bahwa langkah atau saran dari AI harus dipahami dan perlu disesuaikan.
+    7. **Deployment PWS dan Konfigurasi:** AI tidak memiliki akses ke PWS. Variabel environment dan migrasi database tetap harus saya atur dan jalankan sendiri di server, dan keberhasilannya diverifikasi lewat situs yang berjalan.
+
 4. Modul Community : Review & Food Hack
     * Penanggung Jawab: 2506618723	AZZAM ZAWAWI AL RASYID
     * Data Utama: `CommunityPost`
