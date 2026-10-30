@@ -22,14 +22,22 @@
     });
   });
 
-  // jumlah di tab Merchant ikut berkurang saat kartu dihapus (wishlist.js menghapus kartu)
-  const list = document.getElementById('ms-wishlist-list');
-  const counter = document.getElementById('mw-merchant-count');
-  if (list && counter) {
+  // jumlah & pesan kosong di tiap tab ikut berubah saat kartu dihapus (wishlist.js menghapus kartu)
+  function watchList(listId, counterId, emptyId) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    const counter = document.getElementById(counterId);
+    const empty = document.getElementById(emptyId);
     new MutationObserver(() => {
-      counter.textContent = list.querySelectorAll('[data-wishlist-card]').length;
+      const total = list.querySelectorAll('[data-wishlist-card]').length;
+      if (counter) counter.textContent = total;
+      if (empty) empty.hidden = total > 0;
     }).observe(list, { childList: true });
   }
 
-  selectTab('merchants');
+  watchList('ms-wishlist-list', 'mw-merchant-count', 'ms-wishlist-empty');
+  watchList('sb-wishlist-list', 'mw-bag-count', 'sb-wishlist-empty');
+
+  // ?tab=bags membuka tab Surprise Bags langsung
+  selectTab(new URLSearchParams(window.location.search).get('tab') === 'bags' ? 'bags' : 'merchants');
 })();

@@ -19,6 +19,7 @@ class MerchantStore(models.Model):
     business_email = models.EmailField('email bisnis', blank=True)
     opening_time = models.TimeField('jam buka')
     closing_time = models.TimeField('jam tutup')
+    photo = models.ImageField('foto toko', upload_to='store_photos/', blank=True)
 
     # Diisi otomatis dari OpenStreetMap Nominatim (lihat services.geocode_address)
     latitude = models.FloatField(
@@ -120,4 +121,24 @@ class StoreRating(models.Model):
             f'{self.customer.get_username()} memberi '
             f'{self.rating}/5 untuk {self.store.name}'
         )
+
+class WishlistReminder(models.Model):
+    """Pengaturan pengingat pickup untuk wishlist milik seorang Customer."""
+
+    LEAD_CHOICES = [(15, '15 menit'), (30, '30 menit'), (60, '1 jam')]
+
+    customer = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='wishlist_reminder',
+    )
+    is_enabled = models.BooleanField('aktif', default=True)
+    lead_minutes = models.PositiveSmallIntegerField(
+        'ingatkan sebelum pickup (menit)', choices=LEAD_CHOICES, default=30,
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        state = 'aktif' if self.is_enabled else 'nonaktif'
+        return f'Pengingat {self.customer.get_username()} ({state})'
 

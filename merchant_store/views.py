@@ -14,7 +14,7 @@ from accounts.permissions import is_customer
 
 from .decorators import customer_required, customer_required_api, merchant_required
 from .forms import MerchantStoreForm
-from .models import MerchantStore, StoreWishlist, StoreRating
+from .models import MerchantStore, StoreWishlist, StoreRating, WishlistReminder
 from .ratings import get_rating, get_rating_map
 from .services import (
     GeocodingError,
@@ -22,6 +22,7 @@ from .services import (
     geocode_address,
     haversine_km,
 )
+from surprise_bag.models import BagWishlist
 
 
 # Titik awal peta: kampus UI Depok
@@ -175,6 +176,7 @@ def _serialize_store(
         'rating': average,
         'rating_count': count,
         'bag_count': getattr(store, 'bag_count', 0),
+        'photo_url': store.photo.url if store.photo else '',
         'detail_url': reverse(
             'merchant_store:detail',
             args=[store.id],
@@ -191,10 +193,8 @@ def _serialize_store(
     return data
 
 
-# =========================================================
 # READ: DIREKTORI TOKO
 # Publik: Guest, Customer, dan Merchant
-# =========================================================
 
 @require_GET
 def store_list(request):
@@ -512,12 +512,8 @@ def store_rate(request, pk):
     })
 
 
-
-
-# =========================================================
 # CREATE / UPDATE / DELETE
 # Khusus merchant pemilik toko
-# =========================================================
 
 def _own_store(user):
     return MerchantStore.objects.filter(owner=user).first()
@@ -549,15 +545,9 @@ def my_store(request):
 @require_http_methods(['GET', 'POST'])
 def store_create(request):
     if _own_store(request.user):
-        messages.info(
-            request,
-            'Kamu sudah memiliki profil toko. '
-            'Silakan edit dari halaman Toko Saya.',
-        )
-
         return redirect('merchant_store:my_store')
 
-    form = MerchantStoreForm(request.POST or None)
+    form = MerchantStoreForm(request.POST or None, request.FILES or None)
 
     if request.method == 'POST' and form.is_valid():
         store = form.save(commit=False)
@@ -607,6 +597,7 @@ def store_edit(request):
 
     form = MerchantStoreForm(
         request.POST or None,
+        request.FILES or None,
         instance=store,
     )
 
@@ -684,10 +675,8 @@ def store_delete(request):
     return redirect('merchant_store:my_store')
 
 
-# =========================================================
 # WISHLIST
 # Khusus customer
-# =========================================================
 
 @customer_required
 @require_GET
@@ -718,12 +707,56 @@ def wishlist_list(request):
             }
         )
 
+    # wishlist Surprise Bag (modul Surprise Bag) — hanya paket yang masih aktif
+    bags = [
+        item.bag
+        for item in BagWishlist.objects
+        .filter(customer=request.user, bag__is_active=True)
+        .select_related('bag__merchant__merchant_store')
+    ]
+
+    reminder = WishlistReminder.objects.filter(customer=request.user).first()
+
+    # data untuk pengingat di browser: jam pickup bag & jam buka toko yang ada di wishlist
+    reminder_items = [
+        {
+            'kind': 'bag',
+            'id': str(bag.pk),
+            'name': bag.name,
+            'store': bag.merchant_name,
+            'start': f'{bag.pickup_start:%H:%M}',
+            'end': f'{bag.pickup_end:%H:%M}',
+            'stock': bag.stock,
+            'url': bag.get_absolute_url(),
+        }
+        for bag in bags
+    ] + [
+        {
+            'kind': 'store',
+            'id': str(entry['store'].id),
+            'name': entry['store'].name,
+            'store': entry['store'].name,
+            'start': f"{entry['store'].opening_time:%H:%M}",
+            'end': f"{entry['store'].closing_time:%H:%M}",
+            'url': reverse('merchant_store:detail', args=[entry['store'].id]),
+        }
+        for entry in stores
+        if entry['store'].is_active
+    ]
+
     return render(
         request,
         'merchant_store/wishlist.html',
-        {'entries': stores},
+        {
+            'entries': stores,
+            'bags': bags,
+            'reminder_enabled': bool(reminder and reminder.is_enabled),
+            'reminder_lead': reminder.lead_minutes if reminder else 30,
+            'reminder_items': reminder_items,
+            'can_wishlist': True,
+            'wishlisted_ids': {bag.pk for bag in bags},
+        },
     )
-
 
 @customer_required_api
 @require_POST
@@ -754,3 +787,19 @@ def wishlist_toggle(request, pk):
     )
 
     return JsonResponse({'wishlisted': True})
+
+@customer_required_api
+@require_POST
+def reminder_toggle(request):
+    """Nyalakan / matikan pengingat wishlist milik customer yang sedang login."""
+    reminder, _ = WishlistReminder.objects.get_or_create(
+        customer=request.user,
+        defaults={'is_enabled': False},
+    )
+    reminder.is_enabled = not reminder.is_enabled
+    reminder.save(update_fields=['is_enabled', 'updated_at'])
+    return JsonResponse({
+        'enabled': reminder.is_enabled,
+        'lead_minutes': reminder.lead_minutes,
+    }
+)

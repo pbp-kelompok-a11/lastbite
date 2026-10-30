@@ -305,3 +305,21 @@
   .sb-form, .sb-detail { padding: var(--space-lg); }
   .sb-detail__visual { min-height: 180px; font-size: 4rem; }
 }
+
+/* Foto Surprise Bag pada form */
+.sb-photo-preview {
+  width: 160px;
+  height: 160px;
+  margin-top: .5rem;
+  border: 1px solid #e3e6dd;
+  border-radius: 16px;
+  background: #f1ecdf;
+  overflow: hidden;
+}
+.sb-photo-preview[hidden] { display: none; }
+.sb-photo-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

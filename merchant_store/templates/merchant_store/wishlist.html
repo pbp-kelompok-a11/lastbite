@@ -19,7 +19,7 @@
   <div class="mw-tabs" role="tablist" aria-label="Jenis wishlist">
     <button type="button" class="mw-tab" role="tab" id="mw-tab-bags"
             aria-controls="mw-panel-bags" aria-selected="false" data-tab="bags">
-      Surprise Bags <span class="mw-tab__count">0</span>
+      Surprise Bags <span class="mw-tab__count" id="mw-bag-count">{{ bags|length }}</span>
     </button>
     <button type="button" class="mw-tab" role="tab" id="mw-tab-merchants"
             aria-controls="mw-panel-merchants" aria-selected="true" data-tab="merchants">
@@ -30,8 +30,14 @@
   <!-- Tab Surprise Bags -->
   <section class="mw-panel" id="mw-panel-bags" role="tabpanel"
             aria-labelledby="mw-tab-bags" data-panel="bags" hidden>
-    <div class="mw-empty">
-      <p>Wishlist Surprise Bag belum tersedia.</p>
+    <div class="mw-grid" id="sb-wishlist-list">
+      {% for bag in bags %}
+        {% include 'surprise_bag/components/bag_card.html' with remove_on_unwish=True %}
+      {% endfor %}
+    </div>
+
+    <div class="mw-empty" id="sb-wishlist-empty" {% if bags %}hidden{% endif %}>
+      <p>Belum ada Surprise Bag di wishlist kamu.</p>
       <a href="{% url 'surprise_bag:catalog' %}" class="btn btn--primary btn--md">Jelajahi Surprise Bag</a>
     </div>
   </section>
@@ -44,7 +50,11 @@
       {% cycle 'img/bento.png' 'img/croissant.png' as thumb silent %}
       <li class="mw-card" data-wishlist-card>
         <div class="mw-card__media">
-          <img src="{% static thumb %}" alt="">
+          {% if entry.store.photo %}
+            <img class="mw-card__photo" src="{{ entry.store.photo.url }}" alt="{{ entry.store.name }}">
+          {% else %}
+            <img src="{% static thumb %}" alt="">
+          {% endif %}
 
           {% if not entry.store.is_active %}<span class="mw-badge mw-badge--off">Nonaktif</span>
           {% elif entry.store.is_open_now %}<span class="mw-badge">Buka</span>
@@ -96,16 +106,25 @@
     </div>
   </section>
 
-  <aside class="mw-reminder">
+  <aside class="mw-reminder" id="mw-reminder"
+        data-url="{% url 'merchant_store:reminder_toggle' %}"
+        data-enabled="{{ reminder_enabled|yesno:'true,false' }}"
+        data-lead="{{ reminder_lead }}">
     <div class="mw-reminder__text">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       <div>
         <p class="mw-reminder__title">Jangan sampai kehabisan</p>
-        <p class="mw-reminder__desc">Stok berubah cepat menjelang jam pickup.</p>
+        <p class="mw-reminder__desc" id="mw-reminder-desc">Stok berubah cepat menjelang jam pickup.</p>
       </div>
     </div>
-    <button type="button" class="mw-reminder__btn">Aktifkan pengingat</button>
+    <button type="button" class="mw-reminder__btn" id="mw-reminder-btn" aria-pressed="{{ reminder_enabled|yesno:'true,false' }}">
+      {% if reminder_enabled %}Pengingat aktif ✓{% else %}Aktifkan pengingat{% endif %}
+    </button>
   </aside>
+
+  <div class="mw-toast" id="mw-toast" role="status" aria-live="polite" hidden></div>
+
+  {{ reminder_items|json_script:"mw-reminder-items" }}
 
 </div>
 {% endblock %}
@@ -113,4 +132,5 @@
 {% block extra_js %}
 <script src="{% static 'merchant_store/js/wishlist.js' %}"></script>
 <script src="{% static 'merchant_store/js/wishlist_page.js' %}"></script>
+<script src="{% static 'merchant_store/js/wishlist_reminder.js' %}"></script>
 {% endblock %}

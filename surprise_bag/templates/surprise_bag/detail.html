@@ -8,15 +8,15 @@
 {% endblock %}
 
 {% block content %}
-<section class="sb-page">
+<section class="sb-page" data-csrf="{{ csrf_token }}">
   <div class="section-container">
     <a href="{% url 'surprise_bag:catalog' %}" class="sb-back">← Kembali ke katalog</a>
 
     <div class="sb-detail">
       <div class="sb-detail__visual">
-        {% if bag.image_url %}
-          <img src="{{ bag.image_url }}" alt="{{ bag.name }}" class="sb-detail__image"
-               onerror="this.replaceWith('{{ bag.emoji }}')">
+        {% if bag.image_src %}
+          <img src="{{ bag.image_src }}" alt="{{ bag.name }}" class="sb-detail__image"
+                onerror="this.replaceWith('{{ bag.emoji }}')">
         {% else %}
           {{ bag.emoji }}
         {% endif %}
@@ -48,6 +48,10 @@
             <a href="{% url 'surprise_bag:my_bags' %}" class="btn btn--outline btn--md">Kelola Inventaris</a>
           {% elif is_customer %}
             <a href="{% url 'order:create' bag.pk %}" id="order-btn" class="btn btn--primary btn--lg{% if not bag.is_available %} is-disabled{% endif %}">Pesan Sekarang</a>
+            <button type="button" class="btn btn--outline btn--lg js-wishlist-toggle"
+                    data-url="{% url 'surprise_bag:wishlist_toggle' bag.pk %}"
+                    data-wishlisted="{{ is_wishlisted|yesno:'true,false' }}"
+                    aria-pressed="{{ is_wishlisted|yesno:'true,false' }}">{% if is_wishlisted %}♥ Tersimpan{% else %}♡ Simpan{% endif %}</button>
           {% elif user.is_authenticated %}
             <p>Pemesanan hanya tersedia untuk akun Customer.</p>
           {% else %}
@@ -61,6 +65,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'merchant_store/js/wishlist.js' %}"></script>
 <script>
 const BAG_API = "{% url 'surprise_bag:bag_api' bag.pk %}";
 const stockEl = document.getElementById('detail-stock');

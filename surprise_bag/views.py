@@ -14,9 +14,10 @@ from django.http import Http404, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, resolve_url
 from django.views.decorators.http import require_POST
 from accounts.permissions import is_customer, is_merchant
+from merchant_store.decorators import customer_required_api
 
 from .forms import SurpriseBagForm, SurpriseBagUpdateForm
-from .models import SurpriseBag
+from .models import BagWishlist, SurpriseBag
 
 CATALOG_PAGE_SIZE = 12  # 12 pas untuk grid 3 atau 4 kolom
 CATALOG_SORT_CHOICES = [
@@ -171,15 +172,19 @@ def catalog(request):
         'categories': SurpriseBag.CATEGORY_CHOICES,
         'sort_options': CATALOG_SORT_CHOICES,
         'is_merchant': is_merchant(request.user),
+        'can_wishlist': is_customer(request.user),
+        'wishlisted_ids': BagWishlist.bag_ids_for(request.user),
     })
 
 
 def bag_detail(request, pk):
     bag = _get_visible_bag(request, pk)
+    customer = is_customer(request.user)
     return render(request, 'surprise_bag/detail.html', {
         'bag': bag,
         'is_owner': bag.merchant == request.user,
-        'is_customer': is_customer(request.user),
+        'is_customer': customer,
+        'is_wishlisted': customer and BagWishlist.objects.filter(customer=request.user, bag=bag).exists(),
         'login_url': f'{resolve_url(settings.LOGIN_URL)}?next={request.path}',
     })
 
@@ -195,7 +200,7 @@ def my_bags(request):
 @merchant_required
 def create_bag(request):
     if request.method == 'POST':
-        form = SurpriseBagForm(request.POST)
+        form = SurpriseBagForm(request.POST, request.FILES)
         if form.is_valid():
             bag = form.save(commit=False)
             bag.merchant = request.user  # paksa isi pemilik dari session, bukan dari form
@@ -212,7 +217,7 @@ def edit_bag(request, pk):
     # filter merchant=request.user supaya merchant lain dapat 404
     bag = get_object_or_404(SurpriseBag, pk=pk, merchant=request.user)
     if request.method == 'POST':
-        form = SurpriseBagUpdateForm(request.POST, instance=bag)
+        form = SurpriseBagUpdateForm(request.POST, request.FILES, instance=bag)
         if form.is_valid():
             form.save()
             messages.success(request, f'Surprise Bag "{bag.name}" berhasil diperbarui.')
@@ -289,3 +294,24 @@ def toggle_active_api(request, pk):
     bag.is_active = bool(payload.get('is_active', not bag.is_active))
     bag.save(update_fields=['is_active', 'updated_at'])
     return JsonResponse(bag.to_dict())
+
+
+# --- Wishlist (Customer) ---
+
+@customer_required_api
+@require_POST
+def wishlist_toggle(request, pk):
+    """Simpan / hapus Surprise Bag dari wishlist via AJAX — sama seperti wishlist toko."""
+    bag = get_object_or_404(SurpriseBag, pk=pk)
+    existing = BagWishlist.objects.filter(customer=request.user, bag=bag)
+
+    # menghapus selalu boleh, termasuk bag yang sudah dinonaktifkan merchant
+    if existing.exists():
+        existing.delete()
+        return JsonResponse({'wishlisted': False})
+
+    if not bag.is_active:
+        return JsonResponse({'error': 'Surprise Bag ini sedang tidak aktif.'}, status=404)
+
+    BagWishlist.objects.get_or_create(customer=request.user, bag=bag)
+    return JsonResponse({'wishlisted': True})

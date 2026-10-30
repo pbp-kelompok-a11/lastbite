@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import SurpriseBag
+from .models import BagWishlist, SurpriseBag
 
 
 @admin.register(SurpriseBag)
@@ -9,3 +9,9 @@ class SurpriseBagAdmin(admin.ModelAdmin):
     list_filter = ('category', 'is_active')
     search_fields = ('name', 'merchant__username')
     list_editable = ('stock', 'is_active')
+
+
+@admin.register(BagWishlist)
+class BagWishlistAdmin(admin.ModelAdmin):
+    list_display = ('customer', 'bag', 'created_at')
+    search_fields = ('customer__username', 'bag__name')

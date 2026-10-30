@@ -38,8 +38,8 @@ class SurpriseBag(models.Model):
 
     name = models.CharField(max_length=100)
     description = models.TextField()
-    # link gambar (opsional); kalau kosong, kartu pakai emoji kategori
     image_url = models.URLField(blank=True)
+    photo = models.ImageField('foto paket', upload_to='bag_photos/', blank=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='mixed')
 
     original_price = models.DecimalField(
@@ -93,6 +93,12 @@ class SurpriseBag(models.Model):
         return self.CATEGORY_EMOJI.get(self.category, '🛍️')
 
     @property
+    def image_src(self):
+        if self.photo:
+            return self.photo.url
+        return self.image_url
+
+    @property
     def merchant_name(self):
         # utamakan nama toko dari Modul Merchant Store; kalau belum dibuat, pakai nama akun
         store = getattr(self.merchant, 'merchant_store', None)
@@ -123,7 +129,7 @@ class SurpriseBag(models.Model):
             'category': self.category,
             'category_label': self.get_category_display(),
             'emoji': self.emoji,
-            'image_url': self.image_url,
+            'image_url': self.image_src,
             'merchant': self.merchant_name,
             'original_price': float(self.original_price),
             'discounted_price': float(self.discounted_price),
@@ -135,3 +141,27 @@ class SurpriseBag(models.Model):
             'is_available': self.is_available,
             'detail_url': self.get_absolute_url(),
         }
+
+
+class BagWishlist(models.Model):
+    """Relasi Surprise Bag favorit (wishlist) milik seorang Customer — konsepnya sama dengan StoreWishlist."""
+
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bag_wishlist_items')
+    bag = models.ForeignKey(SurpriseBag, on_delete=models.CASCADE, related_name='wishlisted_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['customer', 'bag'], name='surprise_bag_unique_wishlist'),
+        ]
+
+    def __str__(self):
+        return f'{self.customer.get_username()} ♥ {self.bag.name}'
+
+    @classmethod
+    def bag_ids_for(cls, user):
+        """ID Surprise Bag yang ada di wishlist user (kosong untuk guest)."""
+        if not user.is_authenticated:
+            return set()
+        return set(cls.objects.filter(customer=user).values_list('bag_id', flat=True))

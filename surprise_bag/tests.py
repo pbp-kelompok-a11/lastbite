@@ -3,17 +3,18 @@ from datetime import date, time
 from decimal import Decimal
 
 from django.contrib import admin
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AnonymousUser, User
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
+from django.db import IntegrityError, transaction
 
 from accounts.models import UserProfile
 from merchant_store.models import MerchantStore
 from order.models import Order
 
 from .forms import SurpriseBagForm, SurpriseBagUpdateForm
-from .models import SurpriseBag
+from .models import BagWishlist, SurpriseBag
 
 PASSWORD = 'pass12345'
 
@@ -176,7 +177,7 @@ class SurpriseBagFormTests(SurpriseBagTestCase):
     def test_update_form_only_exposes_allowed_fields(self):
         self.assertEqual(
             list(SurpriseBagUpdateForm().fields),
-            ['image_url', 'discounted_price', 'stock', 'pickup_start', 'pickup_end', 'is_active'],
+            ['photo', 'discounted_price', 'stock', 'pickup_start', 'pickup_end', 'is_active'],
         )
 
     def test_update_form_checks_discount_against_saved_original_price(self):
@@ -552,6 +553,104 @@ class CatalogNearestSortTests(TestCase):
             with self.subTest(lat=lat, lng=lng):
                 _, response = self.get(sort='nearest', lat=lat, lng=lng)
                 self.assertEqual(response.context['filters']['lat'], '')
+
+# ============================================================
+# WISHLIST
+# ============================================================
+
+class BagWishlistTests(SurpriseBagTestCase):
+    def toggle_url(self, bag=None):
+        return reverse('surprise_bag:wishlist_toggle', args=[(bag or self.bag).pk])
+
+    def toggle(self, bag=None):
+        return self.client.post(self.toggle_url(bag))
+
+    def test_str(self):
+        item = BagWishlist.objects.create(customer=self.customer, bag=self.bag)
+        self.assertEqual(str(item), 'customer ♥ Roti Sore')
+
+    def test_customer_can_add_and_remove(self):
+        self.client.force_login(self.customer)
+        self.assertEqual(self.toggle().json(), {'wishlisted': True})
+        self.assertTrue(BagWishlist.objects.filter(customer=self.customer, bag=self.bag).exists())
+        self.assertEqual(self.toggle().json(), {'wishlisted': False})
+        self.assertFalse(BagWishlist.objects.exists())
+
+    def test_guest_gets_401_and_merchant_gets_403(self):
+        self.assertEqual(self.toggle().status_code, 401)
+        self.client.force_login(self.merchant)
+        self.assertEqual(self.toggle().status_code, 403)
+        self.assertFalse(BagWishlist.objects.exists())
+
+    def test_toggle_requires_post(self):
+        self.client.force_login(self.customer)
+        self.assertEqual(self.client.get(self.toggle_url()).status_code, 405)
+
+    def test_unknown_bag_returns_404(self):
+        self.client.force_login(self.customer)
+        self.assertEqual(self.client.post(reverse('surprise_bag:wishlist_toggle', args=[uuid.uuid4()])).status_code, 404)
+
+    def test_inactive_bag_can_be_removed_but_not_added(self):
+        self.client.force_login(self.customer)
+        BagWishlist.objects.create(customer=self.customer, bag=self.bag)
+        SurpriseBag.objects.filter(pk=self.bag.pk).update(is_active=False)
+        self.assertEqual(self.toggle().json(), {'wishlisted': False})
+        self.assertEqual(self.toggle().status_code, 404)
+        self.assertFalse(BagWishlist.objects.exists())
+
+    def test_same_bag_cannot_be_saved_twice(self):
+        BagWishlist.objects.create(customer=self.customer, bag=self.bag)
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            BagWishlist.objects.create(customer=self.customer, bag=self.bag)
+
+    def test_bag_ids_for(self):
+        BagWishlist.objects.create(customer=self.customer, bag=self.bag)
+        self.assertEqual(BagWishlist.bag_ids_for(self.customer), {self.bag.pk})
+        self.assertEqual(BagWishlist.bag_ids_for(self.other_merchant), set())
+        self.assertEqual(BagWishlist.bag_ids_for(AnonymousUser()), set())
+
+    def test_catalog_heart_only_for_customer_and_shows_saved_state(self):
+        catalog = reverse('surprise_bag:catalog')
+        self.assertNotContains(self.client.get(catalog), self.toggle_url())
+        self.client.force_login(self.merchant)
+        self.assertNotContains(self.client.get(catalog), self.toggle_url())
+
+        BagWishlist.objects.create(customer=self.customer, bag=self.bag)
+        self.client.force_login(self.customer)
+        response = self.client.get(catalog)
+        self.assertContains(response, self.toggle_url())
+        self.assertContains(response, 'data-wishlisted="true"')
+
+    def test_detail_shows_wishlist_state(self):
+        detail = reverse('surprise_bag:detail', args=[self.bag.pk])
+        self.client.force_login(self.customer)
+        self.assertContains(self.client.get(detail), '♡ Simpan')
+        BagWishlist.objects.create(customer=self.customer, bag=self.bag)
+        response = self.client.get(detail)
+        self.assertTrue(response.context['is_wishlisted'])
+        self.assertContains(response, '♥ Tersimpan')
+
+    def test_wishlist_page_lists_only_own_active_bags(self):
+        inactive = make_bag(self.merchant, name='Bag Nonaktif', is_active=False)
+        other_customer = make_user('customer2', 'customer')
+        BagWishlist.objects.create(customer=self.customer, bag=self.bag)
+        BagWishlist.objects.create(customer=self.customer, bag=inactive)
+        BagWishlist.objects.create(customer=other_customer, bag=self.bag)
+
+        self.client.force_login(self.customer)
+        response = self.client.get(reverse('merchant_store:wishlist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['bags'], [self.bag])
+        self.assertContains(response, 'id="mw-bag-count">1</span>')
+        self.assertContains(response, 'data-remove-on-unwish="true"')
+
+    def test_landing_page_has_heart_and_csrf_for_customer(self):
+        BagWishlist.objects.create(customer=self.customer, bag=self.bag)
+        self.client.force_login(self.customer)
+        response = self.client.get(reverse('main:home'))
+        self.assertContains(response, self.toggle_url())
+        self.assertContains(response, 'data-csrf=')  # wishlist.js butuh token CSRF dari atribut ini
+        self.assertContains(response, 'css/landing.css')
 
 
 # ============================================================

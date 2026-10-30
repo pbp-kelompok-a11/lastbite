@@ -25,7 +25,9 @@
     <section class="ms-profile-panel" aria-label="Informasi toko">
 
       <div class="ms-profile-identity">
-        <div class="ms-profile-avatar" aria-hidden="true"></div>
+        <div class="ms-profile-avatar"{% if not store.photo %} aria-hidden="true"{% endif %}>
+          {% if store.photo %}<img src="{{ store.photo.url }}" alt="Foto {{ store.name }}">{% endif %}
+        </div>
 
         <div class="ms-profile-identity__text">
           <div class="ms-profile-titleline">
@@ -63,8 +65,8 @@
                 title="Simpan ke wishlist">{% if is_wishlisted %}♥{% else %}♡{% endif %}</button>
       {% elif not user.is_authenticated %}
         <a href="{% url 'accounts:login' %}?next={{ request.path }}"
-           class="ms-profile-wishlist"
-           aria-label="Login untuk menyimpan toko">♡</a>
+            class="ms-profile-wishlist"
+            aria-label="Login untuk menyimpan toko">♡</a>
       {% endif %}
 
       <!-- Detail informasi -->
@@ -139,33 +141,34 @@
 
       <!-- Peta OpenStreetMap asli -->
       <div id="ms-detail-map"
-           class="ms-map ms-map--detail"
-           data-name="{{ store.name }}"
-           data-address="{{ store.address }}"
-           data-geocode-url="{% url 'merchant_store:api_geocode' %}"
-           {% if store.has_coordinates %}
+          class="ms-map ms-map--detail"
+          data-name="{{ store.name }}"
+          data-address="{{ store.address }}"
+          data-geocode-url="{% url 'merchant_store:api_geocode' %}"
+          {% if store.has_coordinates %}
             data-lat="{{ store.latitude|unlocalize }}"
             data-lng="{{ store.longitude|unlocalize }}"
-           {% endif %}
-           role="region"
-           aria-label="Peta lokasi {{ store.name }}"></div>
+          {% endif %}
+          role="region"
+          aria-label="Peta lokasi {{ store.name }}">
+      </div>
 
       <div id="ms-map-status" class="ms-map-status" role="status" aria-live="polite" hidden></div>
 
-      <a id="ms-open-osm-link"
-         class="ms-profile-map-link"
-         href="https://www.openstreetmap.org/search?query={{ store.address|urlencode }}"
-         target="_blank"
-         rel="noopener noreferrer">Buka di OpenStreetMap ↗</a>
-
+        <a id="ms-open-osm-link"
+          class="ms-profile-map-link"
+          href="https://www.openstreetmap.org/search?query={{ store.address|urlencode }}"
+          target="_blank"
+          rel="noopener noreferrer">Buka di OpenStreetMap ↗
+        </a>
     </section>
   </div>
 
   <!-- Rating bintang -->
   <div class="ms-profile-ratingbar"
-       id="ms-store-rating"
-       data-rate-url="{% url 'merchant_store:rate' store.id %}"
-       data-user-rating="{{ user_rating|default:0 }}">
+        id="ms-store-rating"
+        data-rate-url="{% url 'merchant_store:rate' store.id %}"
+        data-user-rating="{{ user_rating|default:0 }}">
 
     <div class="ms-profile-stars" role="group" aria-label="Rating toko dari satu sampai lima bintang">
       {% if can_rate %}

@@ -1,41 +1,57 @@
-<a href="{{ bag.get_absolute_url }}" class="lb-bag-card{% if not bag.stock %} lb-bag-card--soldout{% endif %}">
-  <div class="lb-bag-card__media">
-    {% if bag.image_url %}
-      <img src="{{ bag.image_url }}" alt="{{ bag.name }}" loading="lazy"
-           onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
-      <span class="lb-bag-card__emoji" aria-hidden="true" hidden>{{ bag.emoji }}</span>
-    {% else %}
-      <span class="lb-bag-card__emoji" aria-hidden="true">{{ bag.emoji }}</span>
-    {% endif %}
-    <span class="lb-bag-card__badge">−{{ bag.discount_percent }}%</span>
-  </div>
-  <div class="lb-bag-card__body">
-    <span class="lb-bag-card__store">{{ bag.merchant_name }}</span>
-    <h3 class="lb-bag-card__name">{{ bag.name }}</h3>
-    <div class="lb-bag-card__prices">
-      <span class="lb-bag-card__price">Rp{{ bag.discounted_price|floatformat:"0g" }}</span>
-      <del class="lb-bag-card__price-orig">Rp{{ bag.original_price|floatformat:"0g" }}</del>
-    </div>
-    <div class="lb-bag-card__meta">
-      <span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        {{ bag.pickup_time }}
-      </span>
-      {% if bag.distance_km is not None %}
-        <span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
-          {{ bag.distance_km|floatformat:1 }} km
-        </span>
+<div class="lb-bag-card-wrap" data-wishlist-card>
+  <a href="{{ bag.get_absolute_url }}" class="lb-bag-card{% if not bag.stock %} lb-bag-card--soldout{% endif %}">
+    <div class="lb-bag-card__media">
+            {% if bag.image_src %}
+        <img src="{{ bag.image_src }}" alt="{{ bag.name }}" loading="lazy"
+              onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
+        <span class="lb-bag-card__emoji" aria-hidden="true" hidden>{{ bag.emoji }}</span>
       {% else %}
-        <span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>
-          {{ bag.get_category_display }}
-        </span>
+        <span class="lb-bag-card__emoji" aria-hidden="true">{{ bag.emoji }}</span>
       {% endif %}
+      <span class="lb-bag-card__badge">−{{ bag.discount_percent }}%</span>
     </div>
-    <div class="lb-bag-card__footer">
-      <span class="lb-bag-card__stock">{% if bag.stock %}{{ bag.stock }} bag tersisa{% else %}Habis{% endif %}</span>
-      <span class="lb-bag-card__pickup">Ambil hari ini</span>
+    <div class="lb-bag-card__body">
+      <span class="lb-bag-card__store">{{ bag.merchant_name }}</span>
+      <h3 class="lb-bag-card__name">{{ bag.name }}</h3>
+      <div class="lb-bag-card__prices">
+        <span class="lb-bag-card__price">Rp{{ bag.discounted_price|floatformat:"0g" }}</span>
+        <del class="lb-bag-card__price-orig">Rp{{ bag.original_price|floatformat:"0g" }}</del>
+      </div>
+      <div class="lb-bag-card__meta">
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          {{ bag.pickup_time }}
+        </span>
+        {% if bag.distance_km is not None %}
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+            {{ bag.distance_km|floatformat:1 }} km
+          </span>
+        {% else %}
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+            {{ bag.get_category_display }}
+          </span>
+        {% endif %}
+      </div>
+      <div class="lb-bag-card__footer">
+        <span class="lb-bag-card__stock">{% if bag.stock %}{{ bag.stock }} bag tersisa{% else %}Habis{% endif %}</span>
+        <span class="lb-bag-card__pickup">Ambil hari ini</span>
+      </div>
     </div>
-  </div>
-</a>
+  </a>
+
+  {% if can_wishlist %}
+    {# atribut data-* mengikuti merchant_store/js/wishlist.js supaya script itu bisa dipakai ulang #}
+    {% if bag.pk in wishlisted_ids %}
+      <button type="button" class="lb-bag-card__heart js-wishlist-toggle" data-icon-only
+              data-url="{% url 'surprise_bag:wishlist_toggle' bag.pk %}" data-wishlisted="true"
+              {% if remove_on_unwish %}data-remove-on-unwish="true"{% endif %}
+              aria-pressed="true" aria-label="Hapus dari wishlist" title="Hapus dari wishlist">♥</button>
+    {% else %}
+      <button type="button" class="lb-bag-card__heart js-wishlist-toggle" data-icon-only
+              data-url="{% url 'surprise_bag:wishlist_toggle' bag.pk %}" data-wishlisted="false"
+              aria-pressed="false" aria-label="Simpan ke wishlist" title="Simpan ke wishlist">♡</button>
+    {% endif %}
+  {% endif %}
+</div>

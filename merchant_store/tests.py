@@ -12,7 +12,7 @@ from accounts.models import UserProfile
 
 from . import services
 from .forms import MerchantStoreForm
-from .models import MerchantStore, StoreWishlist
+from .models import MerchantStore, StoreWishlist, WishlistReminder
 from .services import GeocodingError
 
 User = get_user_model()
@@ -252,17 +252,25 @@ class MerchantCrudTests(BaseCase):
 
 # Read publik
 class PublicReadTests(BaseCase):
-    def test_directory_and_detail_open_to_guest(self):
+    def test_directory_open_to_guest_but_detail_requires_login(self):
         store = make_store(self.merchant)
         self.assertEqual(self.client.get(reverse('merchant_store:list')).status_code, 200)
-        response = self.client.get(reverse('merchant_store:detail', args=[store.id]))
+
+        url = reverse('merchant_store:detail', args=[store.id])
+        response = self.client.get(url)
+        self.assertRedirects(
+            response, f"{reverse('accounts:login')}?next={url}", fetch_redirect_response=False
+        )
+
+        self.client.force_login(self.customer)
+        response = self.client.get(url)
         self.assertContains(response, 'Toko Uji')
         self.assertContains(response, 'Belum ada rating')
 
     def test_inactive_store_hidden_except_owner(self):
         store = make_store(self.merchant, is_active=False)
         url = reverse('merchant_store:detail', args=[store.id])
-        self.assertEqual(self.client.get(url).status_code, 404)
+        self.assertEqual(self.client.get(url).status_code, 302)  # tamu dialihkan ke login
         self.client.force_login(self.customer)
         self.assertEqual(self.client.get(url).status_code, 404)
         self.client.force_login(self.merchant)
@@ -270,12 +278,14 @@ class PublicReadTests(BaseCase):
 
     def test_detail_map_coordinates_use_dot_not_locale_comma(self):
         store = make_store(self.merchant, latitude=-6.3628, longitude=106.8272)
+        self.client.force_login(self.customer)
         html = self.client.get(reverse('merchant_store:detail', args=[store.id])).content.decode()
         self.assertIn('data-lat="-6.3628"', html)
         self.assertIn('data-lng="106.8272"', html)
 
     def test_store_name_is_escaped(self):
         store = make_store(self.merchant, name='<script>alert(1)</script>')
+        self.client.force_login(self.customer)
         html = self.client.get(reverse('merchant_store:detail', args=[store.id])).content.decode()
         self.assertNotIn('<script>alert(1)</script>', html)
         self.assertIn('&lt;script&gt;alert(1)&lt;/script&gt;', html)
@@ -424,6 +434,33 @@ class WishlistTests(BaseCase):
         self.client.force_login(self.customer)
         self.assertContains(self.client.get(url), 'Toko Uji')
 
+class WishlistReminderTests(BaseCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('merchant_store:reminder_toggle')
+
+    def test_guest_gets_401_and_merchant_gets_403(self):
+        self.assertEqual(self.client.post(self.url).status_code, 401)
+        self.client.force_login(self.merchant)
+        self.assertEqual(self.client.post(self.url).status_code, 403)
+
+    def test_requires_post(self):
+        self.client.force_login(self.customer)
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_toggle_on_and_off(self):
+        self.client.force_login(self.customer)
+        self.assertTrue(self.client.post(self.url).json()['enabled'])
+        self.assertTrue(WishlistReminder.objects.get(customer=self.customer).is_enabled)
+        self.assertFalse(self.client.post(self.url).json()['enabled'])
+        self.assertFalse(WishlistReminder.objects.get(customer=self.customer).is_enabled)
+
+    def test_wishlist_page_shows_saved_state(self):
+        self.client.force_login(self.customer)
+        page = reverse('merchant_store:wishlist')
+        self.assertContains(self.client.get(page), 'Aktifkan pengingat')
+        self.client.post(self.url)
+        self.assertContains(self.client.get(page), 'Pengingat aktif')
 
 class SeedCommandTests(TestCase):
     def test_seed_is_idempotent(self):

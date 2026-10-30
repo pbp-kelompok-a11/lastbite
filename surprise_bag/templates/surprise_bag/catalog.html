@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<section class="sb-catalog">
+<section class="sb-catalog" data-csrf="{{ csrf_token }}">
   <div class="lb-container">
     <div class="lb-section-head">
       <div>
@@ -100,6 +100,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'merchant_store/js/wishlist.js' %}"></script>
 <script>
 const form = document.getElementById('filter-form');
 const statusEl = document.getElementById('catalog-status');

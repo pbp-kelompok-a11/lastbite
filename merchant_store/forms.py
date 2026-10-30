@@ -5,6 +5,7 @@ from django import forms
 from .models import MerchantStore
 
 PHONE_RE = re.compile(r'^\+?[0-9][0-9\s\-]{7,18}$')
+MAX_PHOTO_SIZE = 5 * 1024 * 1024
 
 
 class MerchantStoreForm(forms.ModelForm):
@@ -12,9 +13,11 @@ class MerchantStoreForm(forms.ModelForm):
         model = MerchantStore
         fields = [
             'name', 'description', 'address', 'phone',
+            'photo', 'name', 'description', 'address', 'phone',
             'business_email', 'opening_time', 'closing_time',
         ]
         widgets = {
+            'photo': forms.FileInput(attrs={'accept': 'image/*'}),
             'name': forms.TextInput(attrs={'placeholder': 'Contoh: Bakers Corner UI'}),
             'description': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Ceritakan singkat tentang tokomu (opsional)'}),
             'address': forms.TextInput(attrs={
@@ -26,8 +29,20 @@ class MerchantStoreForm(forms.ModelForm):
             'closing_time': forms.TimeInput(attrs={'type': 'time'}, format='%H:%M'),
         }
         help_texts = {
+            'photo': 'Opsional. Format JPG, PNG, atau WEBP, maksimal 5 MB.',
             'address': 'Tulis selengkap mungkin (jalan, kelurahan, kota). Koordinat peta dicari otomatis dari alamat ini.',
         }
+
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        # photo yang baru diunggah punya content_type; foto lama yang tidak diubah tidak punya
+        if photo and hasattr(photo, 'content_type'):
+            if photo.size > MAX_PHOTO_SIZE:
+                raise forms.ValidationError('Ukuran foto maksimal 5 MB.')
+            if not photo.content_type.startswith('image/'):
+                raise forms.ValidationError('File harus berupa gambar (JPG, PNG, atau WEBP).')
+        return photo
 
     def clean_name(self):
         name = ' '.join(self.cleaned_data['name'].split())
