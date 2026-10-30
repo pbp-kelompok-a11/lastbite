@@ -150,13 +150,15 @@ LOGOUT_REDIRECT_URL = 'main:home'
 # CSRF TRUSTED ORIGINS (for PWS deployment)
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     'CSRF_TRUSTED_ORIGINS',
-    'http://localhost http://127.0.0.1'
+    'http://localhost http://127.0.0.1 '
+    'https://fathir-atha-lastbite-pbp-kelompok-a11.pws.cs.ui.ac.id'
 ).split()
 
+# PWS berada di balik proxy HTTPS; header ini aman dipasang di lokal juga
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # SECURITY SETTINGS (production only)
 if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
