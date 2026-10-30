@@ -122,8 +122,9 @@ def summary_api(request):
     month_names_id = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
     
     for i in range(5, -1, -1):
-        ref_date = now - timedelta(days=i * 30)
-        m_start = ref_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        local_now = timezone.localtime(now)
+        year, month_index = divmod(local_now.year * 12 + local_now.month - 1 - i, 12)
+        m_start = local_now.replace(year=year, month=month_index + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
         m_next = (m_start + timedelta(days=32)).replace(day=1)
         
         m_logs = all_user_logs.filter(created_at__gte=m_start, created_at__lt=m_next)

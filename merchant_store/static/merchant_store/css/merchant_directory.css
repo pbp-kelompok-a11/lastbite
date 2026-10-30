@@ -75,7 +75,7 @@
 /* ---------- Kartu besar ---------- */
 .md-shell {
   display: grid;
-  grid-template-columns: 430px 1fr;
+  grid-template-columns: 430px minmax(0, 1fr);
   height: var(--md-panel-h);
   border: 1px solid var(--md-line);
   border-radius: 28px;
@@ -88,6 +88,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
   padding: 1.5rem;
   background: #fff;
 }
@@ -492,7 +493,7 @@
   }
 
   .md-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto 420px;
     height: auto;
   }
@@ -500,6 +501,15 @@
   .md-list {
     max-height: 380px;
   }
+}
+
+@media (max-width: 480px) {
+  .md-panel { padding: 1rem; }
+  .md-item__link { gap: .65rem; }
+  .md-item__thumb { width: 52px; height: 52px; }
+  .md-item__thumb img { max-width: 100%; max-height: 100%; }
+  .md-item__rating { font-size: .75rem; }
+  .md-badge { white-space: normal; }
 }
 
 /* ---------- Fitur kartu toko: status buka, lihat di peta, wishlist ---------- */

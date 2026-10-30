@@ -82,12 +82,22 @@
 .lb-login-btn svg { width: 20px; height: 20px; }
 .lb-login-btn:hover { background: #d9ead0; transform: translateY(-1px); }
 
-@media (max-width: 768px) {
-  .navbar__container { padding: 0 16px; }
-  .navbar__links > li { align-items: center; }
-  .navbar__link { padding: 0; }
+/* Switch before the signed-in navigation runs out of room. */
+.navbar__link { white-space: nowrap; }
+.navbar__user { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navbar__hamburger { min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
+
+@media (max-width: 1199px) {
+  .navbar__container { padding: 0 16px; gap: 12px; }
+  .navbar__links { display: none; }
+  .navbar__auth { display: flex; margin-left: auto; }
+  .navbar__user, .lb-nav-search { display: none; }
+  .navbar__hamburger { display: flex; margin-left: 0; flex-shrink: 0; }
+  .navbar__link.is-active { background: var(--lb-pill-bg); border-radius: 8px; }
   .navbar__link::after { display: none; }
   .navbar__links.open {
+    display: flex;
+    flex-direction: column;
     position: absolute;
     top: 100%;
     left: 0;
@@ -99,16 +109,20 @@
     align-items: stretch;
     gap: 0;
     padding: 8px 20px 24px;
+    margin: 0;
     overflow-y: auto;
     background: var(--lb-cream);
     border-top: 1px solid var(--lb-line);
   }
   .navbar__links.open > li {
     display: block;
+    flex-shrink: 0;
     border-bottom: 1px solid var(--lb-line);
   }
   .navbar__links.open .navbar__link {
     display: block;
+    width: 100%;
+    min-height: 44px;
     padding: 16px 4px;
     font-size: 1.05rem;
   }
