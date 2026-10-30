@@ -1,7 +1,7 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
-from django.conf.urls.static import static
+from django.views.static import serve
 
 urlpatterns = [
     path('accounts/', include('accounts.urls')),
@@ -12,10 +12,7 @@ urlpatterns = [
     path('stores/', include('merchant_store.urls')),  # Merchant Store module
     path('community/', include('community.urls')),    # Community module
     path('eco-impact/', include('eco_impact.urls')),  # Eco Impact module
-]
 
-if settings.DEBUG:
-    urlpatterns += static(
-        settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT,
-    )
+    # Foto unggahan (profil, toko, Surprise Bag) selalu dilayani, juga saat DEBUG=False
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]

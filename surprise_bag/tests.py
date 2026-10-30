@@ -177,7 +177,7 @@ class SurpriseBagFormTests(SurpriseBagTestCase):
     def test_update_form_only_exposes_allowed_fields(self):
         self.assertEqual(
             list(SurpriseBagUpdateForm().fields),
-            ['image_url', 'discounted_price', 'stock', 'pickup_start', 'pickup_end', 'is_active'],
+            ['photo', 'discounted_price', 'stock', 'pickup_start', 'pickup_end', 'is_active'],
         )
 
     def test_update_form_checks_discount_against_saved_original_price(self):

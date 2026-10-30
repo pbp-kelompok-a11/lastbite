@@ -9,7 +9,7 @@
     <header class="order-header"><span class="lb-eyebrow">SELAMATKAN MAKANAN HARI INI</span><h1 class="lb-section-title">Reservasi Surprise Bag</h1><p class="lb-section-sub">Pilih jumlah paket, lalu tunggu merchant menyiapkan pesananmu.</p></header>
     <div class="order-reservation">
       <article class="order-card order-summary">
-        <div class="order-product__image">{% if bag.image_url %}<img src="{{ bag.image_url }}" alt="{{ bag.name }}" class="order-product__photo"><span class="order-image-fallback" hidden aria-hidden="true">{{ bag.emoji }}</span>{% else %}<span class="order-image-fallback" aria-hidden="true">{{ bag.emoji }}</span>{% endif %}</div>
+        <div class="order-product__image">{% if bag.image_src %}<img src="{{ bag.image_src }}" alt="{{ bag.name }}" class="order-product__photo"><span class="order-image-fallback" hidden aria-hidden="true">{{ bag.emoji }}</span>{% else %}<span class="order-image-fallback" aria-hidden="true">{{ bag.emoji }}</span>{% endif %}</div>
         <div><span class="order-merchant">{{ bag.merchant_name }}</span><h2>{{ bag.name }}</h2><strong class="order-price">Rp{{ bag.discounted_price|floatformat:'0g' }} / paket</strong></div>
         <div class="order-summary__meta"><span>Stok tersedia: {{ bag.stock }} paket</span><span>Pickup hari ini: {{ bag.pickup_start|time:'H:i' }} sampai {{ bag.pickup_end|time:'H:i' }}</span><span>{{ bag.description }}</span></div>
       </article>

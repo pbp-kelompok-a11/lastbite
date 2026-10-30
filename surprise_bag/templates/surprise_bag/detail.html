@@ -14,9 +14,9 @@
 
     <div class="sb-detail">
       <div class="sb-detail__visual">
-        {% if bag.image_url %}
-          <img src="{{ bag.image_url }}" alt="{{ bag.name }}" class="sb-detail__image"
-               onerror="this.replaceWith('{{ bag.emoji }}')">
+        {% if bag.image_src %}
+          <img src="{{ bag.image_src }}" alt="{{ bag.name }}" class="sb-detail__image"
+                onerror="this.replaceWith('{{ bag.emoji }}')">
         {% else %}
           {{ bag.emoji }}
         {% endif %}

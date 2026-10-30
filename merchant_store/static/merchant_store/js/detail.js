@@ -1,4 +1,4 @@
-// Halaman detail toko: peta OpenStreetMap (Leaflet) selalu tampil,
+// Halaman detail toko: peta OpenStreetMap (Leaflet)
 // pin + label nama toko muncul setelah lokasi toko ditemukan
 (() => {
   const el = document.getElementById('ms-detail-map');
@@ -7,9 +7,7 @@
   const status = document.getElementById('ms-map-status');
   const openLink = document.getElementById('ms-open-osm-link');
 
-  // ---------- Pengaman struktur HTML ----------
-  // Pastikan hanya ada satu peta/status/link, semuanya berada DI DALAM kotak peta
-  // (.ms-profile-map-panel), dan ilustrasi abu-abu dihapus karena diganti peta asli.
+  //hanya ada satu peta/status/link, semuanya berada di kotak peta
   const panel = document.querySelector('.ms-profile-map-panel');
   [el, status, openLink].forEach((node) => {
     if (!node) return;
@@ -19,7 +17,7 @@
     if (panel && !panel.contains(node)) panel.appendChild(node);
   });
 
-  // Bar rating bintang harus berada di dalam halaman, tepat di bawah kartu utama
+  // Bar rating bintang berada di dalam halaman, tepat di bawah kartu utama
   const page = document.querySelector('.ms-store-detail-page');
   const layout = page ? page.querySelector('.ms-profile-layout') : null;
   const ratingBar = document.getElementById('ms-store-rating');
@@ -62,7 +60,7 @@
       lng >= -180 && lng <= 180;
   }
 
-  // Isi label: nama toko + "di area ..." (dibuat lewat DOM agar aman dari XSS)
+  // nama toko dan area dibuat DOM agar aman dari XSS
   function buildCallout() {
     const box = document.createElement('div');
     const name = document.createElement('strong');
@@ -78,7 +76,7 @@
     return box;
   }
 
-  // ---------- Peta dibuat langsung, tanpa menunggu lokasi toko ----------
+  //Peta dibuat langsung, tanpa menunggu lokasi toko
   const map = L.map(el, {
     zoomControl: true,
     scrollWheelZoom: true,
@@ -94,7 +92,7 @@
 
   requestAnimationFrame(() => map.invalidateSize());
 
-  // ---------- Pin toko ----------
+  //Pin toko
   function placeStore(lat, lng, zoom = 16) {
     if (!validCoordinates(lat, lng)) {
       showStatus('Koordinat lokasi toko tidak valid.');
@@ -127,7 +125,7 @@
     hideStatus();
   }
 
-  // ---------- Cari lokasi toko dari alamat ----------
+  // Cari lokasi toko dari alamat
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   // Bersihkan alamat: buang kode pos, "Indonesia", dan bagian yang berulang
@@ -145,7 +143,7 @@
     return parts;
   }
 
-  // Alamat lengkap dulu, lalu versi yang makin ringkas (nama + kecamatan + kabupaten/kota)
+  // Alamat lengkap dulu, lalu versi (nama + kecamatan + kabupaten/kota)
   function candidateQueries(address) {
     const parts = cleanParts(address);
     const list = [];

@@ -1,108 +1,465 @@
+/* ---------- Halaman & judul ---------- */
+.ms-page {
+  padding-top: calc(var(--navbar-height) + var(--space-2xl));
+  padding-bottom: var(--space-3xl);
+}
 
-.ms-page { padding-top: calc(var(--navbar-height) + var(--space-2xl)); padding-bottom: var(--space-3xl); }
-.ms-header { margin-bottom: var(--space-xl); }
-.ms-title { font-family: var(--font-heading); font-size: clamp(1.5rem, 4vw, 2.25rem); font-weight: 800; line-height: 1.2; }
-.ms-subtitle { color: var(--color-text-muted); margin-top: var(--space-sm); }
-.ms-subtitle-strong { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; }
-.ms-eyebrow { color: var(--color-primary); font-size: .75rem; letter-spacing: .1em; font-weight: 700; }
-.ms-muted { color: var(--color-text-muted); font-size: .875rem; }
-.ms-warn { color: #a12b22; }
-.ms-back { display: inline-block; margin-bottom: var(--space-lg); color: var(--color-primary); font-weight: 600; }
-.ms-back:hover { text-decoration: underline; }
+.ms-header {
+  margin-bottom: var(--space-xl);
+}
 
-/*tombol tambahan*/
-.btn--danger { background: #a12b22; color: #fff; border: 2px solid transparent; }
-.btn--danger:hover { background: #7f211a; }
-.btn:disabled { opacity: .6; cursor: not-allowed; }
-.ms-page :is(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+.ms-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 800;
+  line-height: 1.2;
+}
 
-/*notifikasi warning*/
-.notification--warning { background: #fff4d6; color: #6b4b00; border-color: var(--color-accent-dark); }
-.notification--info { background: var(--color-surface); }
-.notification--error { background: #fde8e6; color: #7f211a; border-color: #a12b22; }
+.ms-subtitle {
+  margin-top: var(--space-sm);
+  color: var(--color-text-muted);
+}
 
-/*badge*/
-.ms-badge { display: inline-block; padding: 2px 10px; border-radius: var(--radius-full); font-size: .75rem; font-weight: 600; white-space: nowrap; }
-.ms-badge--open { background: var(--color-primary-light); color: var(--color-primary-dark); }
-.ms-badge--closed { background: #fde8e6; color: #7f211a; }
-.ms-badge--off { background: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+.ms-subtitle-strong {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
 
-/*direktori: panel kiri + peta kanan*/
-.ms-directory { display: grid; grid-template-columns: 380px 1fr; gap: var(--space-lg); align-items: start; }
-.ms-panel { display: grid; gap: var(--space-md); padding: var(--space-lg); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
-.ms-search { display: grid; gap: var(--space-sm); }
-.ms-label { font-weight: 600; font-size: .875rem; }
-.ms-input, .ms-field input, .ms-field textarea { width: 100%; padding: .65rem .9rem; font: inherit; color: var(--color-text); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
-.ms-inline { display: flex; gap: var(--space-sm); align-items: center; }
-.ms-inline--wrap { flex-wrap: wrap; }
-.ms-radius { border: 0; padding: 0; }
-.ms-radius legend { margin-bottom: var(--space-sm); }
-.ms-chips { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
-.ms-chip { position: relative; cursor: pointer; }
-.ms-chip input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
-.ms-chip span { display: inline-block; padding: .35rem .9rem; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-bg); font-size: .875rem; font-weight: 500; transition: all var(--transition); }
-.ms-chip input:checked + span { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
-.ms-chip input:focus-visible + span { outline: 3px solid var(--color-primary); outline-offset: 2px; }
-.ms-status { min-height: 1.4em; font-size: .875rem; color: var(--color-text-muted); }
-.ms-status--error { color: #a12b22; }
+.ms-eyebrow {
+  color: var(--color-primary);
+  font-size: .75rem;
+  letter-spacing: .1em;
+  font-weight: 700;
+}
 
-.ms-results { display: grid; gap: var(--space-sm); max-height: 520px; overflow-y: auto; padding-right: 2px; }
-.ms-results--grid { max-height: none; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); overflow: visible; }
-.ms-card { display: grid; gap: var(--space-sm); padding: var(--space-md); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
-.ms-card h3 { display: inline; font-family: var(--font-heading); font-size: 1rem; margin-right: var(--space-sm); }
-.ms-card h3 a:hover { color: var(--color-primary); text-decoration: underline; }
-.ms-card__address { font-size: .875rem; color: var(--color-text-muted); margin: var(--space-xs) 0; }
-.ms-card__meta { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-md); font-size: .8125rem; color: var(--color-text-muted); }
-.ms-card__actions { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+.ms-muted {
+  color: var(--color-text-muted);
+  font-size: .875rem;
+}
 
+.ms-warn {
+  color: #a12b22;
+}
+
+.ms-back {
+  display: inline-block;
+  margin-bottom: var(--space-lg);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.ms-back:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Tombol tambahan ---------- */
+.btn--danger {
+  background: #a12b22;
+  color: #fff;
+  border: 2px solid transparent;
+}
+
+.btn--danger:hover {
+  background: #7f211a;
+}
+
+.btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.ms-page :is(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Notifikasi ---------- */
+.notification--warning {
+  background: #fff4d6;
+  color: #6b4b00;
+  border-color: var(--color-accent-dark);
+}
+
+.notification--info {
+  background: var(--color-surface);
+}
+
+.notification--error {
+  background: #fde8e6;
+  color: #7f211a;
+  border-color: #a12b22;
+}
+
+/* ---------- Badge ---------- */
+.ms-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: .75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ms-badge--open {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.ms-badge--closed {
+  background: #fde8e6;
+  color: #7f211a;
+}
+
+.ms-badge--off {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+/* ---------- Direktori: panel kiri + peta kanan ---------- */
+.ms-directory {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.ms-panel {
+  display: grid;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.ms-search {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.ms-label {
+  font-weight: 600;
+  font-size: .875rem;
+}
+
+.ms-input,
+.ms-field input,
+.ms-field textarea {
+  width: 100%;
+  padding: .65rem .9rem;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.ms-inline {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.ms-inline--wrap {
+  flex-wrap: wrap;
+}
+
+.ms-radius {
+  border: 0;
+  padding: 0;
+}
+
+.ms-radius legend {
+  margin-bottom: var(--space-sm);
+}
+
+.ms-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.ms-chip {
+  position: relative;
+  cursor: pointer;
+}
+
+.ms-chip input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+
+.ms-chip span {
+  display: inline-block;
+  padding: .35rem .9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-bg);
+  font-size: .875rem;
+  font-weight: 500;
+  transition: all var(--transition);
+}
+
+.ms-chip input:checked + span {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.ms-chip input:focus-visible + span {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.ms-status {
+  min-height: 1.4em;
+  font-size: .875rem;
+  color: var(--color-text-muted);
+}
+
+.ms-status--error {
+  color: #a12b22;
+}
+
+/* ---------- Hasil pencarian & kartu toko ---------- */
+.ms-results {
+  display: grid;
+  gap: var(--space-sm);
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.ms-results--grid {
+  max-height: none;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  overflow: visible;
+}
+
+.ms-card {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.ms-card h3 {
+  display: inline;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  margin-right: var(--space-sm);
+}
+
+.ms-card h3 a:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.ms-card__address {
+  font-size: .875rem;
+  color: var(--color-text-muted);
+  margin: var(--space-xs) 0;
+}
+
+.ms-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  font-size: .8125rem;
+  color: var(--color-text-muted);
+}
+
+.ms-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+/* ---------- Peta ---------- */
 /* isolation: agar panel peta Leaflet tidak menimpa navbar */
-.ms-map { position: relative; z-index: 0; isolation: isolate; height: 600px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; }
-.ms-map--detail { height: 420px; }
-.ms-map--form { height: 260px; margin-top: var(--space-sm); }
-
-/*detail*/
-.ms-detail { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items: start; }
-.ms-detail__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-md); }
-.ms-rating { margin: var(--space-sm) 0; font-weight: 600; }
-.ms-description { margin: var(--space-md) 0; }
-.ms-facts { display: grid; gap: var(--space-md); margin: var(--space-lg) 0; }
-.ms-facts dt { font-weight: 600; font-size: .875rem; }
-.ms-facts dd { color: var(--color-text-muted); }
-.ms-facts a { color: var(--color-primary); text-decoration: underline; text-underline-offset: 3px; }
-.ms-actions { display: flex; flex-wrap: wrap; gap: var(--space-md); margin-top: var(--space-lg); align-items: center; }
-.ms-empty { padding: var(--space-xl); text-align: center; color: var(--color-text-muted); background: var(--color-surface); border: 1px dashed var(--color-border); border-radius: var(--radius-lg); display: grid; gap: var(--space-md); justify-items: center; }
-.ms-empty[hidden] { display: none; }
-
-/*form & panel kartu*/
-.ms-card-panel { max-width: 720px; margin: 0 auto; padding: var(--space-xl); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
-.ms-form { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); margin-top: var(--space-xl); }
-.ms-field { grid-column: 1 / -1; }
-.ms-field--half { grid-column: auto; }
-.ms-field label { display: block; font-weight: 600; margin-bottom: var(--space-sm); }
-.ms-help { color: var(--color-text-muted); font-size: .8125rem; margin-top: var(--space-sm); }
-.ms-field .errorlist, .ms-form .errorlist { color: #a12b22; font-size: .875rem; list-style: none; margin-top: var(--space-xs); }
-.ms-geocode { margin-top: var(--space-sm); display: grid; gap: var(--space-xs); justify-items: start; }
-.ms-form__actions { grid-column: 1 / -1; display: flex; gap: var(--space-md); flex-wrap: wrap; }
-
-/*dialog hapus*/
-.ms-dialog { margin: auto; width: min(460px, calc(100% - 2rem)); padding: var(--space-xl); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-bg); color: var(--color-text); box-shadow: var(--shadow-xl); }
-.ms-dialog::backdrop { background: rgba(26, 43, 30, .55); }
-.ms-dialog h2 { font-family: var(--font-heading); font-size: 1.375rem; margin-bottom: var(--space-md); }
-.ms-dialog__actions { display: flex; flex-wrap: wrap; gap: var(--space-md); margin-top: var(--space-lg); }
-
-/*responsif*/
-@media (max-width: 960px) {
-  .ms-directory, .ms-detail { grid-template-columns: 1fr; }
-  .ms-map { height: 380px; }
-  .ms-results { max-height: 420px; }
-}
-@media (max-width: 560px) {
-  .ms-form { grid-template-columns: 1fr; }
-  .ms-field--half { grid-column: 1 / -1; }
-  .ms-card-panel { padding: var(--space-lg); }
+.ms-map {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  height: 600px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
-/* Foto toko pada form */
+.ms-map--detail {
+  height: 420px;
+}
+
+.ms-map--form {
+  height: 260px;
+  margin-top: var(--space-sm);
+}
+
+/* ---------- Detail ---------- */
+.ms-detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+.ms-detail__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.ms-rating {
+  margin: var(--space-sm) 0;
+  font-weight: 600;
+}
+
+.ms-description {
+  margin: var(--space-md) 0;
+}
+
+.ms-facts {
+  display: grid;
+  gap: var(--space-md);
+  margin: var(--space-lg) 0;
+}
+
+.ms-facts dt {
+  font-weight: 600;
+  font-size: .875rem;
+}
+
+.ms-facts dd {
+  color: var(--color-text-muted);
+}
+
+.ms-facts a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ms-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  align-items: center;
+}
+
+.ms-empty {
+  display: grid;
+  gap: var(--space-md);
+  justify-items: center;
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.ms-empty[hidden] {
+  display: none;
+}
+
+/* ---------- Form & panel kartu ---------- */
+.ms-card-panel {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.ms-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  margin-top: var(--space-xl);
+}
+
+.ms-field {
+  grid-column: 1 / -1;
+}
+
+.ms-field--half {
+  grid-column: auto;
+}
+
+.ms-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+}
+
+.ms-help {
+  color: var(--color-text-muted);
+  font-size: .8125rem;
+  margin-top: var(--space-sm);
+}
+
+.ms-field .errorlist,
+.ms-form .errorlist {
+  color: #a12b22;
+  font-size: .875rem;
+  list-style: none;
+  margin-top: var(--space-xs);
+}
+
+.ms-geocode {
+  display: grid;
+  gap: var(--space-xs);
+  justify-items: start;
+  margin-top: var(--space-sm);
+}
+
+.ms-form__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+/* ---------- Dialog hapus ---------- */
+.ms-dialog {
+  margin: auto;
+  width: min(460px, calc(100% - 2rem));
+  padding: var(--space-xl);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: var(--shadow-xl);
+}
+
+.ms-dialog::backdrop {
+  background: rgba(26, 43, 30, .55);
+}
+
+.ms-dialog h2 {
+  font-family: var(--font-heading);
+  font-size: 1.375rem;
+  margin-bottom: var(--space-md);
+}
+
+.ms-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+/* ---------- Foto toko pada form ---------- */
 .ms-photo-preview {
   width: 160px;
   height: 160px;
@@ -112,10 +469,44 @@
   background: #f1ecdf;
   overflow: hidden;
 }
-.ms-photo-preview[hidden] { display: none; }
+
+.ms-photo-preview[hidden] {
+  display: none;
+}
+
 .ms-photo-preview img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* ---------- Responsif ---------- */
+@media (max-width: 960px) {
+  .ms-directory,
+  .ms-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .ms-map {
+    height: 380px;
+  }
+
+  .ms-results {
+    max-height: 420px;
+  }
+}
+
+@media (max-width: 560px) {
+  .ms-form {
+    grid-template-columns: 1fr;
+  }
+
+  .ms-field--half {
+    grid-column: 1 / -1;
+  }
+
+  .ms-card-panel {
+    padding: var(--space-lg);
+  }
 }

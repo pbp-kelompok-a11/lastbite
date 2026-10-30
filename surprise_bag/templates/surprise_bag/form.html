@@ -17,7 +17,8 @@
       {% endif %}
     </div>
 
-    <form method="post" class="sb-form">
+    <!-- BARU (edit a): tambah enctype agar form bisa mengirim file -->
+    <form method="post" class="sb-form" enctype="multipart/form-data">
       {% csrf_token %}
 
       {% for error in form.non_field_errors %}
@@ -28,6 +29,11 @@
         <div class="sb-form__field{% if field.field.widget.input_type == 'checkbox' %} sb-form__field--check{% endif %}">
           <label for="{{ field.id_for_label }}">{{ field.label }}</label>
           {{ field }}
+          {% if field.name == 'photo' %}
+            <div class="sb-photo-preview" id="sb-photo-preview-box"{% if not bag.photo %} hidden{% endif %}>
+              <img id="sb-photo-preview" src="{% if bag.photo %}{{ bag.photo.url }}{% endif %}" alt="Pratinjau foto paket">
+            </div>
+          {% endif %}
           {% if field.help_text %}<small class="sb-form__help">{{ field.help_text }}</small>{% endif %}
           {% for error in field.errors %}<small class="sb-form__error">{{ error }}</small>{% endfor %}
         </div>
@@ -35,7 +41,7 @@
 
       <!-- preview persentase diskon secara live -->
       <p id="discount-preview" class="sb-form__help"
-         data-original="{% if bag %}{{ bag.original_price|stringformat:'s' }}{% endif %}"></p>
+          data-original="{% if bag %}{{ bag.original_price|stringformat:'s' }}{% endif %}"></p>
 
       <div class="sb-form__actions">
         <a href="{% url 'surprise_bag:my_bags' %}" class="btn btn--outline btn--md">Batal</a>
@@ -67,4 +73,6 @@ function updatePreview() {
 [originalInput, discountedInput].forEach(el => el && el.addEventListener('input', updatePreview));
 updatePreview();
 </script>
+<!-- BARU (edit c): skrip pratinjau foto, tepat setelah </script> di atas -->
+<script src="{% static 'js/bag_form_photo.js' %}"></script>
 {% endblock %}

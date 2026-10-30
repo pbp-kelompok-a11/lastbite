@@ -39,7 +39,7 @@
     'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>';
 
-  // ---------- Peta ----------
+  //Peta
   let map = null;
   let markersLayer = null;
   let meMarker = null;
@@ -71,7 +71,7 @@
       "Peta tidak dapat dimuat. Daftar toko tetap tersedia di samping.";
   }
 
-  // ---------- Helper ----------
+  //Helper
   function el(tag, className, text) {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -216,7 +216,7 @@
     return item;
   }
 
-  // ---------- Render ----------
+  //Render
   function render(data) {
     els.list.replaceChildren();
     if (hasMap) markersLayer.clearLayers();
@@ -306,7 +306,7 @@
     }
   }
 
-  // ---------- Ambil data (AJAX) ----------
+  // Ambil data (AJAX)
   let controller = null;
   async function loadStores() {
     if (controller) controller.abort();
@@ -358,7 +358,7 @@
     loadStores();
   }
 
-  // ---------- Event ----------
+  //Event
   let debounceTimer = null;
   els.q.addEventListener("input", () => {
     window.clearTimeout(debounceTimer);

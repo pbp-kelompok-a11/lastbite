@@ -200,7 +200,7 @@ def my_bags(request):
 @merchant_required
 def create_bag(request):
     if request.method == 'POST':
-        form = SurpriseBagForm(request.POST)
+        form = SurpriseBagForm(request.POST, request.FILES)
         if form.is_valid():
             bag = form.save(commit=False)
             bag.merchant = request.user  # paksa isi pemilik dari session, bukan dari form
@@ -217,7 +217,7 @@ def edit_bag(request, pk):
     # filter merchant=request.user supaya merchant lain dapat 404
     bag = get_object_or_404(SurpriseBag, pk=pk, merchant=request.user)
     if request.method == 'POST':
-        form = SurpriseBagUpdateForm(request.POST, instance=bag)
+        form = SurpriseBagUpdateForm(request.POST, request.FILES, instance=bag)
         if form.is_valid():
             form.save()
             messages.success(request, f'Surprise Bag "{bag.name}" berhasil diperbarui.')

@@ -1,7 +1,7 @@
 {% load static %}
 <div class="order-product">
   <div class="order-product__image">
-    {% if order.surprise_bag.image_url %}<img src="{{ order.surprise_bag.image_url }}" alt="{{ order.food_name }}" loading="lazy" class="order-product__photo"><span class="order-image-fallback" hidden aria-hidden="true">{{ order.surprise_bag.emoji }}</span>
+    {% if order.surprise_bag.image_src %}<img src="{{ order.surprise_bag.image_src }}" alt="{{ order.food_name }}" loading="lazy" class="order-product__photo"><span class="order-image-fallback" hidden aria-hidden="true">{{ order.surprise_bag.emoji }}</span>
     {% else %}<span class="order-image-fallback" aria-hidden="true">{{ order.surprise_bag.emoji }}</span>{% endif %}
   </div>
   <div class="order-product__info">

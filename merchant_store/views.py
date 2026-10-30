@@ -193,10 +193,8 @@ def _serialize_store(
     return data
 
 
-# =========================================================
 # READ: DIREKTORI TOKO
 # Publik: Guest, Customer, dan Merchant
-# =========================================================
 
 @require_GET
 def store_list(request):
@@ -514,12 +512,8 @@ def store_rate(request, pk):
     })
 
 
-
-
-# =========================================================
 # CREATE / UPDATE / DELETE
 # Khusus merchant pemilik toko
-# =========================================================
 
 def _own_store(user):
     return MerchantStore.objects.filter(owner=user).first()
@@ -681,10 +675,8 @@ def store_delete(request):
     return redirect('merchant_store:my_store')
 
 
-# =========================================================
 # WISHLIST
 # Khusus customer
-# =========================================================
 
 @customer_required
 @require_GET

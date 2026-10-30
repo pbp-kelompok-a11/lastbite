@@ -2,6 +2,7 @@ from django import forms
 from .models import SurpriseBag
 
 MIN_DISCOUNT = 30
+MAX_PHOTO_SIZE = 5 * 1024 * 1024  # 5 MB
 MAX_DISCOUNT = 50
 
 
@@ -27,13 +28,13 @@ class SurpriseBagForm(DiscountRangeMixin, forms.ModelForm):
     class Meta:
         model = SurpriseBag
         fields = [
-            'name', 'description', 'category', 'image_url', 'original_price', 'discounted_price',
+            'name', 'description', 'category', 'photo', 'original_price', 'discounted_price',
             'stock', 'pickup_start', 'pickup_end', 'is_active',
         ]
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'Contoh: Paket Roti Manis Sore'}),
             'description': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Isi paket kira-kira apa saja?'}),
-            'image_url': forms.URLInput(attrs={'placeholder': 'https://...'}),
+            'photo': forms.FileInput(attrs={'accept': 'image/*'}),
             'original_price': forms.NumberInput(attrs={'min': 0, 'step': 100, 'placeholder': 'Harga normal (Rp)'}),
             'discounted_price': forms.NumberInput(attrs={'min': 0, 'step': 100, 'placeholder': 'Harga jual (Rp)'}),
             'stock': forms.NumberInput(attrs={'min': 0}),
@@ -43,7 +44,7 @@ class SurpriseBagForm(DiscountRangeMixin, forms.ModelForm):
         labels = {
             'name': 'Nama Paket',
             'description': 'Deskripsi',
-            'image_url': 'Link Gambar (opsional)',
+            'photo': 'Foto Paket (opsional)',
             'category': 'Kategori',
             'original_price': 'Harga Normal (Rp)',
             'discounted_price': 'Harga Diskon (Rp)',
@@ -53,8 +54,18 @@ class SurpriseBagForm(DiscountRangeMixin, forms.ModelForm):
             'is_active': 'Tampilkan di katalog',
         }
 
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        # foto yang baru diunggah punya content_type; foto lama yang tidak diubah tidak punya
+        if photo and hasattr(photo, 'content_type'):
+            if photo.size > MAX_PHOTO_SIZE:
+                raise forms.ValidationError('Ukuran foto maksimal 5 MB.')
+            if not photo.content_type.startswith('image/'):
+                raise forms.ValidationError('File harus berupa gambar (JPG, PNG, atau WEBP).')
+        return photo
+
 
 class SurpriseBagUpdateForm(SurpriseBagForm):
     # sesuai README: yang boleh diubah hanya harga diskon, stok, dan jam pickup
     class Meta(SurpriseBagForm.Meta):
-        fields = ['image_url', 'discounted_price', 'stock', 'pickup_start', 'pickup_end', 'is_active']
+            fields = ['photo', 'discounted_price', 'stock', 'pickup_start', 'pickup_end', 'is_active']

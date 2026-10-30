@@ -1,8 +1,5 @@
 
-/* =====================================================
-   LASTBITE — DETAIL TOKO
-   CSS khusus halaman detail saja
-   ===================================================== */
+/* LASTBITE — DETAIL TOKO CSS khusus halaman detail saja*/
 
 .ms-store-detail-page {
   width: 100% !important;
@@ -558,9 +555,7 @@
 }
 
 
-/* =====================================================
-   RATING BINTANG INTERAKTIF
-   ===================================================== */
+/* RATING BINTANG INTERAKTIF */
 
 .ms-store-detail-page .ms-profile-ratingbar {
   display: flex;
@@ -654,9 +649,7 @@
 }
 
 
-/* =====================================================
-   PETA ASLI DI ATAS ILUSTRASI + PIN & LABEL TOKO
-   ===================================================== */
+/* PETA ASLI DI ATAS ILUSTRASI + PIN & LABEL TOKO */
 
 /* peta asli disembunyikan sampai siap, ilustrasi jadi cadangan */
 .ms-store-detail-page .ms-profile-map-panel .ms-map--detail {

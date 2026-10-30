@@ -1,9 +1,9 @@
 <div class="lb-bag-card-wrap" data-wishlist-card>
   <a href="{{ bag.get_absolute_url }}" class="lb-bag-card{% if not bag.stock %} lb-bag-card--soldout{% endif %}">
     <div class="lb-bag-card__media">
-      {% if bag.image_url %}
-        <img src="{{ bag.image_url }}" alt="{{ bag.name }}" loading="lazy"
-             onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
+            {% if bag.image_src %}
+        <img src="{{ bag.image_src }}" alt="{{ bag.name }}" loading="lazy"
+              onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
         <span class="lb-bag-card__emoji" aria-hidden="true" hidden>{{ bag.emoji }}</span>
       {% else %}
         <span class="lb-bag-card__emoji" aria-hidden="true">{{ bag.emoji }}</span>
