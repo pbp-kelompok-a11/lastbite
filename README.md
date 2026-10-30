@@ -77,6 +77,59 @@ Sistem dibagi menjadi lima modul utama, masing-masing berpusat pada satu entitas
     * Autentikasi: Customer hanya dapat mengakses pesanannya sendiri; Merchant hanya dapat memproses pesanan tokonya; Guest dilarang mengakses sistem transaksi.
     * Relasi Antarmodul: Mengambil data `SurpriseBag` dari Modul 1. Status pesanan Completed menjadi syarat Customer untuk menulis ulasan di Modul 4 dan memicu pencatatan dampak otomatis di Modul 5.
 
+    ### AI Disclosure & Analisis Kritis Keterbatasan AI
+
+    **Modul Order: Pemesanan & Status Pickup**
+
+    **Penanggung jawab: Salwa Alyani Naznin (2506622802)**
+
+    Dalam pengerjaan Modul Order pada Proyek LastBite, saya menggunakan AI untuk membantu membaca struktur repository kelompok, merancang alur reservasi dan status pickup, menghasilkan serta merevisi kode backend, menyusun interaksi AJAX/modal, mengintegrasikan antarmodul, menyesuaikan tampilan dengan Figma, dan membuat pengujian. Bantuan AI mencakup penulisan kode implementasi, bukan hanya pemberian referensi atau ide. Saya tetap bertanggung jawab untuk memahami kode, meninjau kesesuaian fitur dengan requirement, dan menjelaskan keputusan teknis modul yang saya kerjakan.
+
+    **Tools yang Digunakan:** ChatGPT melalui Codex, termasuk integrasi Figma untuk membaca konteks desain dan aset yang menjadi acuan implementasi antarmuka.
+
+    **Strategi Penggunaan AI:** Permintaan diberikan bertahap: mempelajari modul anggota lain terlebih dahulu, memakai model `SurpriseBag` asli tanpa menduplikasinya, mengikuti autentikasi bersama, mengimplementasikan transaksi dan pembatasan akses, menyambungkan review dan Eco Impact setelah dependensinya tersedia, kemudian menyesuaikan desain dan menjalankan pengujian. Hasil AI diperiksa melalui pembacaan kode, Django checks, pengujian otomatis, dan pemeriksaan antarmuka. Pengujian dan revisi kode tersebut juga mendapat bantuan AI.
+
+    **Bagian yang Dibantu AI:**
+
+    1. Menyusun model `Order`, migration, form reservasi, form verifikasi pickup, URL, dan views dengan pola Django yang mengikuti repository kelompok.
+    2. Mengimplementasikan `reserve_bag()` dan `transition_order()` pada `services.py`, termasuk validasi role, kepemilikan, jumlah paket, stok, waktu pickup, dan urutan perubahan status.
+    3. Menambahkan transaksi atomik, penguncian baris, pengurangan/pengembalian stok, dan `reservation_key` untuk menangani pengiriman ulang reservasi yang sama.
+    4. Membuat halaman reservasi, tab Aktif/Riwayat, kartu progres pesanan, modal kode pickup, serta fungsi JavaScript `fetch` untuk filter dan perubahan status tanpa memuat ulang seluruh halaman.
+    5. Menghubungkan Order Completed dengan pencatatan `ImpactLog` otomatis dan review Community melalui `related_order`, termasuk tautan Tulis Review/Lihat Review serta agregasi rating Merchant Store.
+    6. Mengadaptasi desain Figma menjadi Django templates dan CSS dengan komponen, token warna, font, navbar, dan footer bersama yang telah digunakan anggota kelompok lain.
+    7. Menulis dan memperbarui tests untuk reservasi, stok, snapshot harga, pembatalan, perubahan status, kode pickup, CSRF, isolasi akses antar-pengguna, integrasi review, dan rollback jika proses gagal.
+    8. Membantu menjelaskan alur kode, menyiapkan konfigurasi database lokal terpisah dari deployment, memeriksa migration, dan mengelola integrasi perubahan melalui branch Git.
+
+    #### Analisis Kritis Keterbatasan AI & Penyesuaian Implementasi
+
+    1. **Asumsi Skema Antarmodul:** AI tidak dapat menentukan relasi yang benar hanya dari deskripsi requirement. Pada pemeriksaan awal, model Surprise Bag dan Merchant Store di `main` masih berupa scaffold. Implementasi menunggu kode asli tersedia pada branch teman, lalu menggunakan FK ke `SurpriseBag` dan kepemilikan melalui `SurpriseBag.merchant`, bukan membuat model inventaris atau toko pengganti.
+
+    2. **Inkonsistensi Representasi Role:** Modul inventaris semula memeriksa Group `Merchant`, sedangkan autentikasi bersama menggunakan `UserProfile`. Pemeriksaan akses diselaraskan dengan `accounts.permissions.is_customer` dan `is_merchant`. Keanggotaan Group saja tidak dijadikan jalan pintas untuk memperoleh hak Merchant apabila role profil tidak sesuai.
+
+    3. **Konsistensi Stok dan Race Condition:** Pemisahan operasi membaca stok, menguranginya, dan membuat Order dapat menimbulkan data tidak konsisten. Reservasi ditempatkan dalam `transaction.atomic`, memakai `select_for_update()`, dan memanggil pengurangan stok bersyarat pada model Surprise Bag. Namun, keberhasilan tests SQLite tidak membuktikan perilaku penguncian PostgreSQL; pengujian konkurensi pada database deployment tetap merupakan verifikasi terpisah.
+
+    4. **Pengiriman Ulang Reservasi:** Menonaktifkan tombol di browser belum cukup untuk mencegah request berulang. `reservation_key` yang unik digunakan untuk mengambil kembali Order yang sudah dibuat. Customer, paket, dan jumlahnya dicocokkan sebelum hasil lama dikembalikan. Perlindungan ini berlaku untuk key yang sama, bukan melarang Customer membuat reservasi berbeda dengan key baru.
+
+    5. **Snapshot Harga dan Penghematan:** Harga katalog dapat berubah setelah reservasi. Order menyimpan harga normal, harga diskon, nama makanan, dan jadwal pickup saat transaksi dibuat. `total_price` dan `money_saved` dihitung dari snapshot tersebut dengan memperhitungkan `quantity`, sehingga perubahan harga paket tidak mengubah histori transaksi lama.
+
+    6. **Pembatalan dan Riwayat Transaksi:** Requirement Delete diterapkan sebagai pembatalan berstatus `Cancelled`, bukan menghapus bukti transaksi. Customer hanya boleh membatalkan Order Pending, dan stok dikembalikan setelah transisi berhasil. FK `PROTECT` menjaga paket yang telah memiliki Order; endpoint penghapusan paket menonaktifkan penawaran tersebut agar riwayat tetap tersedia.
+
+    7. **Otorisasi Objek dan Manipulasi Request:** UUID, field tersembunyi, dan tombol yang tidak ditampilkan bukan pengganti pemeriksaan akses. Query Customer dibatasi dengan `customer=request.user`, sedangkan Merchant dibatasi melalui pemilik Surprise Bag. Harga, identitas Customer, dan status awal ditentukan server. Mutasi memakai POST dan CSRF agar aturan tidak bergantung pada JavaScript atau input browser.
+
+    8. **Validasi Status dan Verifikasi Pickup:** Form hanya memeriksa format kode dan menormalkan huruf melalui `clean_pickup_code()`. Kecocokan kode, kepemilikan Merchant, dan status awal diperiksa kembali di service. Alur yang diizinkan adalah Pending ke Ready to Pickup lalu Completed; lompatan dan pengulangan transisi ditolak. Kode hanya diberikan pada tampilan Customer, bukan daftar Merchant.
+
+    9. **Efek Samping Completion dan Klaim Idempotensi:** Perubahan status Completed dan pencatatan ImpactLog dilakukan dalam transaksi yang sama agar kegagalan pencatatan membatalkan perubahan status. Pencegahan completion berulang bertumpu pada lock dan aturan transisi Order. `get_or_create()` tidak dianggap sebagai jaminan universal bebas duplikasi tanpa memperhatikan constraint database dan jalur penulisan data lainnya.
+
+    10. **Review Demo vs Pembelian Terverifikasi:** Implementasi awal Community belum memiliki relasi transaksi. Integrasi menambahkan `related_order`, pilihan Order Completed milik Customer, validasi kepemilikan, dan constraint satu review per Order. Review contoh lama tidak diberi transaksi palsu: tetap belum terverifikasi dan tidak dihitung dalam rating toko. Identitas Merchant ditelusuri dari relasi Order, bukan dipilih bebas dari browser.
+
+    11. **Batas Kepercayaan pada Frontend:** Preview total reservasi, label status, dan tampilan progres membantu interaksi, tetapi bukan sumber kebenaran transaksi. Server tetap memvalidasi stok, jumlah, harga, role, dan status. Respons AJAX dirender menggunakan autoescaping template, sedangkan pesan dan kode dinamis dimasukkan melalui `textContent` pada bagian antarmuka yang relevan.
+
+    12. **Keselarasan Desain dan Efisiensi Query:** Kode contoh dari konteks Figma tidak langsung dipakai sebagai React/Tailwind karena project menggunakan Django. Implementasi diadaptasi ke template dan CSS scoped modul Order dengan komponen `lb-*` bersama; ikon disimpan lokal agar tidak bergantung pada URL aset Figma sementara. `select_related()` dan `Subquery` digunakan untuk mengambil relasi dan ID review tanpa query tambahan untuk setiap kartu.
+
+    13. **Asumsi Waktu dan Cakupan Fitur:** Model Surprise Bag menyediakan jam pickup tanpa tanggal penawaran. Reservasi mengartikannya sebagai pickup hari ini menggunakan zona waktu aplikasi dan menolak pemesanan setelah jam akhir. Belum ada kedaluwarsa otomatis Order Pending, pembayaran, atau pemindaian QR. Completed berarti serah terima berhasil diverifikasi, bukan bukti pembayaran.
+
+    14. **Batas Pengujian dan Atribusi Perbaikan:** Tests mencakup skenario berhasil maupun gagal, antara lain stok tidak cukup, request berulang, akses milik pengguna lain, kode salah, rollback, serta review tidak sah. Pemeriksaan browser juga dilakukan memakai database fixture terisolasi dan Django Test Client sebagai penghubung request. Hasil ini tidak disamakan dengan pengujian HTTP deployment PWS atau konkurensi PostgreSQL. Revisi implementasi dan pengujian di atas juga dibantu AI; disclosure ini tidak mengklaim seluruh perbaikan sebagai pekerjaan manual tanpa bantuan AI.
+
 3. Modul Merchant Store : Direktori Toko & Integrasi Public API
     * Penanggung Jawab: 2506656734	FATHIR ATHA RIZKI TASRIL
     * Data Utama:`MerchantStore`
@@ -124,3 +177,33 @@ Sistem dibagi menjadi lima modul utama, masing-masing berpusat pada satu entitas
     * AJAX / HTMX & Filter: Dasbor diperbarui secara asinkron dan riwayat catatan dapat difilter berdasarkan rentang waktu (mingguan/bulanan) tanpa reload penuh.
     * Autentikasi: Seluruh data catatan dan ringkasan metrik bersifat privat, hanya dapat diakses oleh Customer pemilik akun yang bersangkutan.
     * Relasi Antarmodul: Menarik kuantitas dan harga dari transaksi `Order` yang berstatus Completed pada Modul 2.
+    * AI Disclosure & Analisis Kritis Keterbatasan AI (Modul Eco Impact):
+    Dalam pengerjaan Proyek LastBite pada Modul Eco Impact (Impact Journal & Green Wallet), saya (Khayla Syafira Ardiasih) menggunakan AI sebagai referensi teknis untuk penyusunan arsitektur logika metrik dampak lingkungan, integrasi endpoint AJAX visualisasi, pembuatan komponen dasbor interaktif, dan penulisan rangkaian unit test.
+
+    Tools yang Digunakan: ChatGPT
+
+    Bagian yang Dibantu AI:
+    1. Menyusun struktur dasar endpoint API (`summary_api` dan `logs_api`) untuk agregasi data kalkulasi makanan terselamatkan, reduksi emisi karbon (CO2), dan penghematan biaya.
+    2. Memberikan referensi template komponen UI visual dasbor (kartu metrik Jejak Baikmu, diagram batang tren bulanan, kartu status gamifikasi Waste Warrior, dan riwayat log).
+    3. Menyusun kerangka awal fungsi JavaScript asinkron (`fetch`) untuk memuat data riwayat log dan memperbarui statistik tanpa memuat ulang halaman secara penuh (full page reload).
+    4. Menyusun draf rangkaian unit test untuk menguji kode respon HTTP (200, 302, 400, 403, 404), validasi form, hak akses antar-peran, dan fungsi agregasi metrik.
+
+    Analisis Kritis Keterbatasan AI & Perbaikan Manual:
+
+    1. Integritas Data Transaksi vs Manipulasi Log (Data Tampering): AI awalnya mengizinkan seluruh log diedit melalui form yang sama. Saya menganalisis bahwa log yang bersumber dari pesanan harus bersifat imutabel sebagai bukti transaksi, sehingga saya memblokir hak edit dan hapus pada log dengan `log.source == 'order'` di `views.py` dan hanya mengizinkannya pada log penyelamatan mandiri (`source == 'manual'`).
+    2. Formula Rasio Konversi Emisi Karbon (CO2): AI mengusulkan konstanta emisi global statis tanpa konteks ilmiah yang jelas. Saya mengkritisinya karena limbah makanan di Indonesia didominasi organik berkadar air tinggi. Saya menetapkan faktor emisi backend terverifikasi (1.9 kg CO2 per kg makanan) agar estimasi dampak lingkungan tidak menyesatkan (greenwashing).
+    3. Celah Keamanan Insecure Direct Object References (IDOR): AI membuat endpoint edit dan hapus hanya memfilter berdasarkan `ImpactLog.objects.get(pk=id)`. Saya mengidentifikasi celah ini dan secara manual mengunci kueri dengan `user=request.user` pada `get_object_or_404` agar pengguna tidak dapat memanipulasi atau menghapus catatan dampak milik pengguna lain via modifikasi parameter URL/payload.
+    4. Kalkulasi Selisih Penghematan Finansial (Quantity Multiplication): AI mengkalkulasi penghematan hanya dari selisih harga satuan `(original_price - discounted_price)`. Saya mengoreksi logika ini pada property `money_saved` di `ImpactLog` agar mengalikan selisih harga dengan `quantity` (jumlah porsi) agar nominal penghematan di dasbor tidak keliru saat penyelamatan makanan berjumlah jamak.
+    5. Resolusi Relasi Kosong (Null Traversal) Nama Toko: AI hanya membaca field `notes` untuk menampilkan nama merchant pada kartu log, menyebabkan log riwayat pesanan berlabel placeholder `[Nama Toko]`. Saya merombak `logs_api` di `views.py` untuk menelusuri rantai relasi toko secara defensif menggunakan `getattr` dengan fallback bertingkat sebelum beralih ke `notes`.
+    6. Celah Manipulasi Klien pada Level Gamifikasi: AI menyarankan penentuan tingkatan Waste Warrior dihitung di JavaScript frontend berdasarkan teks DOM. Saya menolak pendekatan ini karena rentan dimanipulasi melalui inspeksi elemen browser; seluruh kalkulasi progres level (Seedling Saver hingga Earth Guardian) dan target porsi saya sentralisasi di backend `summary_api`.
+    7. Metode Destruktif Tanpa Proteksi CSRF: AI menghasilkan aksi penghapusan log menggunakan tag tautan `<a>` berbasis HTTP GET. Saya mengkritisi risiko penghapusan tak sengaja dan celah CSRF ini, lalu merombaknya di template menjadi form submit berproteksi token CSRF dengan konfirmasi dialog JavaScript.
+    8. Kebocoran Isolasi Styling CSS (Global Scope Pollution): AI menulis aturan CSS yang menimpa tag `body` dan tipografi secara global di `eco_impact.css`, merusak tampilan navbar dan footer halaman lain. Saya membatasi cakupan (scoping) selector secara ketat ke dalam namespace kelas komponen `.eco-*`.
+    9. Kerapuhan URL Routing Tombol Aksi (Error 404): AI merender tautan tombol edit pada frontend ke rute `/edit/<uuid>/`, padahal rute terdaftar di `urls.py` menggunakan prefiks `/logs/edit/<uuid>/`. Saya menambahkan URL alias `edit_log_alt` dan `delete_log_alt` pada `eco_impact/urls.py` agar aksi tombol pensil tidak menghasilkan error 404.
+    10. Sanitasi Tag HTML & Penanganan XSS pada Catatan: AI berasumsi field `CharField` otomatis bebas dari celah injeksi skrip. Saya menambahkan pembersihan string `.strip()` pada backend dan pembatasan panjang karakter pada form catatan manual guna mengantisipasi eksekusi muatan skrip berbahaya saat nama toko/catatan dirender kembali di dasbor via AJAX.
+    11. Pencegahan Anomali Data (Negative & Zero Values): AI membiarkan input jumlah porsi bernilai nol atau negatif lolos ke database. Saya memperbaikinya dengan menggunakan `PositiveIntegerField(default=1)` pada model `ImpactLog` serta menambahkan widget `min: 1` pada `ImpactLogForm` agar data input selalu bernilai positif valid.
+    12. Efisiensi Query Agregasi (Database-Level Calculations): AI menghitung akumulasi total dampak dengan memuat seluruh objek model ke memori lalu menjalankan loop manual di Python. Saya mengoptimalkannya dengan memanfaatkan metode agregasi dan kueri langsung berbasis filter pengguna di Django ORM demi efisiensi performa server.
+    13. Asumsi Keliru Dukungan Browser pada Web Share API: AI membuat tombol bagikan pencapaian langsung memanggil `navigator.share` tanpa penanganan kegagalan. Saya menambahkan blok fallback otomatis berupa penyalinan tautan ke clipboard (`navigator.clipboard.writeText`) beserta notifikasi alert agar fitur tetap berfungsi di browser desktop yang tidak mendukung Web Share.
+    14. Inkonsistensi State Metrik Pasca-Input AJAX: AI menyarankan memuat ulang halaman secara penuh (full page reload) setiap kali pengguna menambah log manual. Saya menolak saran ini dan membangun alur asinkron di mana respons sukses AJAX langsung mentrigger fetch ulang `summary_api` dan `logs_api` agar kartu metrik di atasnya ter-update instan tanpa mereset posisi scroll pengguna.
+    15. Query Filter Rentang Waktu Rentan Perbedaan Zona Waktu: AI memfilter data mingguan dan bulanan menggunakan manipulasi string tanggal lokal mentah. Saya memperbaikinya dengan query ORM `created_at__gte` berbasis `django.utils.timezone.now()` dan `timedelta` agar sinkron dengan konfigurasi zona waktu server.
+    16. Implementasi Diagram Batang 6 Bulan Mandiri: AI mengusulkan impor pustaka charting pihak ketiga yang berat dan memperlambat first load. Saya menggantinya dengan implementasi CSS Grid Bar Chart mandiri yang menghitung rasio persentase dinamis langsung dari respons JSON backend `monthly_trend`, menjaga aplikasi tetap ringan tanpa dependensi luar.
+    17. Cakupan Pengujian Keamanan & Kondisi Batas (Edge Cases): AI awalnya hanya menyusun unit test skenario ideal (happy path) dengan asumsi pengguna selalu valid. Saya memperluasnya secara manual menjadi 16 pengujian komprehensif di `eco_impact/tests.py`, mencakup proteksi akses Guest (302 redirect), penolakan akses Merchant (403 PermissionDenied), isolasi data antar-pengguna, pemblokiran edit log pesanan otomatis, dan akurasi formula matematis metrik dampak.
