@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import MerchantStore, StoreWishlist
+from .models import MerchantStore, StoreWishlist, WishlistReminder
 
 
 @admin.register(MerchantStore)
@@ -10,6 +10,11 @@ class MerchantStoreAdmin(admin.ModelAdmin):
     search_fields = ('name', 'address', 'owner__username')
     list_select_related = ('owner',)
 
+@admin.register(WishlistReminder)
+class WishlistReminderAdmin(admin.ModelAdmin):
+    list_display = ('customer', 'is_enabled', 'lead_minutes', 'updated_at')
+    list_filter = ('is_enabled',)
+    list_select_related = ('customer',)
 
 @admin.register(StoreWishlist)
 class StoreWishlistAdmin(admin.ModelAdmin):

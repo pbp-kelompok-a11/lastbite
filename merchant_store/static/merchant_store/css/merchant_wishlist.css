@@ -379,6 +379,31 @@
   transition: background var(--transition);
 }
 
+.mw-reminder__btn[aria-pressed="true"] {
+  background: var(--mw-green);
+  color: #fff;
+}
+
+.mw-reminder__btn:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+.mw-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  z-index: 1000;
+  max-width: min(92vw, 420px);
+  padding: .85rem 1.25rem;
+  border-radius: 14px;
+  background: var(--mw-ink);
+  color: #fff;
+  font-size: .9rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+}
+
 .mw-reminder__btn:hover {
   background: #d4e6d3;
 }

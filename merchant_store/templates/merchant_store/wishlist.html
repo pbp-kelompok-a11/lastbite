@@ -106,16 +106,25 @@
     </div>
   </section>
 
-  <aside class="mw-reminder">
+  <aside class="mw-reminder" id="mw-reminder"
+        data-url="{% url 'merchant_store:reminder_toggle' %}"
+        data-enabled="{{ reminder_enabled|yesno:'true,false' }}"
+        data-lead="{{ reminder_lead }}">
     <div class="mw-reminder__text">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       <div>
         <p class="mw-reminder__title">Jangan sampai kehabisan</p>
-        <p class="mw-reminder__desc">Stok berubah cepat menjelang jam pickup.</p>
+        <p class="mw-reminder__desc" id="mw-reminder-desc">Stok berubah cepat menjelang jam pickup.</p>
       </div>
     </div>
-    <button type="button" class="mw-reminder__btn">Aktifkan pengingat</button>
+    <button type="button" class="mw-reminder__btn" id="mw-reminder-btn" aria-pressed="{{ reminder_enabled|yesno:'true,false' }}">
+      {% if reminder_enabled %}Pengingat aktif ✓{% else %}Aktifkan pengingat{% endif %}
+    </button>
   </aside>
+
+  <div class="mw-toast" id="mw-toast" role="status" aria-live="polite" hidden></div>
+
+  {{ reminder_items|json_script:"mw-reminder-items" }}
 
 </div>
 {% endblock %}
@@ -123,4 +132,5 @@
 {% block extra_js %}
 <script src="{% static 'merchant_store/js/wishlist.js' %}"></script>
 <script src="{% static 'merchant_store/js/wishlist_page.js' %}"></script>
+<script src="{% static 'merchant_store/js/wishlist_reminder.js' %}"></script>
 {% endblock %}

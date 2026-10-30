@@ -14,7 +14,7 @@ from accounts.permissions import is_customer
 
 from .decorators import customer_required, customer_required_api, merchant_required
 from .forms import MerchantStoreForm
-from .models import MerchantStore, StoreWishlist, StoreRating
+from .models import MerchantStore, StoreWishlist, StoreRating, WishlistReminder
 from .ratings import get_rating, get_rating_map
 from .services import (
     GeocodingError,
@@ -715,17 +715,48 @@ def wishlist_list(request):
         .select_related('bag__merchant__merchant_store')
     ]
 
+    reminder = WishlistReminder.objects.filter(customer=request.user).first()
+
+    # data untuk pengingat di browser: jam pickup bag & jam buka toko yang ada di wishlist
+    reminder_items = [
+        {
+            'kind': 'bag',
+            'id': str(bag.pk),
+            'name': bag.name,
+            'store': bag.merchant_name,
+            'start': f'{bag.pickup_start:%H:%M}',
+            'end': f'{bag.pickup_end:%H:%M}',
+            'stock': bag.stock,
+            'url': bag.get_absolute_url(),
+        }
+        for bag in bags
+    ] + [
+        {
+            'kind': 'store',
+            'id': str(entry['store'].id),
+            'name': entry['store'].name,
+            'store': entry['store'].name,
+            'start': f"{entry['store'].opening_time:%H:%M}",
+            'end': f"{entry['store'].closing_time:%H:%M}",
+            'url': reverse('merchant_store:detail', args=[entry['store'].id]),
+        }
+        for entry in stores
+        if entry['store'].is_active
+    ]
+
     return render(
         request,
         'merchant_store/wishlist.html',
         {
             'entries': stores,
             'bags': bags,
+            'reminder_enabled': bool(reminder and reminder.is_enabled),
+            'reminder_lead': reminder.lead_minutes if reminder else 30,
+            'reminder_items': reminder_items,
             'can_wishlist': True,
             'wishlisted_ids': {bag.pk for bag in bags},
         },
     )
-
 
 @customer_required_api
 @require_POST
@@ -756,3 +787,19 @@ def wishlist_toggle(request, pk):
     )
 
     return JsonResponse({'wishlisted': True})
+
+@customer_required_api
+@require_POST
+def reminder_toggle(request):
+    """Nyalakan / matikan pengingat wishlist milik customer yang sedang login."""
+    reminder, _ = WishlistReminder.objects.get_or_create(
+        customer=request.user,
+        defaults={'is_enabled': False},
+    )
+    reminder.is_enabled = not reminder.is_enabled
+    reminder.save(update_fields=['is_enabled', 'updated_at'])
+    return JsonResponse({
+        'enabled': reminder.is_enabled,
+        'lead_minutes': reminder.lead_minutes,
+    }
+)
