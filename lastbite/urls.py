@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
-from django.views.static import serve
+from main.media_views import serve_media
 
 urlpatterns = [
     path('accounts/', include('accounts.urls')),
@@ -13,6 +13,6 @@ urlpatterns = [
     path('community/', include('community.urls')),    # Community module
     path('eco-impact/', include('eco_impact.urls')),  # Eco Impact module
 
-    # Foto unggahan (profil, toko, Surprise Bag) selalu dilayani, juga saat DEBUG=False
-    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    # Foto unggahan (profil, toko, Surprise Bag): dibaca dari database, juga saat DEBUG=False
+    re_path(r'^media/(?P<path>.*)$', serve_media),
 ]

@@ -142,8 +142,15 @@
     const thumb = el("div", "md-item__thumb");
     if (store.photo_url) {
       const img = el("img", "md-item__photo");
-      img.src = store.photo_url;
       img.alt = store.name;
+      img.onerror = () => {
+        img.onerror = null;
+        img.className = "";
+        img.alt = "";
+        if (cfg.thumbs.length) img.src = cfg.thumbs[store.id % cfg.thumbs.length];
+        else img.remove();
+      };
+      img.src = store.photo_url;
       thumb.appendChild(img);
     } else if (cfg.thumbs.length) {
       const img = el("img");
