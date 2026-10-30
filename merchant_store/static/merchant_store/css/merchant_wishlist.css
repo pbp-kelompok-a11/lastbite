@@ -77,3 +77,13 @@
   .mw-grid { grid-template-columns: 1fr; }
   .mw-reminder { padding: 1.25rem; }
 }
+
+/* Foto toko memenuhi area gambar kartu */
+.mw-card__media img.mw-card__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 1;
+}

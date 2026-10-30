@@ -25,7 +25,9 @@
     <section class="ms-profile-panel" aria-label="Informasi toko">
 
       <div class="ms-profile-identity">
-        <div class="ms-profile-avatar" aria-hidden="true"></div>
+        <div class="ms-profile-avatar"{% if not store.photo %} aria-hidden="true"{% endif %}>
+          {% if store.photo %}<img src="{{ store.photo.url }}" alt="Foto {{ store.name }}">{% endif %}
+        </div>
 
         <div class="ms-profile-identity__text">
           <div class="ms-profile-titleline">

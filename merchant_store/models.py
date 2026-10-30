@@ -19,6 +19,7 @@ class MerchantStore(models.Model):
     business_email = models.EmailField('email bisnis', blank=True)
     opening_time = models.TimeField('jam buka')
     closing_time = models.TimeField('jam tutup')
+    photo = models.ImageField('foto toko', upload_to='store_photos/', blank=True)
 
     # Diisi otomatis dari OpenStreetMap Nominatim (lihat services.geocode_address)
     latitude = models.FloatField(

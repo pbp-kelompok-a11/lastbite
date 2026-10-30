@@ -50,7 +50,11 @@
       {% cycle 'img/bento.png' 'img/croissant.png' as thumb silent %}
       <li class="mw-card" data-wishlist-card>
         <div class="mw-card__media">
-          <img src="{% static thumb %}" alt="">
+          {% if entry.store.photo %}
+            <img class="mw-card__photo" src="{{ entry.store.photo.url }}" alt="{{ entry.store.name }}">
+          {% else %}
+            <img src="{% static thumb %}" alt="">
+          {% endif %}
 
           {% if not entry.store.is_active %}<span class="mw-badge mw-badge--off">Nonaktif</span>
           {% elif entry.store.is_open_now %}<span class="mw-badge">Buka</span>

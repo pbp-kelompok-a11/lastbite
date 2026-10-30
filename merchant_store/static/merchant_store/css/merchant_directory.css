@@ -51,6 +51,7 @@
 .md-item__link:hover, .md-item__link:focus-visible { background: #f8f8f4; }
 .md-item__thumb { flex: none; display: grid; place-items: center; width: 76px; height: 76px; border-radius: 18px; background: #f1ecdf; overflow: hidden; }
 .md-item__thumb img { width: 56px; height: 56px; object-fit: contain; }
+.md-item__thumb img.md-item__photo { width: 100%; height: 100%; object-fit: cover; }
 .md-item__body { flex: 1; min-width: 0; }
 .md-item__name { font-size: 1rem; font-weight: 500; color: var(--md-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .md-item__rating { margin-top: .2rem; font-size: .8rem; font-weight: 600; color: var(--md-star); }

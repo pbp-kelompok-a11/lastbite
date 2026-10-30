@@ -54,4 +54,20 @@
       button.disabled = false;
     }
   });
+
+  // Pratinjau foto toko yang dipilih
+  (() => {
+    const input = document.getElementById('id_photo');
+    const box = document.getElementById('ms-photo-preview-box');
+    const img = document.getElementById('ms-photo-preview');
+    if (!input || !box || !img) return;
+
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0];
+      if (!file || !file.type.startsWith('image/')) return;
+      img.src = URL.createObjectURL(file);
+      box.hidden = false;
+    });
+  })();
+  
 })();

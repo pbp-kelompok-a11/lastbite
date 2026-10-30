@@ -252,17 +252,25 @@ class MerchantCrudTests(BaseCase):
 
 # Read publik
 class PublicReadTests(BaseCase):
-    def test_directory_and_detail_open_to_guest(self):
+    def test_directory_open_to_guest_but_detail_requires_login(self):
         store = make_store(self.merchant)
         self.assertEqual(self.client.get(reverse('merchant_store:list')).status_code, 200)
-        response = self.client.get(reverse('merchant_store:detail', args=[store.id]))
+
+        url = reverse('merchant_store:detail', args=[store.id])
+        response = self.client.get(url)
+        self.assertRedirects(
+            response, f"{reverse('accounts:login')}?next={url}", fetch_redirect_response=False
+        )
+
+        self.client.force_login(self.customer)
+        response = self.client.get(url)
         self.assertContains(response, 'Toko Uji')
         self.assertContains(response, 'Belum ada rating')
 
     def test_inactive_store_hidden_except_owner(self):
         store = make_store(self.merchant, is_active=False)
         url = reverse('merchant_store:detail', args=[store.id])
-        self.assertEqual(self.client.get(url).status_code, 404)
+        self.assertEqual(self.client.get(url).status_code, 302)  # tamu dialihkan ke login
         self.client.force_login(self.customer)
         self.assertEqual(self.client.get(url).status_code, 404)
         self.client.force_login(self.merchant)
@@ -270,12 +278,14 @@ class PublicReadTests(BaseCase):
 
     def test_detail_map_coordinates_use_dot_not_locale_comma(self):
         store = make_store(self.merchant, latitude=-6.3628, longitude=106.8272)
+        self.client.force_login(self.customer)
         html = self.client.get(reverse('merchant_store:detail', args=[store.id])).content.decode()
         self.assertIn('data-lat="-6.3628"', html)
         self.assertIn('data-lng="106.8272"', html)
 
     def test_store_name_is_escaped(self):
         store = make_store(self.merchant, name='<script>alert(1)</script>')
+        self.client.force_login(self.customer)
         html = self.client.get(reverse('merchant_store:detail', args=[store.id])).content.decode()
         self.assertNotIn('<script>alert(1)</script>', html)
         self.assertIn('&lt;script&gt;alert(1)&lt;/script&gt;', html)

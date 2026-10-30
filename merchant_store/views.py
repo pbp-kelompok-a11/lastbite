@@ -176,6 +176,7 @@ def _serialize_store(
         'rating': average,
         'rating_count': count,
         'bag_count': getattr(store, 'bag_count', 0),
+        'photo_url': store.photo.url if store.photo else '',
         'detail_url': reverse(
             'merchant_store:detail',
             args=[store.id],
@@ -552,7 +553,7 @@ def store_create(request):
     if _own_store(request.user):
         return redirect('merchant_store:my_store')
 
-    form = MerchantStoreForm(request.POST or None)
+    form = MerchantStoreForm(request.POST or None, request.FILES or None)
 
     if request.method == 'POST' and form.is_valid():
         store = form.save(commit=False)
@@ -602,6 +603,7 @@ def store_edit(request):
 
     form = MerchantStoreForm(
         request.POST or None,
+        request.FILES or None,
         instance=store,
     )
 

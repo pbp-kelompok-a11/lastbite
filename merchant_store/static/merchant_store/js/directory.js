@@ -140,12 +140,18 @@
     link.href = store.detail_url;
 
     const thumb = el("div", "md-item__thumb");
-    if (cfg.thumbs.length) {
+    if (store.photo_url) {
+      const img = el("img", "md-item__photo");
+      img.src = store.photo_url;
+      img.alt = store.name;
+      thumb.appendChild(img);
+    } else if (cfg.thumbs.length) {
       const img = el("img");
       img.src = cfg.thumbs[store.id % cfg.thumbs.length];
       img.alt = "";
       thumb.appendChild(img);
     }
+    
     link.appendChild(thumb);
 
     const body = el("div", "md-item__body");

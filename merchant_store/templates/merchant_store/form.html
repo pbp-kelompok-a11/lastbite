@@ -16,6 +16,7 @@
     <p class="ms-subtitle">Data ini tampil di direktori toko. Lokasi di peta dicari otomatis dari alamat.</p>
 
     <form method="post" class="ms-form" id="ms-store-form" novalidate
+          enctype="multipart/form-data"
           data-geocode-url="{% url 'merchant_store:api_geocode' %}">
       {% csrf_token %}
       {{ form.non_field_errors }}
@@ -23,6 +24,11 @@
       <div class="ms-field{% if field.name == 'phone' or field.name == 'business_email' or field.name == 'opening_time' or field.name == 'closing_time' %} ms-field--half{% endif %}">
         {{ field.label_tag }}
         {{ field }}
+        {% if field.name == 'photo' %}
+          <div class="ms-photo-preview" id="ms-photo-preview-box"{% if not store.photo %} hidden{% endif %}>
+            <img id="ms-photo-preview" src="{% if store.photo %}{{ store.photo.url }}{% endif %}" alt="Pratinjau foto toko">
+          </div>
+        {% endif %}
         {% if field.help_text %}<p class="ms-help">{{ field.help_text }}</p>{% endif %}
         {{ field.errors }}
         {% if field.name == 'address' %}
