@@ -236,6 +236,74 @@ Sistem dibagi menjadi lima modul utama, masing-masing berpusat pada satu entitas
     * Autentikasi: Guest bersifat read-only; pembuatan dan edit konten dibatasi untuk Customer terdaftar; penulisan review divalidasi ketat terhadap kepemilikan transaksi selesai.
     * Relasi Antarmodul: Agregasi nilai rating dari entitas review diteruskan ke Modul 3 untuk menampilkan rata-rata rating bintang pada profil toko.
 
+    # AI Disclosure & Analisis Kritis Keterbatasan AI
+
+    **Modul Community: Food Hack & Review**
+
+    Dalam pengembangan Proyek LastBite pada Modul Community, saya memanfaatkan AI sebagai asisten teknis untuk membantu memecahkan permasalahan logika pemrograman, mengeksplorasi pendekatan implementasi, serta memahami penggunaan Django dalam pengembangan aplikasi web. Bantuan AI juga digunakan dalam penyusunan dan penyesuaian kode, pengembangan interaksi AJAX, debugging, integrasi antarmodul, dan pengujian fungsional. Kebutuhan, cakupan fitur, serta alur penggunaan Community ditentukan berdasarkan rancangan yang saya susun, sedangkan hasil implementasinya ditinjau agar sesuai dengan kebutuhan proyek.
+
+    **Tools yang Digunakan:** ChatGPT dan OpenAI Codex.
+
+    ### Bagian yang Dibantu AI
+
+    1. **Perancangan Struktur Model Community:** Membantu mengevaluasi struktur model `CommunityPost` yang digunakan untuk mengelola Food Hack dan Review, termasuk relasi terhadap pengguna, komentar, Like, dan pesanan.
+
+    2. **Pengembangan CRUD Food Hack:** Membantu memecahkan logika pembuatan, pengeditan, dan penghapusan Food Hack melalui Django views dan forms, termasuk pengaturan hak akses berdasarkan kepemilikan postingan.
+
+    3. **Validasi Form dan Model:** Memberikan referensi penerapan validasi melalui `ModelForm` dan metode `clean()` agar input postingan, komentar, dan Review memenuhi ketentuan masing-masing fitur.
+
+    4. **Implementasi Community Feed:** Membantu menyusun pendekatan untuk menggabungkan Food Hack dan Review dalam satu halaman, termasuk pengelolaan tab kategori dan penyajian informasi setiap postingan.
+
+    5. **Pencarian, Filtering, dan Sorting:** Membantu mengembangkan logika pencarian berdasarkan konten postingan, pengurutan berdasarkan waktu, jumlah Like, atau rating, serta penanganan parameter filter yang tidak sesuai.
+
+    6. **Pengembangan Pagination:** Memberikan referensi penggunaan Django `Paginator` untuk membatasi jumlah postingan yang ditampilkan dan mempertahankan parameter pencarian ketika pengguna berpindah halaman.
+
+    7. **Implementasi Like Berbasis AJAX:** Membantu memecahkan logika penambahan dan pembatalan Like pada Food Hack, termasuk penyimpanan status pengguna serta pembaruan jumlah Like tanpa memuat ulang halaman.
+
+    8. **Pengembangan Komentar dan Nested Replies:** Membantu menyusun mekanisme pembuatan, pengeditan, penghapusan, dan pembalasan komentar, termasuk pengelolaan relasi komentar induk dan balasan melalui AJAX.
+
+    9. **Integrasi Review dengan Order:** Membantu merumuskan mekanisme Review berdasarkan pesanan berstatus Completed, termasuk pemeriksaan kepemilikan Order, validasi rating, dan pembatasan satu Review per transaksi.
+
+    10. **Pengembangan Balasan Resmi Merchant:** Membantu mengevaluasi mekanisme pemberian balasan terhadap Review oleh Merchant yang memiliki toko terkait, termasuk pengelolaan balasan yang sudah dibuat.
+
+    11. **Pengembangan Antarmuka Community:** Memberikan referensi penyusunan Django templates, komponen HTML yang digunakan berulang, CSS, dan JavaScript agar tampilan Food Hack, Review, serta interaksi pengguna tetap konsisten.
+
+    12. **Debugging dan Pengujian:** Membantu mengidentifikasi kesalahan implementasi, mengevaluasi penggunaan Django ORM, serta menyusun dan menyesuaikan unit test untuk validasi, CRUD, hak akses, dan integrasi antarmodul.
+
+    ### Analisis Kritis Keterbatasan AI & Penyesuaian Implementasi
+
+    1. **Perbedaan Aturan Bisnis Food Hack dan Review:** Meskipun Food Hack dan Review ditampilkan dalam satu Community Feed, keduanya memiliki kebutuhan data yang berbeda. Food Hack digunakan untuk membagikan tips pemanfaatan makanan, sedangkan Review merupakan penilaian terhadap transaksi yang telah diselesaikan. Saya meninjau penggunaan `post_type` pada model `CommunityPost` beserta validasinya agar Food Hack tidak memerlukan rating atau relasi Order, sementara Review harus memenuhi persyaratan tersebut. Pendekatan ini memungkinkan penggunaan struktur postingan bersama tanpa mengabaikan aturan bisnis masing-masing fitur.
+
+    2. **Konsistensi Validasi antara Model dan Form:** Validasi yang hanya ditempatkan pada antarmuka atau form berpotensi dilewati ketika data dibuat melalui jalur lain. Saya mengevaluasi pembagian tanggung jawab antara validasi `ModelForm` dan metode `clean()` pada model untuk menjaga konsistensi data Community. Perlu diperhatikan bahwa `save()` pada Django tidak otomatis menjalankan `full_clean()`, sehingga jalur penyimpanan yang tidak melalui form tervalidasi memerlukan pemeriksaan tersendiri. Hal ini menjadi perhatian agar aturan data tidak hanya berlaku pada alur penggunaan normal.
+
+    3. **Keamanan Hak Akses pada CRUD Food Hack:** Pengguna yang telah login tidak seharusnya memperoleh izin untuk mengubah seluruh postingan. Saya meninjau pembatasan objek berdasarkan `author=request.user` pada operasi edit dan hapus agar pengguna hanya dapat mengelola Food Hack miliknya sendiri. Pemeriksaan dilakukan pada backend, bukan hanya melalui penyembunyian tombol di antarmuka. Dengan demikian, perubahan ID postingan pada URL tidak dapat digunakan sebagai jalan pintas untuk mengakses operasi milik pengguna lain.
+
+    4. **Validasi Kepemilikan Komentar:** Sistem komentar memerlukan pembatasan hak akses yang terpisah dari postingan induknya. Penulis Food Hack tidak otomatis memiliki kewenangan untuk mengedit seluruh komentar yang diberikan pengguna lain. Oleh karena itu, operasi pengeditan dan penghapusan komentar perlu memeriksa identitas penulis komentar yang bersangkutan. Pemisahan ini menjaga agar hak pengelolaan postingan tidak disamakan dengan hak pengelolaan komentar.
+
+    5. **Integritas Relasi Nested Replies:** Implementasi komentar bertingkat tidak cukup hanya menyimpan ID komentar induk yang dikirim dari frontend. Tanpa validasi tambahan, balasan berpotensi dikaitkan dengan komentar dari postingan berbeda atau membentuk relasi yang tidak sesuai. Saya mengevaluasi penggunaan relasi `parent` pada `CommunityComment` beserta pemeriksaan kesesuaian postingan induk. Pendekatan ini menjaga struktur diskusi tetap konsisten dan mencegah terbentuknya hubungan komentar yang tidak valid.
+
+    6. **Konsistensi Like antara Frontend dan Database:** Pembaruan jumlah Like secara langsung melalui JavaScript dapat menimbulkan perbedaan dengan kondisi database apabila request gagal atau status pengguna tidak sesuai. Implementasi menggunakan endpoint POST untuk memproses perubahan Like, kemudian mengembalikan status `has_upvoted` dan `upvote_count` kepada frontend. Saya meninjau agar tampilan mengikuti respons backend, bukan menentukan jumlah Like secara mandiri. Dengan demikian, database tetap menjadi sumber utama informasi interaksi pengguna.
+
+    7. **Risiko Permintaan Like Berulang:** Interaksi AJAX memungkinkan pengguna mengirimkan beberapa request dalam waktu berdekatan, misalnya ketika tombol Like ditekan berulang kali. Jika perubahan hanya dilakukan dengan menambah atau mengurangi angka tanpa memeriksa relasi pengguna, jumlah Like berpotensi tidak konsisten. Implementasi menggunakan mekanisme toggle berdasarkan status Like yang tersimpan dan transaksi database pada proses perubahan. Namun, pengujian pada skenario request bersamaan tetap diperlukan untuk memastikan perilakunya sesuai pada lingkungan deployment.
+
+    8. **Penyesuaian Filter dan Sorting Berdasarkan Jenis Konten:** Food Hack dan Review mempunyai parameter pengurutan yang berbeda. Pengurutan berdasarkan jumlah Like relevan untuk Food Hack, sedangkan pengurutan berdasarkan rating lebih sesuai untuk Review. Saya mengevaluasi pemisahan pilihan filter berdasarkan kategori agar parameter yang tidak relevan tidak menghasilkan perilaku yang membingungkan. Nilai parameter yang tidak dikenal juga perlu ditangani dengan pilihan default sehingga Community Feed tetap dapat digunakan.
+
+    9. **Efisiensi Query pada Community Feed:** Community Feed menampilkan informasi yang berasal dari beberapa relasi database, seperti penulis, Order, jumlah Like, dan komentar. Jika seluruh data diambil menggunakan query terpisah pada setiap postingan, jumlah query dapat meningkat seiring bertambahnya konten. Implementasi memanfaatkan `select_related()`, anotasi `Count()`, dan `Exists()` untuk memperoleh informasi yang diperlukan. Saya juga meninjau penggunaan pagination sepuluh postingan per halaman agar sistem tidak memuat seluruh konten sekaligus. Efektivitas optimasi tetap perlu dinilai melalui pengujian query pada jumlah data yang lebih besar.
+
+    10. **Konsistensi Pencarian dan Pagination Berbasis AJAX:** Pencarian asinkron memerlukan koordinasi antara parameter pencarian, kategori aktif, pengurutan, dan halaman yang sedang ditampilkan. Jika parameter tersebut tidak dipertahankan secara konsisten, pengguna dapat memperoleh hasil yang berbeda ketika berpindah halaman atau mengganti filter. Implementasi memisahkan respons halaman penuh dan respons parsial untuk Community Feed. Saya meninjau pendekatan ini agar perubahan hasil pencarian tidak memerlukan pemuatan ulang seluruh halaman, tetapi tetap mengikuti kondisi filter yang dipilih pengguna.
+
+    11. **Validasi Review Berdasarkan Transaksi Completed:** Review tidak boleh dibuat hanya berdasarkan pilihan produk atau Merchant yang dikirimkan dari browser karena informasi tersebut dapat dimanipulasi. Saya mengevaluasi mekanisme `ReviewForm` agar pilihan Order dibatasi pada transaksi berstatus `COMPLETED` milik Customer yang sedang login. Kepemilikan dan status Order diperiksa kembali pada backend sebelum Review disimpan. Pendekatan ini menjaga agar Review yang terhubung dengan transaksi benar-benar berasal dari Customer yang memenuhi persyaratan.
+
+    12. **Pencegahan Duplikasi Review dan Race Condition:** Pemeriksaan apakah sebuah Order sudah memiliki Review berpotensi tidak cukup ketika dua request dikirim hampir bersamaan. Implementasi menggunakan `transaction.atomic()` dan `select_for_update()` pada proses pembuatan Review, serta pembatasan keunikan relasi Order pada database. Saya meninjau pendekatan tersebut agar satu transaksi tidak menghasilkan beberapa Review. Namun, keberhasilan pengujian lokal tidak otomatis menjamin perilaku konkurensi yang identik pada seluruh jenis database, sehingga pengujian lanjutan tetap menjadi pertimbangan.
+
+    13. **Pembatasan Balasan Resmi Merchant:** Status sebagai Merchant tidak otomatis memberikan hak untuk membalas seluruh Review. Merchant harus memiliki hubungan dengan toko yang menerima pesanan terkait Review tersebut. Saya mengevaluasi validasi kepemilikan melalui relasi Review, Order, dan Merchant Store agar balasan hanya dapat diberikan oleh pihak yang berwenang. Penggunaan `OneToOneField` pada model balasan juga menjaga agar setiap Review hanya mempunyai satu tanggapan resmi Merchant, yang dapat diperbarui apabila diperlukan.
+
+    14. **Keamanan HTTP Method dan Request AJAX:** Operasi yang mengubah data tidak seharusnya menggunakan request GET karena metode tersebut ditujukan untuk pengambilan informasi. Saya meninjau penggunaan request POST dan pembatasan metode seperti `@require_POST` pada interaksi yang melakukan perubahan data. Perlindungan CSRF Django juga perlu dipertahankan pada request AJAX yang relevan. Langkah ini memastikan keamanan operasi tidak hanya bergantung pada tombol atau validasi yang tersedia di frontend.
+
+    15. **Penggunaan Komponen Template dan Pemeliharaan Antarmuka:** Pengembangan antarmuka dengan bantuan AI berpotensi menghasilkan struktur HTML yang berulang apabila setiap halaman dibuat secara terpisah. Saya mengevaluasi penggunaan template parsial untuk elemen yang dipakai pada beberapa bagian Community, seperti komponen reaksi Food Hack, rating Review, dan pilihan sorting. Pendekatan tersebut membantu menjaga konsistensi antartampilan dan mempermudah perubahan desain. Meskipun demikian, pemisahan komponen perlu tetap mempertimbangkan keterbacaan agar struktur template tidak menjadi terlalu kompleks.
+
+    16. **Evaluasi Integrasi Antarmodul dan Pengujian:** Modul Community bergantung pada autentikasi dari Accounts, data transaksi dari Order, serta informasi Merchant dari modul terkait. Solusi yang dihasilkan AI perlu disesuaikan dengan nama field, relasi model, URL, dan aturan akses yang digunakan dalam repository kelompok. Saya meninjau kesesuaian implementasi tersebut melalui pemeriksaan kode, debugging, dan pengujian fungsional. Pengujian juga perlu mencakup skenario khusus, seperti pengguna tanpa izin, input tidak valid, Order yang belum Completed, dan upaya membuat Review ganda. Proses evaluasi serta perbaikan kode tersebut dapat melibatkan bantuan AI, sehingga tidak seluruh penyesuaian diklaim sebagai hasil penulisan manual.
+
 5. Modul Eco Impact : Impact Journal & Green Wallet
     * Penanggung Jawab: 2506656910	KHAYLA SYAFIRA ARDIASIH
     * Data Utama: `ImpactLog`

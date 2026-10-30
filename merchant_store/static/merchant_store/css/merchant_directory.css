@@ -595,3 +595,14 @@
   font-size: .78rem;
   color: var(--md-muted);
 }
+
+/* ---------- Perbaikan tampilan HP ---------- */
+.md-panel { min-width: 0; }
+.md-chips { flex-wrap: wrap; }
+.md-item__thumb img.md-item__photo { display: block; }
+@media (max-width: 480px) {
+  .md-page { padding-left: .75rem; padding-right: .75rem; }
+  .md-panel { padding: 1rem; }
+  .md-item__link { gap: .8rem; }
+  .md-item__thumb { width: 64px; height: 64px; }
+}

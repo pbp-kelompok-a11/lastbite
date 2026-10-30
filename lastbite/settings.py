@@ -136,7 +136,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # WhiteNoise storage for production
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STORAGES = {
+    'default': {'BACKEND': 'main.storage.DatabaseStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+}
 
 
 # DEFAULT PRIMARY KEY

@@ -51,7 +51,8 @@
       <li class="mw-card" data-wishlist-card>
         <div class="mw-card__media">
           {% if entry.store.photo %}
-            <img class="mw-card__photo" src="{{ entry.store.photo.url }}" alt="{{ entry.store.name }}">
+          <img class="mw-card__photo" src="{{ entry.store.photo.url }}" alt="{{ entry.store.name }}"
+            onerror="this.onerror=null; this.removeAttribute('class'); this.alt=''; this.src='{% static thumb %}';">
           {% else %}
             <img src="{% static thumb %}" alt="">
           {% endif %}

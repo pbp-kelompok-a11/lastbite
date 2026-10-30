@@ -56,8 +56,10 @@
 
 /* ---- Reset ---- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; font-size: 16px; }
+html { scroll-behavior: smooth; font-size: 16px; -webkit-text-size-adjust: 100%; max-width: 100%; overflow-x: hidden; }
 body {
+  max-width: 100%;
+  overflow-x: hidden; /* cegah halaman melebar ke samping di HP */
   font-family: var(--font-sans);
   color: var(--color-text);
   background: var(--color-bg);
