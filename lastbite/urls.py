@@ -6,6 +6,7 @@ from main.media_views import serve_media
 urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('admin/', admin.site.urls),
+    path('api/', include('api.urls')),                # API untuk aplikasi mobile (DRF)
     path('', include('main.urls')),              # Landing page
     path('bags/', include('surprise_bag.urls')),  # Surprise Bag module
     path('orders/', include('order.urls')),       # Order module
