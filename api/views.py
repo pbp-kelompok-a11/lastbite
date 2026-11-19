@@ -32,8 +32,12 @@ def api_root(request, format=None):
                 "register": reverse("api:register", request=request, format=format),
                 "logout": reverse("api:logout", request=request, format=format),
                 "me": reverse("api:me", request=request, format=format),
-                # Tambahkan endpoint modul di sini setelah dibuat, contoh:
-                # "merchant": request.build_absolute_uri("/api/merchant/"),
+                "surprise_bags": reverse("api:surprise-bags", request=request, format=format),
+                "orders": reverse("api:orders", request=request, format=format),
+                "merchant_stores": reverse("api:merchant-stores", request=request, format=format),
+                "food_hacks": reverse("api:food-hacks", request=request, format=format),
+                "verified_reviews": reverse("api:verified-reviews", request=request, format=format),
+                "impact_logs": reverse("api:impact-logs", request=request, format=format),
             },
         }
     )
