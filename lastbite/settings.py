@@ -24,6 +24,7 @@ ALLOWED_HOSTS = [
     'fathir-atha-lastbite-pbp-kelompok-a11.pws.cs.ui.ac.id',
     'localhost',
     '127.0.0.1',
+    '10.0.2.2',
 ]
 
 
@@ -43,11 +44,16 @@ INSTALLED_APPS = [
     'merchant_store',
     'community',
     'eco_impact',
+    # API untuk aplikasi mobile (Flutter)
+    'rest_framework',
+    'corsheaders',
+    'api',
 ]
 
 
 # MIDDLEWARE
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Serve static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -165,3 +171,26 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+
+# =====================================================================
+# API MOBILE (Flutter) — CORS, cookie, dan Django REST Framework
+# =====================================================================
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split()
+CORS_URLS_REGEX = r'^/api/'
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SAMESITE = 'None'
+
+REST_FRAMEWORK = {
+    # Session auth tanpa cek CSRF, hanya untuk view DRF (lihat api/authentication.py)
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'api.authentication.CsrfExemptSessionAuthentication',
+    ],
+    # Default: GET bebas, POST/PUT/PATCH/DELETE harus login. Bisa di-override per view.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+}
